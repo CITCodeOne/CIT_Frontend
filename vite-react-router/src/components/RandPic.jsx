@@ -5,7 +5,6 @@ import mike from '../pics/mike.jpg';
 import sponge from '../pics/sponge.jpg';
 
 function RandPic({ picNumb }) {
-    // Function to select an image based on the prop
     const getImage = (picNumb) => {
         switch (picNumb) {
             case '1':

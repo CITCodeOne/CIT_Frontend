@@ -8,7 +8,7 @@ function CompAndProps() {
   return (
     <div>
       <h1>Simple eksempel i koden på hvordan man parser en prop til en component</h1>
-      <RandPic picNumb={randomPicNumb.toString()} /> {/* Pass the random number as a prop */}
+      <RandPic picNumb={randomPicNumb.toString()} /> {/* Parser et tilfædigt tal som en prop */}
     </div>
   );
 }
