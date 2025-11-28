@@ -6,10 +6,14 @@ import figlet from 'figlet';
 import standard from "figlet/fonts/Standard";
 import roman from "figlet/fonts/Roman";
 import slant from "figlet/fonts/Slant";
+import smkeyboard from "figlet/fonts/Small Keyboard";
+import banner3 from "figlet/fonts/Banner3";
 // Choose and load a font into standard. figlet will use standard by default
 figlet.parseFont('Standard', standard);
 figlet.parseFont('Roman', roman);
 figlet.parseFont('Slant', slant);
+figlet.parseFont('Small Keyboard', smkeyboard);
+figlet.parseFont('Banner3', banner3);
 
 function Figlet() {
         const { text } = useParams();
@@ -26,7 +30,7 @@ function FigletBox({ text }) {
                 figlet.text(
                         text,
                         {
-                                font: 'Slant',
+                                font: 'Banner3',
                                 horizontalLayout: "default",
                                 verticalLayout: "default",
                                 width: 180,
@@ -43,7 +47,7 @@ function FigletBox({ text }) {
         }, [text]);
 
         return (
-                <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight:1}}>
+                <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight: 1 }}>
                         {figletText}
                 </pre>
         );
