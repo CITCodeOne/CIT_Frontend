@@ -5,8 +5,11 @@ import figlet from 'figlet';
 // Importing fonts to ensure they are available
 import standard from "figlet/fonts/Standard";
 import roman from "figlet/fonts/Roman";
+import slant from "figlet/fonts/Slant";
 // Choose and load a font into standard. figlet will use standard by default
-figlet.parseFont("Standard", roman);
+figlet.parseFont('Standard', standard);
+figlet.parseFont('Roman', roman);
+figlet.parseFont('Slant', slant);
 
 function Figlet() {
         const { text } = useParams();
@@ -23,7 +26,7 @@ function FigletBox({ text }) {
                 figlet.text(
                         text,
                         {
-                                font: 'Standard',
+                                font: 'Slant',
                                 horizontalLayout: "default",
                                 verticalLayout: "default",
                                 width: 180,
