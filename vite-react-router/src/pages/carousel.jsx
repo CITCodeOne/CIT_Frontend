@@ -17,8 +17,8 @@ export default function CarouselPage() {
                         alt="First slide"
                     />
                     <Carousel.Caption>
-                        <h3>First Slide</h3>
-                        <p>This is the first slide label.</p>
+                        <h3>1</h3>
+                        <p>Rawr.</p>
                     </Carousel.Caption>
                 </Carousel.Item>
                 <Carousel.Item>
@@ -28,8 +28,8 @@ export default function CarouselPage() {
                         alt="Second slide"
                     />
                     <Carousel.Caption>
-                        <h3>Second Slide</h3>
-                        <p>This is the second slide label.</p>
+                        <h3>2</h3>
+                        <p>Me when someone does something.</p>
                     </Carousel.Caption>
                 </Carousel.Item>
                 <Carousel.Item>
@@ -39,8 +39,8 @@ export default function CarouselPage() {
                         alt="Third slide"
                     />
                     <Carousel.Caption>
-                        <h3>Third Slide</h3>
-                        <p>This is the third slide label.</p>
+                        <h3>3</h3>
+                        <p>MIKE.</p>
                     </Carousel.Caption>
                 </Carousel.Item>
             </Carousel>
