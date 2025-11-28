@@ -75,10 +75,10 @@ function App() {
                   id="profile-dropdown"
                   align="end"
                 >
-                  <NavDropdown.Item href="#profile">Profile</NavDropdown.Item>
-                  <NavDropdown.Item href="#settings">Settings</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
                   <NavDropdown.Divider />
-                  <NavDropdown.Item href="#logout">Logout</NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to="#logout">Logout</NavDropdown.Item>
                 </NavDropdown>
               </div>
             </div>
