@@ -9,8 +9,8 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/CompAndProps" element={<CompAndProps />} />
-        <Route path="/Carousel" element={<Carousel />}/>
+        <Route path="/compandprops" element={<CompAndProps />} />
+        <Route path="/carousel" element={<Carousel />}/>
       </Routes>
   );
 }

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Link } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './style/Cstyle.css';
 import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
@@ -8,12 +9,13 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 
+
 function App() {
   return (
     <Router>
       <Navbar expand="lg" className="bg-body-tertiary">
-        <Container fluid>
-          <Navbar.Brand as={Link} to="/">CIT-MDB</Navbar.Brand>
+        <Container fluid className='NavbarCstyle'>
+          <Navbar.Brand as={Link} to="/" className='Clogo'>CIT-MDB</Navbar.Brand>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav
@@ -21,8 +23,15 @@ function App() {
               style={{ maxHeight: '100px' }}
               navbarScroll
             >
-              <Nav.Link as={Link} to="/">Hjem</Nav.Link>
-              <Nav.Link as={Link} to="/about">How to website</Nav.Link>
+
+              {
+                /*Udkommenteret vise hvordan man definere links til en side samt tekst 
+                <Nav.Link as={Link} to="/">Home</Nav.Link>
+                <Nav.Link as={Link} to="/about">How to website</Nav.Link>
+                */
+              }
+
+              {/*Hvordan man laver en drop down menu i nav-baren 
               <NavDropdown title=" ⋮ " id="navbarScrollingDropdown" className="no-caret">
                 <NavDropdown.Item as={Link} to="/CompAndProps">Random pictures</NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/Carousel">
@@ -33,22 +42,24 @@ function App() {
                   Noget endnu sejere her?
                 </NavDropdown.Item>
               </NavDropdown>
-              {/*
+              */}
+
+              {/* Hvordan man disabler et link, aner ikke om vi kommer til at bruge det.
               <Nav.Link href="#" disabled>
                 Link
               </Nav.Link>
               */}
+
             </Nav>
             <div className="d-flex justify-content-between flex-grow-1">
-              <div className="d-flex justify-content"></div>
-              <Form className="d-flex" style={{ maxWidth: 400, width: "100%" }}>
+              <Form className="d-flex flex-grow-1">
                 <Form.Control
                   type="search"
                   placeholder="Search"
                   className="me-2"
                   aria-label="Search"
                 />
-                <Button variant="outline-success">Search</Button>
+                <Button variant="outline-success Cbutton">Search</Button>
               </Form>
 
               <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
@@ -85,12 +96,12 @@ function App() {
           </Navbar.Collapse>
         </Container>
       </Navbar>
-        <Container
-          fluid
-          className="flex-grow-1 overflow-auto py-3"
-        >
-          <AppRoutes />
-        </Container>
+      <Container
+        fluid
+        className="flex-grow-1 overflow-auto py-3 ContainerCstyle"
+      >
+        <AppRoutes />
+      </Container>
     </Router>
   );
 }

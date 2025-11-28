@@ -1,0 +1,39 @@
+/*custom styling for navbar padding*/
+.NavbarCstyle {
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+/*custom styling for (content) container*/
+.ContainerCstyle {
+    padding-left: 15%;
+    padding-right: 15%;
+}
+
+/*custom styling for logo */
+.Clogo {
+    border-radius: 5px;
+    background-color: #1f90f3;
+    margin-right: 5px;
+    padding: 5px;
+    font-size: medium;
+    transition: background-color 0.3s, border-radius 0.3s;
+}
+
+.Clogo:hover {
+    background-color: #92bfe6;
+    border-radius: 12px;
+}
+
+.Cbutton {
+    background-color: #1f90f3;
+    color: black;
+    border-radius: 5px;
+}
+
+.Cbutton:hover {
+    transition: background-color 0.3s, border-radius 0.3s;
+    background-color: #92bfe6;
+    border-radius: 12px;
+    color: black;
+}
