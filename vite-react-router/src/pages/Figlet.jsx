@@ -47,7 +47,17 @@ function FigletBox({ text }) {
         }, [text]);
 
         return (
-                <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight: 1, textWrapMode: 'nowrap' }}>
+                <pre style={
+                        {
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap',
+                                lineHeight: 1,
+                                overflowX: 'auto',
+                                overflowY: 'hidden',
+                                minWidth: '600px',
+                                textWrap: 'nowrap'
+                        }
+                }>
                         {figletText}
                 </pre >
         );
