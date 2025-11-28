@@ -25,8 +25,8 @@ function App() {
               <Nav.Link as={Link} to="/about">How to website</Nav.Link>
               <NavDropdown title=" ⋮ " id="navbarScrollingDropdown" className="no-caret">
                 <NavDropdown.Item as={Link} to="/CompAndProps">Random pictures</NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="#action4">
-                  Noget sejt her?
+                <NavDropdown.Item as={Link} to="/Carousel">
+                  Carousel
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
                 <NavDropdown.Item as={Link} to="/">
