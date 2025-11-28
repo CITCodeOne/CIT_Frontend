@@ -22,7 +22,6 @@ function Home() {
       <p>Der her er vores mega seje hjemmeskærm med en sej løve</p>
       <img src={lionImage} alt="LIWON" />
       <div style={{ marginTop: '1rem' }}>
-        <Button variant="success" onClick={() => setShowAuth(true)}>Sign up</Button>
       </div>
       <SignInOffcanvas
         show={showAuth}

@@ -27,10 +27,10 @@ function App() {
               style={{ maxHeight: '100px' }}
               navbarScroll
             >
-
+            <Nav.Link as={Link} to="/figlet/figgyyyyy">Home</Nav.Link>
               {
                 /*Udkommenteret vise hvordan man definere links til en side samt tekst 
-                <Nav.Link as={Link} to="/">Home</Nav.Link>
+                
                 <Nav.Link as={Link} to="/about">How to website</Nav.Link>
                 */
               }

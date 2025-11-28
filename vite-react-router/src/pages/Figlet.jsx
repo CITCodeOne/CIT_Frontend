@@ -40,7 +40,7 @@ function FigletBox({ text }) {
         }, [text]);
 
         return (
-                <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
+                <pre style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight:1}}>
                         {figletText}
                 </pre>
         );
