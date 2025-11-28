@@ -3,61 +3,61 @@ import React from 'react';
 function About() {
   return (
     <div>
-      <h1>Simpelt Framework med Sidebar og Topbar</h1>
+      <h1>Simpelt framework med sidebar og topbar</h1>
       <p>
-        Dette er et eksempel på, hvordan en side kan bygges op fra bunden. Vi starter med en minimal mængde CSS for at få layoutet til at se nogenlunde korrekt ud.
-        Frameworket bruger routing til at navigere mellem forskellige sider, som forklaret af Morten i undervisningen. Derudover er der en sidebar, der gør det muligt at navigere mellem forskellige sektioner på hjemmesiden gennem links.
+        Denne side er et eksempel på, hvordan en simpel hjemmeside kan bygges op fra bunden. 
+        Den er blevet opdateret fra ren HTML og CSS til at bruge Bootstrap. 
+        Det er ikke perfekt endnu, men det giver os et godt udgangspunkt.
       </p>
+      <p>
+        Vi bruger Bootstrap i et vist omfang for at kunne demonstrere, hvordan man anvender komponenterne, dette er et eksamenskrav. 
+        Bootstrap fungerer som et sæt foruddefinerede byggeklodser, man kan kombinere på forskellige måder.
+      </p>
+      <p>
+        Udseendet er i høj grad styret af Bootstrap, indtil vi finder ud af hvordan vi kapre stilen selv. 
+        For mere info om komponenterne kan man se dokumentationen på{' '}
+        <a href="https://react-bootstrap.netlify.app/" target="_blank" rel="noreferrer">
+          react-bootstrap.netlify.app
+        </a>.
+      </p>
+
       <h2>Components og Props</h2>
       <p>
-        Under hjemmesidens <strong>Components og Props</strong> bliver der parset en simpel prop (en integer), som bruges af komponentet <code>CompAndProps</code>. Dette komponent returnerer et billede baseret på den værdi, der bliver sendt med som prop.
-        Dette gør det nemt at lave en "plug-and-play"-struktur, hvor man kan tilføje forskellige sider og funktioner.
+        På siden <strong>Components og Props</strong> bliver der sendt en simpel prop (en int) til komponentet <code>CompAndProps</code>. 
+        Komponentet returnerer et billede baseret på den værdi, der bliver sendt med som prop. 
+        Det gør det nemt at lave en “plug-and-play”, hvor vi kan tilføje forskellige sider og funktioner.
       </p>
+
       <h2>Hvad er Props?</h2>
       <p>
-        Props (&quot;properties&quot;) skal ses som at være en måde at sende data fra parent-komponent til en child-komponent. De er bare et simpelt objekt, der indeholder information, som komponentet kan bruge til at generere dynamisk indhold.
-        Det er vigtigt at bemærke, at props så vidt som muligt kun skal bruges til at sende data, ikke til at generere HTML direkte eller indeholde html, da det efter mere omhyggelig research er bad practice.
-        Så for at vi holder os til god praksis, lader vi komponenterne stå for at generere HTML, mens props kun leverer data.
+        Props (&quot;properties&quot;) er måden, vi sender data fra et parent-komponent til et child-komponent på. 
+        De er i praksis bare et objekt med information, som komponentet kan bruge til at generere dynamisk indhold.
       </p>
+      <p>
+        Det er god praksis at lade props indeholde data og ikke færdig HTML. 
+        Selve HTML-strukturen bør så vidt muligt genereres inde i komponenterne, så koden bliver mere overskuelig og genanvendelig.
+        Alt andet er bad practice, og efter lidt mere research burde de undgås fuldstændig (Fandt dårlige eksempler på stackoverflow før).
+      </p>
+
       <h2>Brug af components</h2>
       <p>
-        Hvis man kigger i filerne kan man se to under folderen components at der på nuværende tidspunkt eksistere 2.
-        Navbar.jsx er mere eller mindre statisk, og er bare en function som retunere links til de forskellige sider, hvor RandPic.jsx retunere et billede basseret på et tilfældigt tal, billeder skal eksistere på &quot;serveren&quot; altså i folderen pics eller andre steder,
-        hvis man ønsker at gøre brug af det. Evt se Home/hjem eller CompAndProps.jsx for at finde syntaxen for at vise billeder.
+        Hvis du kigger i mappen <code>components</code>, kan du se, at der lige nu findes der et komponent:
+        <code>RandPic.jsx</code>. 
       </p>
+      <p>
+        <code>RandPic.jsx</code> returnerer et billede baseret på et tilfældigt tal. 
+        Billederne skal ligge på &quot;serveren&quot; for eksempel i mappen <code>pics</code> – for at kunne vises.
+        Du kan se eksempler på brugen i <code>Home.jsx</code> eller <code>CompAndProps.jsx</code>.
+      </p>
+
       <h2>AppRoutes.jsx</h2>
       <p>
-        Approutes.jsx er det der står for routingen af de forskellige sider. På nuværende tidspunkt bruger vi approutes i app.jsx hvilket gør at vi altid vil have top og side bars, 
-        så hvis vi ønsker andet skal jeg lige finde på en lidt smartere løsning i forhold til at genere html (Tænker vi tager det til et møde).
-        Som nævnt tideligere bliver routes kaldt på under app.jsx ved linjen &lt;main className=&quot;content&quot;&gt;&lt;/main&gt;
+        <code>AppRoutes.jsx</code> står for at styre routingen mellem de forskellige sider. 
+        Lige nu bliver <code>AppRoutes</code> brugt i <code>App.jsx</code>, hvilket betyder, at topbaren (og eventuelle sidebars) er synlige hele tiden.
       </p>
-       <h1>Simpelt Framework med Sidebar og Topbar</h1>
       <p>
-        Dette er et eksempel på, hvordan en side kan bygges op fra bunden. Vi starter med en minimal mængde CSS for at få layoutet til at se nogenlunde korrekt ud.
-        Frameworket bruger routing til at navigere mellem forskellige sider, som forklaret af Morten i undervisningen. Derudover er der en sidebar, der gør det muligt at navigere mellem forskellige sektioner på hjemmesiden gennem links.
-      </p>
-      <h2>Components og Props</h2>
-      <p>
-        Under hjemmesidens <strong>Components og Props</strong> bliver der parset en simpel prop (en integer), som bruges af komponentet <code>CompAndProps</code>. Dette komponent returnerer et billede baseret på den værdi, der bliver sendt med som prop.
-        Dette gør det nemt at lave en "plug-and-play"-struktur, hvor man kan tilføje forskellige sider og funktioner.
-      </p>
-      <h2>Hvad er Props?</h2>
-      <p>
-        Props (&quot;properties&quot;) skal ses som at være en måde at sende data fra parent-komponent til en child-komponent. De er bare et simpelt objekt, der indeholder information, som komponentet kan bruge til at generere dynamisk indhold.
-        Det er vigtigt at bemærke, at props så vidt som muligt kun skal bruges til at sende data, ikke til at generere HTML direkte eller indeholde html, da det efter mere omhyggelig research er bad practice.
-        Så for at vi holder os til god praksis, lader vi komponenterne stå for at generere HTML, mens props kun leverer data.
-      </p>
-      <h2>Brug af components</h2>
-      <p>
-        Hvis man kigger i filerne kan man se to under folderen components at der på nuværende tidspunkt eksistere 2.
-        Navbar.jsx er mere eller mindre statisk, og er bare en function som retunere links til de forskellige sider, hvor RandPic.jsx retunere et billede basseret på et tilfældigt tal, billeder skal eksistere på &quot;serveren&quot; altså i folderen pics eller andre steder,
-        hvis man ønsker at gøre brug af det. Evt se Home/hjem eller CompAndProps.jsx for at finde syntaxen for at vise billeder.
-      </p>
-      <h2>AppRoutes.jsx</h2>
-      <p>
-        Approutes.jsx er det der står for routingen af de forskellige sider. På nuværende tidspunkt bruger vi approutes i app.jsx hvilket gør at vi altid vil have top og side bars, 
-        så hvis vi ønsker andet skal jeg lige finde på en lidt smartere løsning i forhold til at genere html (Tænker vi tager det til et møde).
-        Som nævnt tideligere bliver routes kaldt på under app.jsx ved linjen &lt;main className=&quot;content&quot;&gt;&lt;/main&gt;
+        Hvis vi senere vil have sider uden disse elementer, skal vi justere strukturen en smule og tænke mere fleksibelt i forhold til, hvordan vi genererer HTML’en. 
+        Det er noget, vi kan tage op på et senere tidspunkt.
       </p>
     </div>
   );
