@@ -4,15 +4,20 @@ import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
 import CustomCarousel from '../pages/CustomCarousel';
 import Figlet from '../pages/Figlet';
+import Navbar from '../components/Navbar';
 
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/compandprops" element={<CompAndProps />} />
-      <Route path="/customcarousel" element={<CustomCarousel />} />
-      <Route path="/figlet/:text" element={<Figlet />} />
+      <Route element={<Navbar />} >
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/compandprops" element={<CompAndProps />} />
+        <Route path="/customcarousel" element={<CustomCarousel />} />
+        <Route path="/figlet/:text" element={<Figlet />} />
+      </Route>
+      <Route path="/signin" element={<Home />} />
+      <Route path="/signup" element={<Home />} />
     </Routes>
   );
 }
