@@ -8,9 +8,13 @@ import Form from 'react-bootstrap/Form';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
+import { useState } from 'react';
+import SignInOffcanvas from './components/SignInOffcanvas';
 
 
 function App() {
+  const [showSignIn, setShowSignIn] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   return (
     <Router>
       <Navbar expand="lg" className="bg-body-tertiary">
@@ -64,38 +68,55 @@ function App() {
 
               <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                 {/* Profile*/}
-                <NavDropdown
-                  title={
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: 40,
-                        height: 40,
-                        borderRadius: '50%',
-                        background: '#ccc',
-                        textAlign: 'center',
-                        lineHeight: '40px',
-                        fontWeight: 'bold',
-                        color: '#fff',
-                        fontSize: 20
-                      }}
-                    >
-                      P
-                    </span>
-                  }
-                  id="profile-dropdown"
-                  align="end"
-                >
-                  <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
-                  <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
-                  <NavDropdown.Divider />
-                  <NavDropdown.Item as={Link} to="#logout">Logout</NavDropdown.Item>
-                </NavDropdown>
+
+                {isSignedIn ? (
+                  <NavDropdown
+                    title={
+                      <span
+                        style={{
+                          display: 'inline-block',
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: '#ccc',
+                          textAlign: 'center',
+                          lineHeight: '40px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          fontSize: 20
+                        }}
+                      >
+                        P
+                      </span>
+                    }
+                    id="profile-dropdown"
+                    align="end"
+                  >
+                    <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
+                    <NavDropdown.Divider />
+                    <NavDropdown.Item onClick={() => setIsSignedIn(false)}>Logout</NavDropdown.Item>
+                  </NavDropdown>
+                ) : (
+                  <div className="d-flex align-items-center gap-2">
+                    <Button variant="primary" onClick={() => setShowSignIn(true)}>
+                      Sign in
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </Navbar.Collapse>
         </Container>
       </Navbar>
+      <SignInOffcanvas
+        show={showSignIn}
+        onClose={() => setShowSignIn(false)}
+        onSignIn={() => {
+          setIsSignedIn(true);
+          setShowSignIn(false);
+        }}
+      />
       <Container
         fluid
         className="flex-grow-1 overflow-auto py-3 ContainerCstyle"
