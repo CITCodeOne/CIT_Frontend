@@ -2,7 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import Home from '../pages/Home';
 import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
-import Carousel from '../pages/carousel';
+import CustomCarousel from '../pages/CustomCarousel';
 
 function AppRoutes() {
   return (
@@ -10,7 +10,7 @@ function AppRoutes() {
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/compandprops" element={<CompAndProps />} />
-        <Route path="/carousel" element={<Carousel />}/>
+        <Route path="/customcarousel" element={<CustomCarousel />}/>
       </Routes>
   );
 }

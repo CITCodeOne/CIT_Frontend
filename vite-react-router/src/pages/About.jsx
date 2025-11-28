@@ -1,6 +1,6 @@
 import React from 'react';
 
-function About() {
+export default function About() {
   return (
     <div>
       <h1>Simpelt framework med sidebar og topbar</h1>
@@ -63,4 +63,3 @@ function About() {
   );
 }
 
-export default About;
