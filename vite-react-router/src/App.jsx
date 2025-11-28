@@ -13,7 +13,7 @@ function App() {
     <Router>
       <Navbar expand="lg" className="bg-body-tertiary">
         <Container fluid>
-          <Navbar.Brand href="#">CIT-MDB</Navbar.Brand>
+          <Navbar.Brand as={Link} to="/">CIT-MDB</Navbar.Brand>
           <Navbar.Toggle aria-controls="navbarScroll" />
           <Navbar.Collapse id="navbarScroll">
             <Nav
@@ -29,7 +29,7 @@ function App() {
                   Noget sejt her?
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item href="#action5">
+                <NavDropdown.Item as={Link} to="/">
                   Noget endnu sejere her?
                 </NavDropdown.Item>
               </NavDropdown>
