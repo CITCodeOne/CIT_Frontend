@@ -25,33 +25,6 @@ export default function NavbarLayout() {
                                                         style={{ maxHeight: '100px' }}
                                                         navbarScroll
                                                 >
-                                                        <Nav.Link as={Link} to="/figlet/figgyyyyy">Home</Nav.Link>
-                                                        {
-                                                                /*Udkommenteret vise hvordan man definere links til en side samt tekst 
-                                                                
-                                                                <Nav.Link as={Link} to="/about">How to website</Nav.Link>
-                                                                */
-                                                        }
-
-                                                        {/*Hvordan man laver en drop down menu i nav-baren 
-              <NavDropdown title=" ⋮ " id="navbarScrollingDropdown" className="no-caret">
-                <NavDropdown.Item as={Link} to="/CompAndProps">Random pictures</NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/Carousel">
-                  Carousel
-                </NavDropdown.Item>
-                <NavDropdown.Divider />
-                <NavDropdown.Item as={Link} to="/">
-                  Noget endnu sejere her?
-                </NavDropdown.Item>
-              </NavDropdown>
-              */}
-
-                                                        {/* Hvordan man disabler et link, aner ikke om vi kommer til at bruge det.
-              <Nav.Link href="#" disabled>
-                Link
-              </Nav.Link>
-              */}
-
                                                 </Nav>
                                                 <div className="d-flex justify-content-between flex-grow-1">
                                                         <Form className="d-flex flex-grow-1">
@@ -63,10 +36,8 @@ export default function NavbarLayout() {
                                                                 />
                                                                 <Button variant="outline-success Cbutton">Search</Button>
                                                         </Form>
-
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
-
                                                                 {isSignedIn ? (
                                                                         <NavDropdown
                                                                                 title={
