@@ -1,0 +1,85 @@
+.make-carousel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  width: 100%;
+}
+
+.make-carousel__viewport {
+  overflow: hidden;
+  width: 100%;
+}
+
+.make-carousel__track {
+  display: flex;
+  transition: transform 0.45s ease;
+  width: 100%;
+}
+
+.make-carousel__slide {
+  flex: 0 0 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.make-carousel__card-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.make-carousel__control {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.5rem;
+  height: 2.5rem;
+  width: 2.5rem;
+  display: grid;
+  place-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.make-carousel__control:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.make-carousel__control:not(:disabled):hover,
+.make-carousel__control:not(:disabled):focus-visible {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.make-carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.make-carousel__dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.make-carousel__dot--active {
+  background-color: #1f90f3;
+  transform: scale(1.1);
+}
+
+@media (hover: hover) {
+  .make-carousel__dot:hover {
+    background-color: rgba(31, 144, 243, 0.7);
+  }
+}
