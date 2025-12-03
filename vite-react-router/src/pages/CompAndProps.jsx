@@ -3,7 +3,7 @@ import RandPic from '../components/RandPic';
 
 
 
-function CompAndProps() {
+export default function CompAndProps() {
   const randomPicNumb = Math.floor(Math.random() * 4) + 1;
   return (
     <div>
@@ -12,5 +12,3 @@ function CompAndProps() {
     </div>
   );
 }
-
-export default CompAndProps;
