@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import lionImage from '../pics/lion.jpg';
 import SignInOffcanvas from '../components/SignInOffcanvas';
-
+//Test
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const [movies, setMovies] = useState([]);
