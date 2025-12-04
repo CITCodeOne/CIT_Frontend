@@ -14,6 +14,7 @@ import Page from '../pages/Page';
 import Title from '../pages/Title';
 import Individual from '../pages/Individual';
 import Search from '../pages/Search';
+import TestMainDisplay from '../Tests/TestMainDisplay';
 
 function AppRoutes() {
   return (
@@ -40,6 +41,7 @@ function AppRoutes() {
 
         // Other minor pages
         <Route path="/about" element={<About />} />
+        <Route path="/test" element={<TestMainDisplay />} />
       </Route>
 
       //pages without navbar goes here
