@@ -1,4 +1,3 @@
-import React from 'react';
 import MainDisplay from '../components/MainDisplay';
 import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
