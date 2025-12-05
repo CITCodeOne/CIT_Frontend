@@ -1,5 +1,5 @@
 import React from "react";
-import MakeCarousel from "../components/MakeCarousel";
+import makeCarousel from "../components/MakeCarousel";
 import lion from "../pics/lion.jpg";
 import girl from "../pics/girl.jpg";
 import mike from "../pics/mike.jpg";
@@ -42,41 +42,6 @@ const demoCards = [
     }
 ];
 
-const cardStyle = {
-    background: "#0f172a",
-    color: "#f8fafc",
-    borderRadius: "12px",
-    overflow: "hidden",
-    width: "100%",
-    boxShadow: "0 12px 30px rgba(15, 23, 42, 0.35)"
-};
-
-const imageStyle = {
-    width: "100%",
-    height: "180px",
-    objectFit: "cover"
-};
-
-const contentStyle = {
-    padding: "1rem"
-};
-
 export default function CarouselPage() {
-    return (
-        <div style={{ padding: "3rem 5%" }}>
-            <MakeCarousel
-                itemArray={demoCards}
-                renderItem={(card) => (
-                    <article style={cardStyle}>
-                        <img src={card.img} alt={card.name} style={imageStyle} />
-                        <div style={contentStyle}>
-                            <p style={{ margin: 0, opacity: 0.65, fontSize: "0.85rem" }}>{card.role}</p>
-                            <h3 style={{ margin: "0.35rem 0" }}>{card.name}</h3>
-                            <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: 1.35 }}>{card.blurb}</p>
-                        </div>
-                    </article>
-                )}
-            />
-        </div>
-    );
+    return <div style={{ padding: "3rem 5%" }}>{makeCarousel(demoCards, "actor")}</div>;
 }
