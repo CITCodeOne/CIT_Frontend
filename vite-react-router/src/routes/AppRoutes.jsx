@@ -16,6 +16,8 @@ import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import TestMainDisplay from '../Tests/TestMainDisplay';
 import TestRating from '../Tests/TestRating';
+import TestBookmark from '../Tests/TestBookmark';
+import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 
 function AppRoutes() {
   return (
@@ -44,6 +46,8 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/test" element={<TestMainDisplay />} />
         <Route path="/test-rating" element={<TestRating />} />
+        <Route path="/test-bookmark" element={<TestBookmark />} />
+        <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
       </Route>
 
       //pages without navbar goes here
