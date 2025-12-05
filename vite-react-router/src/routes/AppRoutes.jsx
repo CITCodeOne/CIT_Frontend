@@ -15,6 +15,7 @@ import Title from '../pages/Title';
 import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import TestMainDisplay from '../Tests/TestMainDisplay';
+import TestRating from '../Tests/TestRating';
 
 function AppRoutes() {
   return (
@@ -42,6 +43,7 @@ function AppRoutes() {
         // Other minor pages
         <Route path="/about" element={<About />} />
         <Route path="/test" element={<TestMainDisplay />} />
+        <Route path="/test-rating" element={<TestRating />} />
       </Route>
 
       //pages without navbar goes here

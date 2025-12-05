@@ -1,4 +1,5 @@
 import React from 'react';
+import Rating from './Rating';
 
 /**
  * MainDisplay Component
@@ -70,7 +71,7 @@ function MainDisplay({ type, data }) {
                         {rating && (
                             <div style={{ marginBottom: '1rem' }}>
                                 <h3>Rating</h3>
-                                <p style={{ fontSize: '1.2rem', color: '#1f90f3' }}>⭐ {rating}/10</p>
+                                <Rating initialRating={rating} />
                             </div>
                         )}
                         
