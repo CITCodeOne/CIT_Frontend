@@ -1,10 +1,12 @@
 import React from 'react';
+import { Badge, Image, ListGroup } from 'react-bootstrap';
 import Rating from './Rating';
 
 /**
- * MainDisplay Component
+ * MainDisplay Component (React Bootstrap Version)
  * 
  * A reusable component that displays detailed information for titles (movies/shows) or actors.
+ * Uses React Bootstrap components for consistent styling.
  * 
  * @param {string} type - Either 'title' or 'actor' to determine display layout
  * @param {object} data - Object containing all the information to display
@@ -31,45 +33,46 @@ function MainDisplay({ type, data }) {
 
     return (
         // Use existing ContainerCstyle class for consistent padding across the app
-        <div className="ContainerCstyle" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div className="ContainerCstyle py-4">
             
             {/* Header Section - Display title or actor name with year/birth year */}
-            <div style={{ marginBottom: '2rem' }}>
+            <div className="mb-4">
                 <h1>{type === 'title' ? title : name}</h1>
                 {/* Show birth year only for actors */}
                 {type === 'actor' && birthYear && (
-                    <p style={{ fontSize: '1.1rem', color: '#666' }}>Born: {birthYear}</p>
+                    <p className="fs-5 text-secondary">Born: {birthYear}</p>
                 )}
                 {/* Show release year only for titles */}
                 {type === 'title' && year && (
-                    <p style={{ fontSize: '1.1rem', color: '#666' }}>Year: {year}</p>
+                    <p className="fs-5 text-secondary">Year: {year}</p>
                 )}
             </div>
 
             {/* Banner/Poster Image Section - Only display if image exists */}
             {(banner || poster) && (
-                <div style={{ marginBottom: '2rem' }}>
-                    <img 
+                <div className="mb-4">
+                    <Image 
                         src={banner || poster} 
                         alt={type === 'title' ? title : name}
+                        fluid
+                        rounded
                         style={{ 
-                            width: '100%', 
                             maxHeight: '400px', 
                             objectFit: 'cover',  // Crop to fit while maintaining aspect ratio
-                            borderRadius: '8px'
+                            width: '100%'
                         }} 
                     />
                 </div>
             )}
 
             {/* Main Content Section - Different content based on type */}
-            <div style={{ marginBottom: '2rem' }}>
+            <div className="mb-4">
                 {/* TITLE/MOVIE DISPLAY */}
                 {type === 'title' && (
                     <>
-                        {/* Rating display with star emoji and app accent color */}
+                        {/* Rating display with Rating component */}
                         {rating && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Rating</h3>
                                 <Rating initialRating={rating} />
                             </div>
@@ -77,30 +80,25 @@ function MainDisplay({ type, data }) {
                         
                         {/* Plot/storyline description */}
                         {plot && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Plot</h3>
-                                <p style={{ lineHeight: '1.6' }}>{plot}</p>
+                                <p className="lh-lg">{plot}</p>
                             </div>
                         )}
 
-                        {/* Genre tags - displayed as styled badges */}
+                        {/* Genre tags - displayed as Bootstrap badges */}
                         {genres && genres.length > 0 && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Genres</h3>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                <div className="d-flex gap-2 flex-wrap">
                                     {genres.map((genre, index) => (
-                                        <span 
+                                        <Badge 
                                             key={index}
-                                            style={{
-                                                backgroundColor: '#1f90f3',  // App accent color
-                                                color: 'white',
-                                                padding: '0.3rem 0.8rem',
-                                                borderRadius: '5px',
-                                                fontSize: '0.9rem'
-                                            }}
+                                            bg="primary"
+                                            style={{ backgroundColor: '#1f90f3' }}
                                         >
                                             {genre}
-                                        </span>
+                                        </Badge>
                                     ))}
                                 </div>
                             </div>
@@ -108,19 +106,19 @@ function MainDisplay({ type, data }) {
 
                         {/* Cast list - only show if actors exist */}
                         {actors && actors.length > 0 && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Cast</h3>
-                                <ul>
+                                <ListGroup variant="flush">
                                     {actors.map((actor, index) => (
-                                        <li key={index}>{actor}</li>
+                                        <ListGroup.Item key={index}>{actor}</ListGroup.Item>
                                     ))}
-                                </ul>
+                                </ListGroup>
                             </div>
                         )}
 
                         {/* Directors - handles singular/plural heading */}
                         {directors && directors.length > 0 && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Director{directors.length > 1 ? 's' : ''}</h3>
                                 <p>{directors.join(', ')}</p>
                             </div>
@@ -133,21 +131,21 @@ function MainDisplay({ type, data }) {
                     <>
                         {/* Actor biography/description */}
                         {bio && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Biography</h3>
-                                <p style={{ lineHeight: '1.6' }}>{bio}</p>
+                                <p className="lh-lg">{bio}</p>
                             </div>
                         )}
 
                         {/* List of notable works */}
                         {knownFor && knownFor.length > 0 && (
-                            <div style={{ marginBottom: '1rem' }}>
+                            <div className="mb-3">
                                 <h3>Known For</h3>
-                                <ul>
+                                <ListGroup variant="flush">
                                     {knownFor.map((item, index) => (
-                                        <li key={index}>{item}</li>
+                                        <ListGroup.Item key={index}>{item}</ListGroup.Item>
                                     ))}
-                                </ul>
+                                </ListGroup>
                             </div>
                         )}
                     </>

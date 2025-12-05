@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { Badge } from 'react-bootstrap';
 
 /**
- * Rating Component
+ * Rating Component (React Bootstrap Version)
  * 
  * A simple, reusable star rating component that can display or allow editing of ratings.
+ * Uses React Bootstrap components for consistent styling.
  * 
  * @param {number} initialRating - The starting rating value (0-10)
  * @param {boolean} editable - Whether the user can change the rating (default: false)
@@ -46,14 +48,11 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
     const stars = Math.round(displayRating / 2); // Convert to 5-star scale
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div className="d-flex align-items-center gap-2">
             {/* Star display - 5 stars representing 0-10 scale */}
             <div 
-                style={{ 
-                    display: 'flex', 
-                    gap: '0.2rem',
-                    cursor: editable ? 'pointer' : 'default'
-                }}
+                className="d-flex gap-1"
+                style={{ cursor: editable ? 'pointer' : 'default' }}
                 onMouseLeave={handleMouseLeave}
             >
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -73,11 +72,18 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
                 ))}
             </div>
 
-            {/* Numeric rating display (0-10 scale) */}
+            {/* Numeric rating display (0-10 scale) using Bootstrap Badge */}
             {showNumber && (
-                <span style={{ fontSize: '1.1rem', color: '#1f90f3', fontWeight: 'bold' }}>
+                <Badge 
+                    bg="primary" 
+                    style={{ 
+                        fontSize: '0.9rem',
+                        fontWeight: 'normal',
+                        backgroundColor: '#1f90f3'
+                    }}
+                >
                     {displayRating.toFixed(1)}/10
-                </span>
+                </Badge>
             )}
         </div>
     );
