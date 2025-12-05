@@ -1,0 +1,114 @@
+## Rating Component - Notes
+
+### What We Created:
+- Reusable Rating component (src/components/Rating.jsx)
+- Star-based rating system (5 stars = 0-10 scale)
+- Two modes: display-only OR editable (interactive)
+- Follows existing code patterns and uses #1f90f3 accent color
+
+### Component Props:
+- initialRating: Starting value (0-10 scale)
+- editable: true/false (allows user interaction)
+- onRatingChange: Callback function when rating changes
+- showNumber: true/false (displays numeric value)
+
+### Key Features:
+- 5 stars represent 0-10 scale (each star = 2 points)
+- Filled stars (★) vs empty stars (☆)
+- Hover effect when editable
+- Smooth color transitions
+- Shows rating as "8.5/10" format
+- Can hide numbers for clean star-only display
+
+### Display Modes:
+1. **Read-only**: Shows fixed rating (great for displaying existing ratings)
+2. **Editable**: Click stars to rate (great for user reviews)
+
+### Visual Design:
+- Filled stars: #1f90f3 (app accent color)
+- Empty stars: #ccc (light gray)
+- Font size: 1.5rem for stars
+- Smooth transitions on hover/click
+
+### Usage Examples:
+```jsx
+// Display existing rating
+<Rating initialRating={8.5} />
+
+// Allow user to rate
+<Rating 
+    initialRating={0} 
+    editable={true} 
+    onRatingChange={(rating) => console.log(rating)}
+/>
+
+// Stars only (no number)
+<Rating initialRating={7} showNumber={false} />
+```
+
+### Files Created/Updated:
+- Created: src/components/Rating.jsx
+- Created: src/Tests/TestRating.jsx (test page with examples)
+- Updated: src/components/MainDisplay.jsx (now uses Rating component)
+- Updated: src/routes/AppRoutes.jsx (added /test-rating route)
+
+### How It Works:
+1. Takes 0-10 rating value
+2. Converts to 5-star display (divides by 2, rounds)
+3. Renders 5 stars, filled based on rating
+4. If editable: tracks hover state & handles clicks
+5. Calls onRatingChange callback with new value (0-10)
+
+### Testing:
+1. Start dev server: npm run dev
+2. Visit URLs:
+   - http://localhost:5173/test-rating (comprehensive test page)
+   - http://localhost:5173/page/title/1 (see it in MainDisplay)
+
+### Integration with MainDisplay:
+- MainDisplay now imports and uses Rating component
+- Replaces old emoji + text display
+- Cleaner, more professional look
+- Consistent styling across app
+
+### State Management:
+- Uses useState for current rating
+- Uses useState for hover state (when editable)
+- Resets hover on mouse leave
+- Updates parent component via callback
+
+---
+
+## Future: List Layouts Reference
+
+### When Creating List Components:
+
+Use React Bootstrap Card layout with image + preview:
+
+```jsx
+import { Container, Card, Row, Col } from 'react-bootstrap';
+
+// Structure:
+<Card className="mb-3">
+  <Row className="g-0">
+    <Col md={3}>
+      <Card.Img src={image} alt={title} />
+    </Col>
+    <Col md={9}>
+      <Card.Body>
+        <Card.Title>{title}</Card.Title>
+        <Rating initialRating={rating} />
+        <Card.Text>{description}</Card.Text>
+      </Card.Body>
+    </Col>
+  </Row>
+</Card>
+```
+
+**Key Points:**
+- Image on left (25% - Col md={3})
+- Content on right (75% - Col md={9})
+- Use existing Rating component for ratings
+- Use ContainerCstyle for padding
+- Use Cbutton for action buttons
+- Responsive: stacks on mobile
