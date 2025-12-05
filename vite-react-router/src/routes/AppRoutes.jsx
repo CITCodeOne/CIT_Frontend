@@ -16,6 +16,7 @@ import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import TestMainDisplay from '../Tests/TestMainDisplay';
 import TestRating from '../Tests/TestRating';
+import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 
@@ -41,6 +42,10 @@ function AppRoutes() {
         // Search page
         <Route path="/search" element={<Search />} />
         <Route path="/search/:query" element={<Search />} />
+
+        //Userbanner for testing
+        <Route path="/userbanner" element={<UserBanner />} />
+        <Route path="/userbanner/:userId" element={<User />} />
 
         // Other minor pages
         <Route path="/about" element={<About />} />
