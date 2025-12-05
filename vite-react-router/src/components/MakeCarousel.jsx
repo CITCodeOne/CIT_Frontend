@@ -1,186 +1,147 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import "../style/makeCarousel.css";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Carousel from "react-bootstrap/Carousel";
+import PreviewCards from "./PreviewCards";
 
-const defaultBreakpoints = [
-	{ width: 1280, items: 5 },
-	{ width: 1024, items: 4 },
-	{ width: 768, items: 3 },
-	{ width: 640, items: 2 },
-	{ width: 0, items: 1 }
-];
+const DEFAULT_FOCUS_KEY = "title";
+const DEFAULT_CARD_COUNT = 3;
+const TARGET_CARD_WIDTH = 280; 
+const CARD_GAP = 24;
+const FALLBACK_MESSAGE = "No items were given to make the carousel.";
 
+// Splits the incoming items array into evenly sized chunks (slides) for the carousel.
 const chunkItems = (items, size) => {
-	if (!size || size < 1) {
-		return [items];
+	if (!Array.isArray(items) || !items.length) {
+		return [];
 	}
 
+	const normalizedSize = Number.isFinite(size) && size > 0 ? Math.floor(size) : 1;
 	const chunks = [];
 
-	for (let index = 0; index < items.length; index += size) {
-		chunks.push(items.slice(index, index + size));
+	for (let index = 0; index < items.length; index += normalizedSize) {
+		chunks.push(items.slice(index, index + normalizedSize));
 	}
 
-	return chunks.length ? chunks : [[]];
+	return chunks;
 };
 
-const resolveItemsPerSlide = (width, breakpoints) => {
-	for (const point of breakpoints) {
-		if (width >= point.width) {
-			return point.items;
-		}
+const computeCardsPerSlide = (width) => {
+	if (!Number.isFinite(width) || width <= 0) {
+		return DEFAULT_CARD_COUNT;
 	}
 
-	return 1;
+	// Each card occupies its width plus the gap to the next card (its visual "footprint").
+	const footprint = TARGET_CARD_WIDTH + CARD_GAP;
+	const capacity = Math.floor(width / footprint);
+
+	return Math.max(1, capacity || DEFAULT_CARD_COUNT);
 };
 
-export default function MakeCarousel({
-	itemArray = [],
-	breakpoints = defaultBreakpoints,
-	renderItem,
-	showControls = true,
-	showDots = true,
-	loop = true,
-	autoPlay = false,
-	autoPlayInterval = 5000,
-	ariaLabel = "Carousel"
-}) {
-	const sortedBreakpoints = useMemo(
-		() => [...breakpoints].sort((a, b) => b.width - a.width),
-		[breakpoints]
-	);
-
-	const getInitialItemsPerSlide = () => {
-		if (typeof window === "undefined") {
-			return sortedBreakpoints[0]?.items || 1;
-		}
-
-		return resolveItemsPerSlide(window.innerWidth, sortedBreakpoints);
-	};
-
-	const [itemsPerSlide, setItemsPerSlide] = useState(getInitialItemsPerSlide);
-	const [activeIndex, setActiveIndex] = useState(0);
-
-	const slides = useMemo(
-		() => chunkItems(itemArray, itemsPerSlide),
-		[itemArray, itemsPerSlide]
-	);
-
-	const navigate = useCallback(
-		(direction) => {
-			if (!slides.length) {
-				return;
-			}
-
-			setActiveIndex((prev) => {
-				const next = prev + direction;
-
-				if (loop) {
-					return (next + slides.length) % slides.length;
-				}
-
-				return Math.min(Math.max(next, 0), slides.length - 1);
-			});
-		},
-		[loop, slides.length]
-	);
+const CarouselRenderer = ({ items, focusKey }) => {
+	const containerRef = useRef(null);
+	const [layout, setLayout] = useState({
+		width: TARGET_CARD_WIDTH * DEFAULT_CARD_COUNT,
+		cardsPerSlide: DEFAULT_CARD_COUNT
+	});
 
 	useEffect(() => {
-		const handleResize = () => {
-			setItemsPerSlide(resolveItemsPerSlide(window.innerWidth, sortedBreakpoints));
+		const node = containerRef.current;
+		const getWindowWidth = () =>
+			typeof window !== "undefined" ? window.innerWidth : TARGET_CARD_WIDTH * DEFAULT_CARD_COUNT;
+
+		// Recomputes layout when the container or window width changes.
+		const updateLayout = (width) => {
+			const measuredWidth = Number.isFinite(width) && width > 0 ? width : getWindowWidth();
+			setLayout({
+				width: measuredWidth,
+				cardsPerSlide: computeCardsPerSlide(measuredWidth)
+			});
 		};
 
-		window.addEventListener("resize", handleResize);
-
-		return () => window.removeEventListener("resize", handleResize);
-	}, [sortedBreakpoints]);
-
-	useEffect(() => {
-		setActiveIndex(0);
-	}, [itemsPerSlide, itemArray.length]);
-
-	useEffect(() => {
-		if (!autoPlay || slides.length <= 1) {
+		if (!node) {
+			updateLayout(getWindowWidth());
 			return undefined;
 		}
 
-		const timer = setInterval(() => navigate(1), autoPlayInterval);
+		updateLayout(node.offsetWidth || getWindowWidth());
 
-		return () => clearInterval(timer);
-	}, [autoPlay, autoPlayInterval, navigate, slides.length]);
+		if (typeof ResizeObserver !== "undefined") {
+			// ResizeObserver reads the container's content box width, so even if the
+			// carousel lives inside a constrained column, we react to its actual
+			// rendered width instead of the global window width.
+			const observer = new ResizeObserver((entries) => {
+				// We inspect each entry because a single observer could watch multiple
+				// nodes; contentRect.width is the precise, post-layout width.
+				entries.forEach((entry) => updateLayout(entry.contentRect.width));
+			});
 
-	const renderCard = (item, index) => {
-		if (typeof renderItem === "function") {
-			return renderItem(item, index);
+			observer.observe(node);
+
+			return () => observer.disconnect();
 		}
 
-		return item;
-	};
+		return undefined;
+	}, []);
 
-	const disablePrev = !loop && activeIndex === 0;
-	const disableNext = !loop && activeIndex === slides.length - 1;
+	const slides = useMemo(
+		() => chunkItems(items, layout.cardsPerSlide),
+		[items, layout.cardsPerSlide]
+	);
+	const cardWidthPx = (() => {
+		const { width, cardsPerSlide } = layout;
+		if (!cardsPerSlide) {
+			return TARGET_CARD_WIDTH;
+		}
+
+		// Deduct total gap space first, then divide remaining pixels between cards.
+		const totalGap = CARD_GAP * Math.max(cardsPerSlide - 1, 0);
+		const available = Math.max(width - totalGap, TARGET_CARD_WIDTH);
+		const computed = available / cardsPerSlide;
+
+		return Math.max(180, Math.floor(computed));
+	})();
 
 	return (
-		<div className="make-carousel" aria-label={ariaLabel} role="region">
-			{showControls && (
-				<button
-					className="make-carousel__control make-carousel__control--prev"
-					type="button"
-					onClick={() => navigate(-1)}
-					disabled={disablePrev}
-					aria-label="Previous slide"
-				>
-					‹
-				</button>
-			)}
-
-			<div className="make-carousel__viewport">
-				<div
-					className="make-carousel__track"
-					style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-				>
-					{slides.map((slideItems, slideIndex) => (
-						<div className="make-carousel__slide" key={`slide-${slideIndex}`}>
-							{slideItems.map((item, itemIndex) => (
+		<div ref={containerRef} style={{ width: "100%" }}>
+			<Carousel interval={null} controls={slides.length > 1} indicators={slides.length > 1}>
+				{slides.map((slide, slideIndex) => (
+					<Carousel.Item key={`slide-${slideIndex}`}>
+						<div className="d-flex justify-content-center gap-3 flex-wrap py-4">
+							{slide.map((entry, entryIndex) => (
 								<div
-									className="make-carousel__card-wrapper"
-									key={`item-${slideIndex}-${itemIndex}`}
+									key={`card-${slideIndex}-${entryIndex}`}
+									style={{
+										flex: `0 0 ${cardWidthPx}px`,
+										maxWidth: `${cardWidthPx}px`,
+										minWidth: `${cardWidthPx}px`
+									}}
 								>
-									{renderCard(item, slideIndex * itemsPerSlide + itemIndex)}
+									<PreviewCards item={entry} focusKey={focusKey} />
 								</div>
 							))}
 						</div>
-					))}
-				</div>
-			</div>
-
-			{showControls && (
-				<button
-					className="make-carousel__control make-carousel__control--next"
-					type="button"
-					onClick={() => navigate(1)}
-					disabled={disableNext}
-					aria-label="Next slide"
-				>
-					›
-				</button>
-			)}
-
-			{showDots && slides.length > 1 && (
-				<div className="make-carousel__dots" role="tablist">
-					{slides.map((_, dotIndex) => (
-						<button
-							type="button"
-							key={`dot-${dotIndex}`}
-							className={`make-carousel__dot${
-								dotIndex === activeIndex ? " make-carousel__dot--active" : ""
-							}`}
-							onClick={() => setActiveIndex(dotIndex)}
-							aria-label={`Go to slide ${dotIndex + 1}`}
-							aria-controls={`slide-${dotIndex}`}
-						/>
-					))}
-				</div>
-			)}
+					</Carousel.Item>
+				))}
+			</Carousel>
 		</div>
 	);
+};
+
+/**
+ * makeCarousel Component
+ * A reusable Bootstrap-driven carousel that lays out preview cards for actors or titles.
+ * @param {Array} items - List of objects representing each card the carousel should render.
+ * @param {string} focusKey - Hint about the card context (e.g., "actor" or "title") that PreviewCards can display.
+ */
+export default function makeCarousel(items = [], focusKey = DEFAULT_FOCUS_KEY) {
+	const safeItems = Array.isArray(items) ? items : [];
+
+	if (!safeItems.length) {
+		return (
+			<div className="alert alert-warning text-center my-4" role="status">
+				{FALLBACK_MESSAGE}
+			</div>
+		);
+	}
+
+	return <CarouselRenderer items={safeItems} focusKey={focusKey} />;
 }
