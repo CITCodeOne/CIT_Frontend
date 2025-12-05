@@ -51,7 +51,6 @@
 ### Files Updated:
 - Created: src/components/MainDisplay.jsx
 - Updated: src/pages/Title.jsx (with example data)
-- Updated: src/pages/User.jsx (with example data)
 - Created: src/pages/TestMainDisplay.jsx (test page)
 - Updated: src/routes/AppRoutes.jsx (added /test route)
 
@@ -60,7 +59,8 @@
 2. Visit URLs:
    - http://localhost:5173/test (shows both title & actor examples)
    - http://localhost:5173/page/title/1 (title display)
-   - http://localhost:5173/user/1 (actor display)
+   - http://localhost:5173/user/1 (user display)
+   - http://localhost:5173/user/123 (logged in user)
 
 ### Note:
 Required Node.js 20.19+ or 22.12+
