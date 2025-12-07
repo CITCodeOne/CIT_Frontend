@@ -4,6 +4,9 @@ import lion from "../pics/lion.jpg";
 import girl from "../pics/girl.jpg";
 import mike from "../pics/mike.jpg";
 
+// Demo data for carousel testing - it shows two carousels (titles and contributors)
+// This is how the data can be used to filter out different types for different carousels/scenarios
+
 const demoCards = [
     {
         id: 1,
@@ -61,6 +64,20 @@ const demoCards = [
     }
 ];
 
-export default function CarouselPage() {
-    return <div style={{ padding: "3rem 5%" }}>{makeCarousel(demoCards, "Blandet demo")}</div>;
+export default function CustomCarouselFilterTest() {
+
+  const titleItems = demoCards.filter(
+    (item) => item.type === "Title" && (item.mediaType === "Movie" || item.mediaType === "Series")
+  );
+
+  const contributorItems = demoCards.filter(
+    (item) => item.type === "Contributor"
+  );
+
+  return (
+    <div style={{ padding: "3rem 5%" }}>
+      {makeCarousel(titleItems, "Similar titles")}
+      {makeCarousel(contributorItems, "Cast & Crew")}
+    </div>
+  );
 }

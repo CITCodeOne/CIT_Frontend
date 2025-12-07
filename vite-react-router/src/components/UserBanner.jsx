@@ -1,5 +1,4 @@
 import React from "react";
-import "../style/userBanner.css";
 
 export default function UserBanner({
   username,
@@ -8,7 +7,7 @@ export default function UserBanner({
   ratingsCount,
   bookmarksCount,
   avatarUrl,
-  role = "User",
+  role,
   isOwnProfile,
   isEditMode,
   onEditClick,
@@ -22,63 +21,81 @@ export default function UserBanner({
   const canClickAvatar = isOwnProfile && isEditMode;
 
   return (
-    <section className="user-banner">
-      <div className="user-banner__role-label">{role}</div>
+    <section className="container my-4">
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
+            {/* Avatar + role badge */}
+            <div className="d-flex flex-column align-items-center me-md-3">
+              <div
+                className={canClickAvatar ? "position-relative" : ""}
+                style={{ cursor: canClickAvatar ? "pointer" : "default" }}
+                onClick={canClickAvatar ? onAvatarClick : undefined}
+              >
+                <img
+                  src={avatarUrl}
+                  alt={`${username}'s avatar`}
+                  className="rounded-circle border"
+                  style={{ width: "96px", height: "96px", objectFit: "cover" }}
+                />
+                {canClickAvatar && (
+                  <span
+                    className="position-absolute top-50 start-50 translate-middle badge bg-dark bg-opacity-75"
+                    style={{ fontSize: "0.7rem" }}
+                  >
+                    Upload image
+                  </span>
+                )}
+              </div>
 
-      <div
-        className={
-          canClickAvatar
-            ? "user-banner__avatar-wrapper user-banner__avatar-wrapper--editable"
-            : "user-banner__avatar-wrapper"
-        }
-        onClick={canClickAvatar ? onAvatarClick : undefined}
-      >
-        <img
-          src={avatarUrl}
-          alt={`${username}'s avatar`}
-          className="user-banner__avatar"
-        />
-        {canClickAvatar && (
-          <div className="user-banner__avatar-hint">
-            Upload image
+              {role && (
+                <span className="badge bg-secondary mt-2 text-uppercase">
+                  {role}
+                </span>
+              )}
+            </div>
+
+            {/* Main info */}
+            <div className="flex-grow-1">
+              <div className="d-flex flex-column flex-md-row align-items-md-baseline gap-2">
+                <h2 className="h4 mb-0">{username}</h2>
+                {email && (
+                  <span className="text-muted small">{email}</span>
+                )}
+              </div>
+
+              <div className="mt-2 text-muted small">
+                {createdAt && <span className="me-3">Joined: {formattedDate}</span>}
+              </div>
+
+              <div className="mt-2 d-flex flex-wrap gap-3 small">
+                <span>Ratings: {ratingsCount}</span>
+                <span>Bookmarks: {bookmarksCount}</span>
+              </div>
+            </div>
+
+            {/* Share profile & edit */}
+            <div className="d-flex flex-column align-items-stretch gap-2 mt-3 mt-md-0">
+              {isOwnProfile && (
+                <button
+                  type="button"
+                  onClick={onEditClick}
+                  className="btn btn-outline-primary btn-sm"
+                >
+                  {isEditMode ? "Done" : "Edit profile"}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={onShareClick}
+                className="btn btn-outline-secondary btn-sm"
+              >
+                Share profile
+              </button>
+            </div>
           </div>
-        )}
-      </div>
-
-      <div className="user-banner__main">
-        <div className="user-banner__header">
-          <h2 className="user-banner__username">{username}</h2>
-          <span className="user-banner__email">{email}</span>
         </div>
-
-        <div className="user-banner__meta">
-          {createdAt && <span>Joined: {formattedDate}</span>}
-        </div>
-
-        <div className="user-banner__stats">
-          <span>Ratings: {ratingsCount}</span>
-          <span>Bookmarks: {bookmarksCount}</span>
-        </div>
-      </div>
-
-      <div className="user-banner__actions">
-        {isOwnProfile && (
-          <button
-            type="button"
-            onClick={onEditClick}
-            className="user-banner__btn-edit"
-          >
-            {isEditMode ? "Done" : "Edit profile"}
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={onShareClick}
-          className="user-banner__btn-share"
-        >
-          Share profile
-        </button>
       </div>
     </section>
   );

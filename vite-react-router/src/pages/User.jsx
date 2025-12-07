@@ -1,4 +1,3 @@
-import MainDisplay from '../components/MainDisplay';
 import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
@@ -8,7 +7,7 @@ export default function User() {
   const { userId } = useParams();
   const fileInputRef = useRef(null);
 
-  // Dummy user data from "database"
+  // Dummy user data
   const apiUser = {
     id: userId,
     username: "PixelPirat_47",
@@ -26,8 +25,8 @@ export default function User() {
   const [isEditMode, setIsEditMode] = useState(false);
 
   // Authentication dummy data
-  const loggedInUserId = "123"; // dummy
-  const isLoggedIn = true;      // dummy
+  const loggedInUserId = "123";
+  const isLoggedIn = true;
   const isOwnProfile = isLoggedIn && loggedInUserId === userId;
 
   const handleToggleEditMode = () => {
@@ -60,16 +59,15 @@ export default function User() {
     const newUrl = URL.createObjectURL(file);
     setAvatarUrl(newUrl);
     // BACKEND: Upload new profile picture to user in backend
-
   };
 
   return (
-    <main style={{ padding: "2rem 5%" }}>
+    <main className="container py-4">
       <input
         type="file"
         accept="image/*"
         ref={fileInputRef}
-        style={{ display: "none" }}
+        className="d-none"
         onChange={handleAvatarFileChange}
       />
 
