@@ -4,7 +4,7 @@ import {
         deriveUsername,
         getStoredToken,
         parseJwtClaims,
-} from '../components/extractJwtData';
+} from '../components/ExtractJwtData';
 
 export default function useAuthStatus() {
         const [isSignedIn, setIsSignedIn] = useState(false);
