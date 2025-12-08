@@ -49,7 +49,7 @@ export default function UserBanner({
               </div>
 
               {role && (
-                <span className="badge bg-secondary mt-2 text-uppercase">
+                <span className="badge bg-primary mt-2 text-uppercase">
                   {role}
                 </span>
               )}
@@ -89,7 +89,7 @@ export default function UserBanner({
               <button
                 type="button"
                 onClick={onShareClick}
-                className="btn btn-outline-secondary btn-sm"
+                className="btn btn-outline-primary btn-sm"
               >
                 Share profile
               </button>
