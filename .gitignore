@@ -162,3 +162,6 @@ logs/
 .DS_Store
 .vscode/
 .idea/
+
+# Static assets to keep out of Git history
+vite-react-router/src/pics/bowling.gif
