@@ -12,16 +12,16 @@ export default function UserRatingsPage() {
 
   // dummy ratings list
   const ratedTitles = [
-    { titleId: "tt10052520", title: "Zootopia 2", rating: 9, year: 2025, mediaType: "movie", poster: girl },
-    { titleId: "tt7366338",  title: "Chernobyl", rating: 1, year: 2019, mediaType: "tvSeries", poster: lion },
-    { titleId: "tt0903747",  title: "Breaking Bad", rating: 10, year: 2008, mediaType: "tvSeries", poster: mike },
-    { titleId: "tt1234567",  title: "My Little Pony: The Movie", rating: 7, year: 2020, mediaType: "movie", poster: girl },
+    { titleId: "tt10052520", title: "Zootopia 2", rating: 9, startYear: 2025, mediaType: "movie", poster: girl },
+    { titleId: "tt7366338",  title: "Chernobyl", rating: 1, startYear: 2019, mediaType: "tvSeries", poster: lion },
+    { titleId: "tt0903747",  title: "Breaking Bad", rating: 10, startYear: 2008, mediaType: "tvSeries", poster: mike },
+    { titleId: "tt1234567",  title: "My Little Pony: The Movie", rating: 7, startYear: 2020, mediaType: "movie", poster: girl },
   ];
 
   // returns a list of all the user's ratings
   return (
     <main className="container py-4">
-      <h2 className="h4 mb-3">All ratings for: {username}</h2>
+      <h2 className="h4 mb-3">All ratings for user: {username}</h2>
 
       <MakeList
         itemArray={ratedTitles}
@@ -40,8 +40,8 @@ export default function UserRatingsPage() {
             <div className="flex-grow-1 overflow-hidden px-2 d-flex flex-column justify-content-center">
               <h3 className="mb-1 fs-5">
                 {item.title}{" "}
-                {item.year && (
-                  <span className="text-muted">({item.year})</span>
+                {item.startYear && (
+                  <span className="text-muted">({item.startYear})</span>
                 )}
               </h3>
               <p className="mb-1 text-muted small">{item.mediaType}</p>

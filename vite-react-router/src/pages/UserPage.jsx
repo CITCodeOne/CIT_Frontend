@@ -29,7 +29,7 @@ export default function UserPage() {
       titleId: "tt10052520",
       title: "Zootopia 2",
       rating: 9,
-      year: 2025,
+      startYear: 2025,
       mediaType: "movie",
       poster: girl,
     },
@@ -37,7 +37,7 @@ export default function UserPage() {
       titleId: "tt7366338",
       title: "Chernobyl",
       rating: 1,
-      year: 2019,
+      startYear: 2019,
       mediaType: "tvSeries",
       poster: lion,
     },
@@ -45,7 +45,7 @@ export default function UserPage() {
       titleId: "tt0903747",
       title: "Breaking Bad",
       rating: 10,
-      year: 2008,
+      startYear: 2008,
       mediaType: "tvSeries",
       poster: mike,
     },
@@ -53,7 +53,7 @@ export default function UserPage() {
       titleId: "tt1234567",
       title: "My Little Pony: The Movie",
       rating: 7,
-      year: 2020,
+      startYear: 2020,
       mediaType: "movie",
       poster: girl,
     },
@@ -178,8 +178,8 @@ export default function UserPage() {
                   <div>
                     <div className="fw-semibold">
                       {item.title}{" "}
-                      {item.year && (
-                        <span className="text-muted">({item.year})</span>
+                      {item.startYear && (
+                        <span className="text-muted">({item.startYear})</span>
                       )}
                     </div>
                     <div className="text-muted small">{item.mediaType}</div>
