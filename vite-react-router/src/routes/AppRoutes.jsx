@@ -3,6 +3,7 @@ import Home from '../pages/Home';
 import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
 import CustomCarousel from '../pages/CustomCarousel';
+import ListComp from '../pages/ListComp';
 import Figlet from '../pages/Figlet';
 import Navbar from '../components/Navbar';
 import Signin from '../pages/Signin';
@@ -53,6 +54,9 @@ function AppRoutes() {
         <Route path="/test-rating" element={<TestRating />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
+
+        // List comp page
+        <Route path="/list" element={<ListComp />} />
       </Route>
 
       //pages without navbar goes here

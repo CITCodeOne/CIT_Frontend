@@ -96,7 +96,7 @@ export default function NavbarLayout() {
                         />
                         <Container
                                 fluid
-                                className="flex-grow-1 overflow-auto py-3 ContainerCstyle"
+                                className="flex-grow-1 py-3 ContainerCstyle"
                         >
                                 <Outlet />
                         </Container>
