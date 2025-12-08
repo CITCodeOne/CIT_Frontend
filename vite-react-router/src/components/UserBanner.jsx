@@ -6,7 +6,7 @@ export default function UserBanner({
   createdAt,
   ratingsCount,
   bookmarksCount,
-  avatarUrl,
+  profile_image,
   role,
   isOwnProfile,
   isEditMode,
@@ -33,7 +33,7 @@ export default function UserBanner({
                 onClick={canClickAvatar ? onAvatarClick : undefined}
               >
                 <img
-                  src={avatarUrl}
+                  src={profile_image}
                   alt={`${user_name}'s avatar`}
                   className="rounded-circle border"
                   style={{ width: "96px", height: "96px", objectFit: "cover" }}

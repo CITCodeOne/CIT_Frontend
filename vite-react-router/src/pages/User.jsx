@@ -16,11 +16,11 @@ export default function User() {
     ratingsCount: 42,
     bookmarksCount: 12,
     role: "Admin",
-    avatarUrl: null,
+    profile_image: null,
   };
 
-  const [avatarUrl, setAvatarUrl] = useState(
-    apiUser.avatarUrl || defaultAvatar
+  const [profile_image, setProfileImage] = useState(
+    apiUser.profile_image || defaultAvatar
   );
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -57,7 +57,7 @@ export default function User() {
     const file = event.target.files?.[0];
     if (!file) return;
     const newUrl = URL.createObjectURL(file);
-    setAvatarUrl(newUrl);
+    setProfileImage(newUrl);
     // BACKEND: Upload new profile picture to user in backend
   };
 
@@ -77,7 +77,7 @@ export default function User() {
         createdAt={apiUser.createdAt}
         ratingsCount={apiUser.ratingsCount}
         bookmarksCount={apiUser.bookmarksCount}
-        avatarUrl={avatarUrl}
+        profile_image={profile_image}
         role={apiUser.role}
         isOwnProfile={isOwnProfile}
         isEditMode={isEditMode}
