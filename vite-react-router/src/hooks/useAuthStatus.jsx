@@ -1,29 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-
-const TOKEN_KEY = 'cit.jwt';
-
-const extractUsernameFromToken = (token) => {
-        try {
-                const payloadSegment = token?.split?.('.')[1];
-                if (!payloadSegment) return null;
-
-                // Decode Base64URL payload so we can read the username claim.
-                const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
-                const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-                const decoded = (typeof window !== 'undefined' ? window.atob : atob)(padded);
-                const jsonString = decodeURIComponent(
-                        decoded
-                                .split('')
-                                .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
-                                .join('')
-                );
-                const payload = JSON.parse(jsonString);
-                return payload?.username || payload?.user?.username || payload?.sub || '';
-        } catch (error) {
-                console.warn('Unable to parse cit.jwt payload', error);
-                return null;
-        }
-};
+import {
+        TOKEN_STORAGE_KEY,
+        deriveUsername,
+        getStoredToken,
+        parseJwtClaims,
+} from '../components/ExtractJwtData';
 
 export default function useAuthStatus() {
         const [isSignedIn, setIsSignedIn] = useState(false);
@@ -31,7 +12,7 @@ export default function useAuthStatus() {
 
         const syncAuthState = useCallback(() => {
                 if (typeof window === 'undefined') return;
-                const token = window.localStorage.getItem(TOKEN_KEY);
+                const token = getStoredToken();
 
                 if (!token) {
                         setIsSignedIn(false);
@@ -39,16 +20,15 @@ export default function useAuthStatus() {
                         return;
                 }
 
-                const extractedUsername = extractUsernameFromToken(token);
-
-                if (extractedUsername === null) {
+                const claims = parseJwtClaims(token);
+                if (!claims) {
                         setIsSignedIn(false);
                         setUsername('');
                         return;
                 }
 
                 setIsSignedIn(true);
-                setUsername(extractedUsername || '');
+                setUsername(deriveUsername(claims));
         }, []);
 
         useEffect(() => {
@@ -59,7 +39,7 @@ export default function useAuthStatus() {
                 if (typeof window === 'undefined') return undefined;
 
                 const handleStorageChange = (event) => {
-                        if (event.key === TOKEN_KEY) {
+                        if (event.key === TOKEN_STORAGE_KEY) {
                                 syncAuthState();
                         }
                 };
@@ -70,7 +50,7 @@ export default function useAuthStatus() {
 
         const handleLogout = useCallback(() => {
                         if (typeof window !== 'undefined') {
-                                window.localStorage.removeItem(TOKEN_KEY);
+                                window.localStorage.removeItem(TOKEN_STORAGE_KEY);
                         }
                         setIsSignedIn(false);
                         setUsername('');
