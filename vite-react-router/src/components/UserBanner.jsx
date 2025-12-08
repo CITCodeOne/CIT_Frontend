@@ -1,7 +1,7 @@
 import React from "react";
 
 export default function UserBanner({
-  username,
+  user_name,
   email,
   createdAt,
   ratingsCount,
@@ -34,7 +34,7 @@ export default function UserBanner({
               >
                 <img
                   src={avatarUrl}
-                  alt={`${username}'s avatar`}
+                  alt={`${user_name}'s avatar`}
                   className="rounded-circle border"
                   style={{ width: "96px", height: "96px", objectFit: "cover" }}
                 />
@@ -58,7 +58,7 @@ export default function UserBanner({
             {/* Main info */}
             <div className="flex-grow-1">
               <div className="d-flex flex-column flex-md-row align-items-md-baseline gap-2">
-                <h2 className="h4 mb-0">{username}</h2>
+                <h2 className="h4 mb-0">{user_name}</h2>
                 {email && (
                   <span className="text-muted small">{email}</span>
                 )}

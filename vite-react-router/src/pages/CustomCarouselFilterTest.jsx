@@ -75,9 +75,9 @@ export default function CustomCarouselFilterTest() {
   );
 
   return (
-    <div style={{ padding: "3rem 5%" }}>
+     <main>
       {makeCarousel(titleItems, "Similar titles")}
       {makeCarousel(contributorItems, "Cast & Crew")}
-    </div>
+    </main>
   );
 }
