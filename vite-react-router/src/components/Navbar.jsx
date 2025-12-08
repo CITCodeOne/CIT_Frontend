@@ -27,6 +27,28 @@ export default function NavbarLayout() {
                                                         navbarScroll
                                                 >
                                                 </Nav>
+                                                <NavDropdown title=" ⋮⋮⋮ " id="navbarScrollingDropdown" className="no-caret Cmakescrollable">
+                                                        <NavDropdown.Item as={Link} to="/">Home</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/user/:userId">User</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/user/:userId/bookmarks">Bookmarks</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/page/:pageId">Page</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/page/title/:titleId">Title</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/search">Search</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/userbanner">User Banner</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/about">About</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/test">Test Main Display</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/test-rating">Test Rating</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/test-bookmark">Test Bookmark</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/test-user-profile">Test User Profile</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/profile-image-base64">Profile Image (Base64)</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/list">List Component</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/compandprops">Comp & Props</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/customcarousel">Custom Carousel</NavDropdown.Item>
+                                                        <NavDropdown.Item as={Link} to="/figlet/:text">Figlet</NavDropdown.Item>
+
+                                                        <NavDropdown.Item as={Link} to="*">Not Found</NavDropdown.Item>
+
+                                                </NavDropdown>
                                                 <div className="d-flex justify-content-between flex-grow-1">
                                                         <Form className="d-flex flex-grow-1">
                                                                 <Form.Control
@@ -39,40 +61,40 @@ export default function NavbarLayout() {
                                                         </Form>
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
-                                                                        {isSignedIn ? (
-                                                                                <NavDropdown
-                                                                                        title={
-                                                                                                <div className="d-flex align-items-center">
-                                                                                                        <span
-                                                                                                                style={{
-                                                                                                                        display: 'inline-block',
-                                                                                                                        width: 40,
-                                                                                                                        height: 40,
-                                                                                                                        borderRadius: '50%',
-                                                                                                                        background: '#ccc',
-                                                                                                                        textAlign: 'center',
-                                                                                                                        lineHeight: '40px',
-                                                                                                                        fontWeight: 'bold',
-                                                                                                                        color: '#fff',
-                                                                                                                        fontSize: 20
-                                                                                                                }}
-                                                                                                        >
-                                                                                                                {profileInitial}
+                                                                {isSignedIn ? (
+                                                                        <NavDropdown
+                                                                                title={
+                                                                                        <div className="d-flex align-items-center">
+                                                                                                <span
+                                                                                                        style={{
+                                                                                                                display: 'inline-block',
+                                                                                                                width: 40,
+                                                                                                                height: 40,
+                                                                                                                borderRadius: '50%',
+                                                                                                                background: '#ccc',
+                                                                                                                textAlign: 'center',
+                                                                                                                lineHeight: '40px',
+                                                                                                                fontWeight: 'bold',
+                                                                                                                color: '#fff',
+                                                                                                                fontSize: 20
+                                                                                                        }}
+                                                                                                >
+                                                                                                        {profileInitial}
+                                                                                                </span>
+                                                                                                {username && (
+                                                                                                        <span className="ms-2 fw-semibold text-dark">
+                                                                                                                {username}
                                                                                                         </span>
-                                                                                                        {username && (
-                                                                                                                <span className="ms-2 fw-semibold text-dark">
-                                                                                                                        {username}
-                                                                                                                </span>
-                                                                                                        )}
-                                                                                                </div>
-                                                                                        }
-                                                                                        id="profile-dropdown"
-                                                                                        align="end"
-                                                                                >
+                                                                                                )}
+                                                                                        </div>
+                                                                                }
+                                                                                id="profile-dropdown"
+                                                                                align="end"
+                                                                        >
                                                                                 <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
                                                                                 <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
                                                                                 <NavDropdown.Divider />
-                                                                                        <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                                                                                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                                                                         </NavDropdown>
                                                                 ) : (
                                                                         <div className="d-flex align-items-center gap-2">
