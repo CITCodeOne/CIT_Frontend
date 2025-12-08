@@ -21,7 +21,7 @@ export default function UserRatingsPage() {
   // returns a list of all the user's ratings
   return (
     <main className="container py-4">
-      <h2 className="h4 mb-3">All ratings for user: {username}</h2>
+      <h2 className="h4 mb-3">All ratings by user: {username}</h2>
 
       <MakeList
         itemArray={ratedTitles}
