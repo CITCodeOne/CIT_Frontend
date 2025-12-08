@@ -1,33 +1,29 @@
-import MainDisplay from '../components/MainDisplay';
 import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 
 export default function User() {
   const { userId } = useParams();
   const fileInputRef = useRef(null);
 
-  // Dummy user data from "database"
+  // Dummy user data
   const apiUser = {
-    id: userId,
-    username: "PixelPirat_47",
+    uconst: userId,
+    user_name: "PixelPirat_47",
     email: "pixelpirat47@moonmail.net",
-    createdAt: "2023-01-10T12:00:00Z",
+    createdAt: "2023-01-10T12:00:00Z", //'time' as it comes from backend
     ratingsCount: 42,
     bookmarksCount: 12,
     role: "Admin",
-    avatarUrl: null,
+    profile_image: null,
   };
 
-  const [avatarUrl, setAvatarUrl] = useState(
-    apiUser.avatarUrl || defaultAvatar
-  );
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [profile_image, setProfileImage] = useState(apiUser.profile_image);
+  const [isEditMode, setIsEditMode] = useState(false); 
 
   // Authentication dummy data
-  const loggedInUserId = "123"; // dummy
-  const isLoggedIn = true;      // dummy
+  const loggedInUserId = "123";
+  const isLoggedIn = true;
   const isOwnProfile = isLoggedIn && loggedInUserId === userId;
 
   const handleToggleEditMode = () => {
@@ -58,28 +54,27 @@ export default function User() {
     const file = event.target.files?.[0];
     if (!file) return;
     const newUrl = URL.createObjectURL(file);
-    setAvatarUrl(newUrl);
+    setProfileImage(newUrl);
     // BACKEND: Upload new profile picture to user in backend
-
   };
 
   return (
-    <main style={{ padding: "2rem 5%" }}>
+    <main className="container py-4">
       <input
         type="file"
         accept="image/*"
         ref={fileInputRef}
-        style={{ display: "none" }}
+        className="d-none"
         onChange={handleAvatarFileChange}
       />
 
       <UserBanner
-        username={apiUser.username}
+        user_name={apiUser.user_name}
         email={apiUser.email}
         createdAt={apiUser.createdAt}
         ratingsCount={apiUser.ratingsCount}
         bookmarksCount={apiUser.bookmarksCount}
-        avatarUrl={avatarUrl}
+        profile_image={profile_image}
         role={apiUser.role}
         isOwnProfile={isOwnProfile}
         isEditMode={isEditMode}
