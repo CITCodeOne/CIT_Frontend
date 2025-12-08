@@ -4,6 +4,7 @@ import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
 import CustomCarousel from '../pages/CustomCarousel';
 import ListComp from '../pages/ListComp';
+import CustomCarouselFilterTest from "../pages/CustomCarouselFilterTest";
 import Figlet from '../pages/Figlet';
 import Navbar from '../components/Navbar';
 import Signin from '../pages/Signin';
@@ -62,11 +63,14 @@ function AppRoutes() {
         <Route path="/list" element={<ListComp />} />
       </Route>
 
+
       //pages without navbar goes here
       <Route path="/signin" element={<Signin />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/compandprops" element={<CompAndProps />} />
       <Route path="/customcarousel" element={<CustomCarousel />} />
+    <Route
+      path="/customcarouselfiltertest" element={<CustomCarouselFilterTest />} />
       <Route path="/figlet/:text" element={<Figlet />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

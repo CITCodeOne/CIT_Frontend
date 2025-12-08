@@ -2,11 +2,11 @@ import { encodeImageToBase64 } from "./EncodeImageBase64";
 
 const API_BASE_URL = "https://localhost:5001";
 
-const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => {
-    const sanitized = (rawValue || "").trim().replace(/^"|"$/g, "");
-    if (!sanitized) return null;
-    if (sanitized.startsWith("data:image")) return sanitized;
-    return `data:${mimeType};base64,${sanitized}`;
+export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => { // Default to JPEG
+    const sanitized = (rawValue || "").trim().replace(/^"|"$/g, ""); // Remove surrounding quotes
+    if (!sanitized) return null; // Empty payload
+    if (sanitized.startsWith("data:image")) return sanitized; // Already a data URL
+    return `data:${mimeType};base64,${sanitized}`; // Construct data URL
 };
 
 /**
@@ -17,9 +17,9 @@ const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => {
  * @returns {{src: string, mimeType: string}} Data URL representation.
  */
 export const getProfilePicture = ({ base64, mimeType = "image/jpeg" } = {}) => {
-    const dataUrl = normalizeDataUrl(base64, mimeType);
-    if (!dataUrl) throw new Error("Profile image payload is empty");
-    return { src: dataUrl, mimeType };
+    const dataUrl = normalizeDataUrl(base64, mimeType); //creates data url from base64 string
+    if (!dataUrl) throw new Error("Profile image payload is empty"); // Handle empty payload
+    return { src: dataUrl, mimeType }; // Return data URL and mime type
 };
 
 const buildEndpoint = (baseUrl, userId) => {
