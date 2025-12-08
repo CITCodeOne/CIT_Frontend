@@ -8,17 +8,17 @@ export function decodeBase64Image(base64, fileName = "image.png") {
 	if (!base64) {
 		throw new Error("No Base64 string provided");
 	}
-
+	// Extract MIME type and data portion from data URL if present
 	const [, mimeType = "application/octet-stream", data = base64] =
 		base64.match(/^data:(.+);base64,(.*)$/) || [];
 
-	const byteString = window.atob(data);
-	const len = byteString.length;
-	const bytes = new Uint8Array(len);
+	const byteString = window.atob(data); // decode Base64 to binary string
+	const len = byteString.length; // get length of binary string
+	const bytes = new Uint8Array(len); // create byte array
 
-	for (let i = 0; i < len; i += 1) {
-		bytes[i] = byteString.charCodeAt(i);
+	for (let i = 0; i < len; i += 1) { // populate byte array
+		bytes[i] = byteString.charCodeAt(i); // get byte value at each position
 	}
 
-	return new File([bytes], fileName, { type: mimeType });
+	return new File([bytes], fileName, { type: mimeType }); // create and return File object
 }
