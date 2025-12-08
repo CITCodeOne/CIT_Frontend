@@ -15,6 +15,11 @@ import Page from '../pages/Page';
 import Title from '../pages/Title';
 import Individual from '../pages/Individual';
 import Search from '../pages/Search';
+import TestMainDisplay from '../Tests/TestMainDisplay';
+import TestRating from '../Tests/TestRating';
+import UserBanner from '../components/UserBanner';
+import TestBookmark from '../Tests/TestBookmark';
+import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 
 function AppRoutes() {
   return (
@@ -39,8 +44,16 @@ function AppRoutes() {
         <Route path="/search" element={<Search />} />
         <Route path="/search/:query" element={<Search />} />
 
+        //Userbanner for testing
+        <Route path="/userbanner" element={<UserBanner />} />
+        <Route path="/userbanner/:userId" element={<User />} />
+
         // Other minor pages
         <Route path="/about" element={<About />} />
+        <Route path="/test" element={<TestMainDisplay />} />
+        <Route path="/test-rating" element={<TestRating />} />
+        <Route path="/test-bookmark" element={<TestBookmark />} />
+        <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
 
         // List comp page
         <Route path="/list" element={<ListComp />} />

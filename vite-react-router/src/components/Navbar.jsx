@@ -9,10 +9,11 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import SignInOffcanvas from './SignInOffcanvas';
+import useAuthStatus from '../hooks/useAuthStatus';
 
 export default function NavbarLayout() {
         const [showSignIn, setShowSignIn] = useState(false);
-        const [isSignedIn, setIsSignedIn] = useState(false);
+        const { isSignedIn, username, profileInitial, syncAuthState, handleLogout } = useAuthStatus();
         return (
                 <div className="min-vh-100 d-flex flex-column">
                         <Navbar expand="lg" className="bg-body-tertiary">
@@ -38,33 +39,40 @@ export default function NavbarLayout() {
                                                         </Form>
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
-                                                                {isSignedIn ? (
-                                                                        <NavDropdown
-                                                                                title={
-                                                                                        <span
-                                                                                                style={{
-                                                                                                        display: 'inline-block',
-                                                                                                        width: 40,
-                                                                                                        height: 40,
-                                                                                                        borderRadius: '50%',
-                                                                                                        background: '#ccc',
-                                                                                                        textAlign: 'center',
-                                                                                                        lineHeight: '40px',
-                                                                                                        fontWeight: 'bold',
-                                                                                                        color: '#fff',
-                                                                                                        fontSize: 20
-                                                                                                }}
-                                                                                        >
-                                                                                                P
-                                                                                        </span>
-                                                                                }
-                                                                                id="profile-dropdown"
-                                                                                align="end"
-                                                                        >
+                                                                        {isSignedIn ? (
+                                                                                <NavDropdown
+                                                                                        title={
+                                                                                                <div className="d-flex align-items-center">
+                                                                                                        <span
+                                                                                                                style={{
+                                                                                                                        display: 'inline-block',
+                                                                                                                        width: 40,
+                                                                                                                        height: 40,
+                                                                                                                        borderRadius: '50%',
+                                                                                                                        background: '#ccc',
+                                                                                                                        textAlign: 'center',
+                                                                                                                        lineHeight: '40px',
+                                                                                                                        fontWeight: 'bold',
+                                                                                                                        color: '#fff',
+                                                                                                                        fontSize: 20
+                                                                                                                }}
+                                                                                                        >
+                                                                                                                {profileInitial}
+                                                                                                        </span>
+                                                                                                        {username && (
+                                                                                                                <span className="ms-2 fw-semibold text-dark">
+                                                                                                                        {username}
+                                                                                                                </span>
+                                                                                                        )}
+                                                                                                </div>
+                                                                                        }
+                                                                                        id="profile-dropdown"
+                                                                                        align="end"
+                                                                                >
                                                                                 <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
                                                                                 <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
                                                                                 <NavDropdown.Divider />
-                                                                                <NavDropdown.Item onClick={() => setIsSignedIn(false)}>Logout</NavDropdown.Item>
+                                                                                        <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                                                                         </NavDropdown>
                                                                 ) : (
                                                                         <div className="d-flex align-items-center gap-2">
@@ -82,8 +90,8 @@ export default function NavbarLayout() {
                                 show={showSignIn}
                                 onClose={() => setShowSignIn(false)}
                                 onSignIn={() => {
-                                        setIsSignedIn(true);
                                         setShowSignIn(false);
+                                        syncAuthState();
                                 }}
                         />
                         <Container
