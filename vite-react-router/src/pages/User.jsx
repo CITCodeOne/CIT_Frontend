@@ -9,10 +9,10 @@ export default function User() {
 
   // Dummy user data
   const apiUser = {
-    id: userId,
-    username: "PixelPirat_47",
+    uconst: userId,
+    user_name: "PixelPirat_47",
     email: "pixelpirat47@moonmail.net",
-    createdAt: "2023-01-10T12:00:00Z",
+    createdAt: "2023-01-10T12:00:00Z", //time as it comes from backend
     ratingsCount: 42,
     bookmarksCount: 12,
     role: "Admin",
@@ -72,7 +72,7 @@ export default function User() {
       />
 
       <UserBanner
-        username={apiUser.username}
+        user_name={apiUser.user_name}
         email={apiUser.email}
         createdAt={apiUser.createdAt}
         ratingsCount={apiUser.ratingsCount}
