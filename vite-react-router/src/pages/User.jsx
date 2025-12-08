@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 
 export default function User() {
   const { userId } = useParams();
@@ -19,10 +18,8 @@ export default function User() {
     profile_image: null,
   };
 
-  const [profile_image, setProfileImage] = useState(
-    apiUser.profile_image || defaultAvatar
-  );
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [profile_image, setProfileImage] = useState(apiUser.profile_image);
+  const [isEditMode, setIsEditMode] = useState(false); 
 
   // Authentication dummy data
   const loggedInUserId = "123";
