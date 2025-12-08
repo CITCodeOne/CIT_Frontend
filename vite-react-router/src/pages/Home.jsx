@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import lionImage from '../pics/lion.jpg';
+import lionImage from '../pics/bowling.gif';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 //Test
 function Home() {
