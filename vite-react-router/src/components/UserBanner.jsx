@@ -17,35 +17,32 @@ export default function UserBanner({
 }) {
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString()
-    : "";
+    : ""; // Prettify the join date.
 
-  const canClickAvatar = isOwnProfile && isEditMode;
-
-  // fallback to default profile picture if none provided
-  const imgSrc = profile_image || defaultAvatar;
+  const canClickAvatar = isOwnProfile && isEditMode; // Owner can click avatar when editing.
+  const imgSrc = profile_image || defaultAvatar; // Fallback to default avatar image.
 
   return (
     <section className="container my-4">
       <div className="card shadow-sm">
         <div className="card-body">
           <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
-            {/* Profile picture + role badge */}
             <div className="d-flex flex-column align-items-center me-md-3">
               <div
                 className={canClickAvatar ? "position-relative" : ""}
-                style={{ cursor: canClickAvatar ? "pointer" : "default" }}
+                style={{ cursor: canClickAvatar ? "pointer" : "default" }} // Only hint clickable when editing.
                 onClick={canClickAvatar ? onAvatarClick : undefined}
               >
                 <img
                   src={imgSrc}
                   alt={`${user_name}'s avatar`}
                   className="rounded-circle border"
-                  style={{ width: "96px", height: "96px", objectFit: "cover" }}
+                  style={{ width: "96px", height: "96px", objectFit: "cover" }} // Keep avatar square.
                 />
                 {canClickAvatar && (
                   <span
                     className="position-absolute top-50 start-50 translate-middle badge bg-dark bg-opacity-75"
-                    style={{ fontSize: "0.7rem" }}
+                    style={{ fontSize: "0.7rem" }} // Overlay prompt when avatar is editable.
                   >
                     Upload image
                   </span>
@@ -59,13 +56,10 @@ export default function UserBanner({
               )}
             </div>
 
-            {/* Main info */}
             <div className="flex-grow-1">
               <div className="d-flex flex-column flex-md-row align-items-md-baseline gap-2">
                 <h2 className="h4 mb-0">{user_name}</h2>
-                {email && (
-                  <span className="text-muted small">{email}</span>
-                )}
+                {email && <span className="text-muted small">{email}</span>}
               </div>
 
               <div className="mt-2 text-muted small">
@@ -78,7 +72,6 @@ export default function UserBanner({
               </div>
             </div>
 
-            {/* Share profile & edit */}
             <div className="d-flex flex-column align-items-stretch gap-2 mt-3 mt-md-0">
               {isOwnProfile && (
                 <button
