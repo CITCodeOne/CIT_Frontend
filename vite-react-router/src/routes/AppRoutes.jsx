@@ -20,6 +20,7 @@ import TestRating from '../Tests/TestRating';
 import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
+import ProfileImageBase64 from '../pages/ProfileImageBase64';
 
 function AppRoutes() {
   return (
@@ -54,6 +55,8 @@ function AppRoutes() {
         <Route path="/test-rating" element={<TestRating />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
+        <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
+        
 
         // List comp page
         <Route path="/list" element={<ListComp />} />
