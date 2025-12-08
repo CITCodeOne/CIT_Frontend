@@ -3,6 +3,7 @@ import Home from '../pages/Home';
 import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
 import CustomCarousel from '../pages/CustomCarousel';
+import ListComp from '../pages/ListComp';
 import Figlet from '../pages/Figlet';
 import Navbar from '../components/Navbar';
 import Signin from '../pages/Signin';
@@ -40,6 +41,9 @@ function AppRoutes() {
 
         // Other minor pages
         <Route path="/about" element={<About />} />
+
+        // List comp page
+        <Route path="/list" element={<ListComp />} />
       </Route>
 
       //pages without navbar goes here
