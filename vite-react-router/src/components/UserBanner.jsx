@@ -1,4 +1,5 @@
 import React from "react";
+import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 
 export default function UserBanner({
   user_name,
@@ -20,12 +21,15 @@ export default function UserBanner({
 
   const canClickAvatar = isOwnProfile && isEditMode;
 
+  // fallback to default profile picture if none provided
+  const imgSrc = profile_image || defaultAvatar;
+
   return (
     <section className="container my-4">
       <div className="card shadow-sm">
         <div className="card-body">
           <div className="d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3">
-            {/* Avatar + role badge */}
+            {/* Profile picture + role badge */}
             <div className="d-flex flex-column align-items-center me-md-3">
               <div
                 className={canClickAvatar ? "position-relative" : ""}
@@ -33,7 +37,7 @@ export default function UserBanner({
                 onClick={canClickAvatar ? onAvatarClick : undefined}
               >
                 <img
-                  src={profile_image}
+                  src={imgSrc}
                   alt={`${user_name}'s avatar`}
                   className="rounded-circle border"
                   style={{ width: "96px", height: "96px", objectFit: "cover" }}

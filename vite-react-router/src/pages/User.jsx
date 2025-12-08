@@ -12,7 +12,7 @@ export default function User() {
     uconst: userId,
     user_name: "PixelPirat_47",
     email: "pixelpirat47@moonmail.net",
-    createdAt: "2023-01-10T12:00:00Z", //time as it comes from backend
+    createdAt: "2023-01-10T12:00:00Z", //'time' as it comes from backend
     ratingsCount: 42,
     bookmarksCount: 12,
     role: "Admin",
