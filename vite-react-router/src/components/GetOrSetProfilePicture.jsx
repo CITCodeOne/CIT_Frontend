@@ -1,6 +1,5 @@
+import fetchSimplified from "../business-logic-layer/helper-function/fecthSimplyfied";
 import { encodeImageToBase64 } from "./EncodeImageBase64";
-
-const API_BASE_URL = "https://localhost:5001";
 
 export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => { // Default to JPEG
     const sanitized = (rawValue || "").trim().replace(/^"|"$/g, ""); // Remove surrounding quotes
@@ -22,14 +21,7 @@ export const getProfilePicture = ({ base64, mimeType = "image/jpeg" } = {}) => {
     return { src: dataUrl, mimeType }; // Return data URL and mime type
 };
 
-const buildEndpoint = (baseUrl, userId) => {
-    const trimmedBase = baseUrl?.replace(/\/$/, "") || API_BASE_URL;
-    return `${trimmedBase}/api/v2/users/${userId}/profile-image`;
-};
-
-const buildAuthHeaders = (token) => (token ? { Authorization: `Bearer ${token}` } : {});
-
-export const setProfilePicture = async ({ userId, token, file, imageBase64, baseUrl = API_BASE_URL, signal } = {}) => {
+export const setProfilePicture = async ({ userId, token, file, imageBase64, secure = true, signal } = {}) => {
     if (!userId) throw new Error("User id is required");
     if (!token) throw new Error("JWT token is required");
 
@@ -40,20 +32,21 @@ export const setProfilePicture = async ({ userId, token, file, imageBase64, base
 
     if (!payload) throw new Error("Image data is required");
 
-    const endpoint = buildEndpoint(baseUrl, userId);
-    const response = await fetch(endpoint, {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            ...buildAuthHeaders(token),
-        },
-        body: JSON.stringify({ imageBase64: payload }),
-        signal,
-    });
-
-    if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody.message || "Upload failed");
+    try {
+        await fetchSimplified({
+            version: "v2",
+            endpoint: `users/${userId}/profile-image`,
+            authToken: token,
+            body: { imageBase64: payload },
+            method: "PUT",
+            secure,
+            signal,
+        });
+    } catch (error) {
+        const message = error?.payload?.message || error?.message || "Upload failed";
+        const uploadError = new Error(message);
+        uploadError.cause = error;
+        throw uploadError;
     }
 
     return { ok: true };
