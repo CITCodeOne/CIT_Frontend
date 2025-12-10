@@ -20,26 +20,37 @@ export default function UserBookmarksList() {
             title: "Zootopia 2",
             poster: girl,
             time: "2025-12-05T12:26:13.960Z",
+            plotPre: "In a city of anthropomorph",
         },
         {
             pageId: 5,
             title: "Surf's Up",
             poster: lion,
             time: "2025-12-05T12:28:32.770Z",
+            plotPre: "A documentary-style look ",
         },
         {
             pageId: 1,
             title: "Breaking Bad",
             poster: mike,
             time: "2025-12-05T13:07:52.623Z",
+            plotPre: "A high school chemistry t",
         },
         {
             pageId: 3,
             title: "My Little Pony: The Movie",
             poster: girl,
             time: "2025-12-06T09:15:00.000Z",
+            plotPre: "When a dark force threate",
         },
     ]);
+
+    // helper to format plot preview strings with "..."
+    const formatPlotPre = (s) => {
+        if (!s) return "";
+        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
+        return s.trim() + "...";
+    };
 
     // local bookmark deletion handler
     const [message, setMessage] = useState("");
@@ -75,12 +86,15 @@ export default function UserBookmarksList() {
                                 style={{ width: "80px", height: "120px", objectFit: "cover" }}
                             />
 
-                            {/* Title and added on {date} */}
+                            {/* Title, added on {date} & plot preview */}
                             <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
                                 <h3 className="h5 mb-1">{item.title}</h3>
                                 <p className="text-muted small mb-0">
-                                    Added on: {new Date(item.time).toLocaleDateString()}
+                                    {formatPlotPre(item.plotPre)}
                                 </p>
+                                <div className="text-muted small mt-2">
+                                    Added on: {new Date(item.time).toLocaleDateString()}
+                                </div>
                             </div>
 
                             {/* Delete button */}

@@ -19,7 +19,7 @@ export default function UserRatingsList() {
         {
             titleId: "tt10052520",
             title: "Zootopia 2",
-            rating: 9,
+            rating: 5,
             startYear: 2025,
             mediaType: "movie",
             poster: girl
@@ -27,8 +27,8 @@ export default function UserRatingsList() {
         {
             titleId: "tt7366338",
             title: "Surf's Up",
-            rating: 1, startYear: 2019,
-            mediaType: "tvSeries",
+            rating: 10, startYear: 2019,
+            mediaType: "movie",
             poster: lion
         },
         {
@@ -42,10 +42,18 @@ export default function UserRatingsList() {
         {
             titleId: "tt1234567",
             title: "My Little Pony: The Movie",
-            rating: 7,
+            rating: 1,
             startYear: 2020,
             mediaType: "movie",
             poster: girl
+        },
+                {
+            titleId: "tt1233567",
+            title: "Shawshank Redemption",
+            rating: 3,
+            startYear: 1994,
+            mediaType: "movie",
+            poster: lion
         },
     ]);
 

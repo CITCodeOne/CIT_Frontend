@@ -28,7 +28,7 @@ export default function UserPage() {
         {
             titleId: "tt10052520",
             title: "Zootopia 2",
-            rating: 9,
+            rating: 5,
             startYear: 2025,
             mediaType: "movie",
             poster: girl,
@@ -36,9 +36,9 @@ export default function UserPage() {
         {
             titleId: "tt7366338",
             title: "Surf's Up",
-            rating: 1,
+            rating: 10,
             startYear: 2007,
-            mediaType: "tvSeries",
+            mediaType: "movie",
             poster: lion,
         },
         {
@@ -52,7 +52,7 @@ export default function UserPage() {
         {
             titleId: "tt1234567",
             title: "My Little Pony: The Movie",
-            rating: 7,
+            rating: 1,
             startYear: 2020,
             mediaType: "movie",
             poster: girl,
@@ -69,26 +69,38 @@ export default function UserPage() {
             title: "Zootopia 2",
             poster: girl,
             time: "2025-12-05T12:26:13.960Z",
+            plotPre: "In a city of anthropomorp",
         },
         {
             pageId: 5,
-            title: "Chernobyl",
+            title: "Surf's Up",
             poster: lion,
             time: "2025-12-05T12:28:32.770Z",
+            plotPre: "A documentary-style look ",
         },
         {
             pageId: 1,
             title: "Breaking Bad",
             poster: mike,
             time: "2025-12-05T13:07:52.623Z",
+            plotPre: "A high school chemistry t",
         },
         {
             pageId: 3,
             title: "My Little Pony: The Movie",
             poster: girl,
             time: "2025-12-06T09:15:00.000Z",
+            plotPre: "When a dark force threate",
+            
         },
     ]);
+
+    // helper to format plot preview strings with "..."
+    const formatPlotPre = (s) => {
+        if (!s) return "";
+        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
+        return s.trim() + "...";
+    };
 
     // get latest 3 bookmarks
     const latestBookmarks = bookmarkedPages.slice(0, 3);
@@ -243,14 +255,14 @@ export default function UserPage() {
                                         src={item.poster}
                                         alt={item.title}
                                         style={{
-                                            width: "50px",
-                                            height: "75px",
+                                            width: "100px",
+                                            height: "140px",
                                             objectFit: "cover",
                                             borderRadius: "4px",
                                         }}
                                     />
                                     <div>
-                                        <div className="fw-semibold">
+                                        <div className="fs-5 fw-semibold">
                                             {item.title}{" "}
                                             {item.startYear && (
                                                 <span className="text-muted">({item.startYear})</span>
@@ -311,13 +323,20 @@ export default function UserPage() {
                                     src={item.poster}
                                     alt={item.title}
                                     style={{
-                                        width: "50px",
-                                        height: "75px",
+                                        width: "100px",
+                                        height: "140px",
                                         objectFit: "cover",
                                         borderRadius: "4px",
                                     }}
                                 />
-                                <div className="fw-semibold">{item.title}</div>
+
+                                {/* Title & plot preview*/}
+                                <div className="flex-grow-1">
+                                    <div className="fs-5 fw-semibold">
+                                        {item.title}</div>
+                                    <div className="text-muted small">
+                                        {formatPlotPre(item.plotPre)}</div>
+                                </div>
 
                                 {/* Delete bookmark button */}
                                 {isOwnProfile && (
