@@ -3,7 +3,7 @@ import Home from '../pages/Home';
 import About from '../pages/About';
 import CompAndProps from '../pages/CompAndProps';
 import CustomCarousel from '../pages/CustomCarousel';
-import ListComp from '../pages/ListComp';
+import ItemList from '../components/ListComp';
 import CustomCarouselFilterTest from "../pages/CustomCarouselFilterTest";
 import Figlet from '../pages/Figlet';
 import Navbar from '../components/Navbar';
@@ -22,6 +22,21 @@ import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
+
+import Movie from "../business-logic-layer/data-models/Movie"
+
+//dummy data
+const sizeTest = 10;
+const testItems = [];
+  for (let i = 0; i < sizeTest; i++) {
+    testItems.push(
+      new Movie({
+      name: "ep"+i,
+      releaseYear: 1998,
+      directors: ["Mike Hunt", "Hunter Mike"]
+    })
+    )
+  }
 
 function AppRoutes() {
   return (
@@ -57,10 +72,12 @@ function AppRoutes() {
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
         <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
-        
+
 
         // List comp page
-        <Route path="/list" element={<ListComp />} />
+        <Route path="/list" element={<ItemList
+          itemsRecieved={testItems}
+        />} />
       </Route>
 
 
@@ -69,8 +86,8 @@ function AppRoutes() {
       <Route path="/signup" element={<Signup />} />
       <Route path="/compandprops" element={<CompAndProps />} />
       <Route path="/customcarousel" element={<CustomCarousel />} />
-    <Route
-      path="/customcarouselfiltertest" element={<CustomCarouselFilterTest />} />
+      <Route
+        path="/customcarouselfiltertest" element={<CustomCarouselFilterTest />} />
       <Route path="/figlet/:text" element={<Figlet />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
