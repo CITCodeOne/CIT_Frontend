@@ -8,6 +8,7 @@
 .ContainerCstyle {
     padding-left: 15%;
     padding-right: 15%;
+    overflow: auto;
 }
 
 /*custom styling for logo */
