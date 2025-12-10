@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MakeList from "../components/MakeList";
 import Rating from "../components/Rating";
@@ -6,17 +6,36 @@ import girl from "../pics/girl.jpg";
 import lion from "../pics/lion.jpg";
 import mike from "../pics/mike.jpg";
 
-export default function UserRatingsPage() {
+export default function UserRatingsList() {
+    const { userId } = useParams();
     // dummy username
     const username = "PixelPirat_47";
 
+    // dummy auth
+    const loggedInUserId = "55";
+    const isOwnProfile = userId === loggedInUserId;
+    const isLoggedIn = isOwnProfile;
+
     // dummy ratings list
-    const ratedTitles = [
+    const [ratedTitles, setRatedTitles] = useState([
         { titleId: "tt10052520", title: "Zootopia 2", rating: 9, startYear: 2025, mediaType: "movie", poster: girl },
         { titleId: "tt7366338", title: "Chernobyl", rating: 1, startYear: 2019, mediaType: "tvSeries", poster: lion },
         { titleId: "tt0903747", title: "Breaking Bad", rating: 10, startYear: 2008, mediaType: "tvSeries", poster: mike },
         { titleId: "tt1234567", title: "My Little Pony: The Movie", rating: 7, startYear: 2020, mediaType: "movie", poster: girl },
-    ];
+    ]);
+
+    // local rating handler
+    const [message, setMessage] = useState("");
+    const handleRemoveRating = (titleId) => {
+        if (!isLoggedIn || !isOwnProfile) {
+            setMessage("You must be the profile owner to remove ratings.");
+            setTimeout(() => setMessage(""), 2000);
+            return;
+        }
+        setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
+        setMessage("Rating removed.");
+        setTimeout(() => setMessage(""), 1500);
+    };
 
     // returns a list of all the user's ratings
     return (
@@ -56,10 +75,27 @@ export default function UserRatingsPage() {
                                 editable={false}
                                 showNumber={true}
                             />
+                            {isOwnProfile && (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-danger ms-2"
+                                    onClick={() => handleRemoveRating(item.titleId)}
+                                >
+                                    Remove
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
             />
+            {message && (
+                <div
+                    className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-2 rounded-3 shadow"
+                    style={{ zIndex: 1080, marginBottom: "1.5rem" }}
+                >
+                    {message}
+                </div>
+            )}
         </main>
     );
 }   
