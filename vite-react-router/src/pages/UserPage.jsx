@@ -23,8 +23,8 @@ export default function UserPage() {
         avatarUrl: null,
     };
 
-    // dummy ratings list
-    const ratedTitles = [
+    // dummy ratings list as state
+    const [ratedTitles, setRatedTitles] = useState([
         {
             titleId: "tt10052520",
             title: "Zootopia 2",
@@ -57,12 +57,12 @@ export default function UserPage() {
             mediaType: "movie",
             poster: girl,
         },
-    ];
+    ]);
 
     // get latest 3 ratings
     const latestRatedTitles = ratedTitles.slice(0, 3);
 
-    // bookmarks as state so we can delete them
+    // dummy bookmarks as state
     const [bookmarkedPages, setBookmarkedPages] = useState([
         {
             pageId: 2,
@@ -90,6 +90,7 @@ export default function UserPage() {
         },
     ]);
 
+    // get latest 3 bookmarks
     const latestBookmarks = bookmarkedPages.slice(0, 3);
 
     const [avatarUrl, setAvatarUrl] = useState(apiUser.avatarUrl);
@@ -168,6 +169,25 @@ export default function UserPage() {
         setTimeout(() => setShareMessage(""), 2000);
     };
 
+    // delete rating handler (using dummy auth)
+    const handleDeleteRating = (titleId) => {
+        if (!isLoggedIn) {
+            setShareMessage("You must be logged in to remove ratings.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
+
+        if (!isOwnProfile) {
+            setShareMessage("You can only remove ratings from your own profile.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
+
+        setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
+        setShareMessage("Rating removed.");
+        setTimeout(() => setShareMessage(""), 2000);
+    };
+
     return (
         <main className="container py-4">
             {/* avatar change */}
@@ -240,11 +260,23 @@ export default function UserPage() {
                                     </div>
                                 </div>
 
-                                <Rating
-                                    initialRating={item.rating}
-                                    editable={false}
-                                    showNumber={true}
-                                />
+                                {/* Rating and Remove button grouped together on the right */}
+                                <div className="d-flex align-items-center gap-2 ms-md-auto">
+                                    <Rating
+                                        initialRating={item.rating}
+                                        editable={false}
+                                        showNumber={true}
+                                    />
+                                    {isOwnProfile && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => handleDeleteRating(item.titleId)}
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -287,7 +319,7 @@ export default function UserPage() {
                                 />
                                 <div className="fw-semibold">{item.title}</div>
 
-                                {/* delete button shown only to profile owner */}
+                                {/* delete bookmark button shown only to profile owner */}
                                 {isOwnProfile && (
                                     <button
                                         type="button"
