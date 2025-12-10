@@ -12,6 +12,7 @@ import NotFound from '../pages/NotFound';
 import User from '../pages/User';
 import UserPage from '../pages/UserPage';
 import UserRatingsList from '../pages/UserRatingsList';
+import UserBookmarksList from '../pages/UserBookmarksList';
 import Bookmarks from '../pages/Bookmarks';
 import Page from '../pages/Page';
 import Title from '../pages/Title';
@@ -40,6 +41,8 @@ function AppRoutes() {
         <Route path="/userpage/:userId" element={<UserPage />} />
         // User ratings list page
         <Route path="/userpage/:userId/ratings" element={<UserRatingsList />} />
+        // User bookmarks list page
+        <Route path="/userpage/:userId/bookmarks" element={<UserBookmarksList />} />
 
         // Titles and individual pages
         <Route path="/page/:pageId" element={<Page />} />

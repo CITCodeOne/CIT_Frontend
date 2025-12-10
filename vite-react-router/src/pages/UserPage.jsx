@@ -62,6 +62,38 @@ export default function UserPage() {
   // get latest 3 ratings
   const latestRatedTitles = ratedTitles.slice(0, 3);
 
+  // dummy bookmarks list
+  const bookmarkedPages = [
+    {
+      pageId: 2,
+      title: "Zootopia 2",
+      poster: girl,
+      time: "2025-12-05T12:26:13.960Z",
+    },
+    {
+      pageId: 5,
+      title: "Chernobyl",
+      poster: lion,
+      time: "2025-12-05T12:28:32.770Z",
+    },
+    {
+      pageId: 1,
+      title: "Breaking Bad",
+      poster: mike,
+      time: "2025-12-05T13:07:52.623Z",
+    },
+        {
+      titleId: "tt1234567",
+      title: "My Little Pony: The Movie",
+      rating: 7,
+      startYear: 2020,
+      mediaType: "movie",
+      poster: girl,
+    },
+  ];
+
+  const latestBookmarks = bookmarkedPages.slice(0, 3);
+
   const [avatarUrl, setAvatarUrl] = useState(apiUser.avatarUrl);
   const [isEditMode, setIsEditMode] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
@@ -75,7 +107,7 @@ export default function UserPage() {
     if (!isOwnProfile) return;
     setIsEditMode((prev) => !prev);
   };
-  
+
   // share profile handler - copies profile URL to clipboard or shows fallback message
   const handleShareClick = async () => {
     const profileUrl = window.location.href;
@@ -86,7 +118,6 @@ export default function UserPage() {
         setShareMessage("Profile link copied to clipboard!");
         setTimeout(() => setShareMessage(""), 2000);
       } else {
-        // fallback: show error message if clipboard API is not available
         setShareMessage("Could not copy profile link.");
         setTimeout(() => setShareMessage(""), 4000);
       }
@@ -115,6 +146,11 @@ export default function UserPage() {
     navigate(`/userpage/${userId}/ratings`);
   };
 
+  // navigate to user's full bookmarks list
+  const handleBrowseAllBookmarks = () => {
+    navigate(`/userpage/${userId}/bookmarks`);
+  };
+
   return (
     <main className="container py-4">
       {/* hidden file input for avatar-upload */}
@@ -141,6 +177,7 @@ export default function UserPage() {
         onShareClick={handleShareClick}
       />
 
+      {/* latest ratings */}
       <section className="mt-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h3 className="h5 mb-0">Latest ratings</h3>
@@ -197,12 +234,59 @@ export default function UserPage() {
         )}
       </section>
 
+      {/* latest bookmarks */}
+      <section className="mt-4">
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h3 className="h5 mb-0">Latest bookmarks</h3>
+          {bookmarkedPages.length > 3 && (
+            <button
+              type="button"
+              className="btn btn-link p-0"
+              onClick={handleBrowseAllBookmarks}
+            >
+              Browse all bookmarks
+            </button>
+          )}
+        </div>
+
+        {latestBookmarks.length === 0 ? (
+          <p className="text-muted">This user has not bookmarked any titles yet.</p>
+        ) : (
+          <div className="list-group">
+            {latestBookmarks.map((item) => (
+              <div
+                key={item.pageId}
+                className="list-group-item d-flex align-items-center gap-3"
+              >
+                <img
+                  src={item.poster}
+                  alt={item.title}
+                  style={{
+                    width: "50px",
+                    height: "75px",
+                    objectFit: "cover",
+                    borderRadius: "4px",
+                  }}
+                />
+                <div className="fw-semibold">{item.title}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* bottom-centered share message */}
       {shareMessage && (
         <div
-            className="position-fixed bottom-0 start-50 translate-middle bg-dark text-light px-4 py-3 rounded-3 shadow"
-            style={{ zIndex: 1080, fontSize: "1rem", textAlign: "center" }}
+          className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-3 rounded-3 shadow"
+          style={{
+            zIndex: 1080,
+            fontSize: "1rem",
+            textAlign: "center",
+            marginBottom: "2rem",
+          }}
         >
-            {shareMessage}
+          {shareMessage}
         </div>
       )}
     </main>

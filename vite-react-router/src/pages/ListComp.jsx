@@ -1,5 +1,5 @@
 import MakeList from "../components/MakeList";
-import Container from "react-bootstrap/container";
+//import Container from "react-bootstrap/container";
 import lion from "../pics/lion.jpg";
 import girl from "../pics/girl.jpg";
 import mike from "../pics/mike.jpg";
