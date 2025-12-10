@@ -8,8 +8,6 @@ import mike from "../pics/mike.jpg";
 
 export default function UserRatingsList() {
     const { userId } = useParams();
-    // dummy username
-    const username = "PixelPirat_47";
 
     // dummy auth
     const loggedInUserId = "55";
@@ -18,13 +16,40 @@ export default function UserRatingsList() {
 
     // dummy ratings list
     const [ratedTitles, setRatedTitles] = useState([
-        { titleId: "tt10052520", title: "Zootopia 2", rating: 9, startYear: 2025, mediaType: "movie", poster: girl },
-        { titleId: "tt7366338", title: "Chernobyl", rating: 1, startYear: 2019, mediaType: "tvSeries", poster: lion },
-        { titleId: "tt0903747", title: "Breaking Bad", rating: 10, startYear: 2008, mediaType: "tvSeries", poster: mike },
-        { titleId: "tt1234567", title: "My Little Pony: The Movie", rating: 7, startYear: 2020, mediaType: "movie", poster: girl },
+        {
+            titleId: "tt10052520",
+            title: "Zootopia 2",
+            rating: 9,
+            startYear: 2025,
+            mediaType: "movie",
+            poster: girl
+        },
+        {
+            titleId: "tt7366338",
+            title: "Surf's Up",
+            rating: 1, startYear: 2019,
+            mediaType: "tvSeries",
+            poster: lion
+        },
+        {
+            titleId: "tt0903747",
+            title: "Breaking Bad",
+            rating: 10,
+            startYear: 2008,
+            mediaType: "tvSeries",
+            poster: mike
+        },
+        {
+            titleId: "tt1234567",
+            title: "My Little Pony: The Movie",
+            rating: 7,
+            startYear: 2020,
+            mediaType: "movie",
+            poster: girl
+        },
     ]);
 
-    // local rating handler
+    // local rating deletion handler
     const [message, setMessage] = useState("");
     const handleRemoveRating = (titleId) => {
         if (!isLoggedIn || !isOwnProfile) {
@@ -40,23 +65,25 @@ export default function UserRatingsList() {
     // returns a list of all the user's ratings
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">All ratings by user: {username}</h2>
+            <h2 className="h4 mb-3">Ratings by user: {userId}</h2>
 
             <MakeList
                 itemArray={ratedTitles}
                 renderItem={(item) => (
                     <div
-                        className="d-flex w-100 h-100 rounded-4"
-                        style={{ backgroundColor: "#ffffff" }}
+                        className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center"
                     >
+
+                        {/* Poster image */}
                         <img
                             src={item.poster}
                             alt={item.title}
-                            className="img-fluid py-1 px-1 rounded-start-4"
+                            className="img-fluid object-fit-cover"
                             style={{ width: "80px", height: "120px", objectFit: "cover" }}
                         />
 
-                        <div className="flex-grow-1 overflow-hidden px-2 d-flex flex-column justify-content-center">
+                        {/* Title, year & media type */}
+                        <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
                             <h3 className="mb-1 fs-5">
                                 {item.title}{" "}
                                 {item.startYear && (
@@ -66,6 +93,7 @@ export default function UserRatingsList() {
                             <p className="mb-1 text-muted small">{item.mediaType}</p>
                         </div>
 
+                        {/* Rating and Remove button */}
                         <div
                             className="d-flex align-items-center justify-content-center px-3 rounded-end-4"
                             style={{ minWidth: "90px", backgroundColor: "#ffffff" }}
@@ -88,6 +116,8 @@ export default function UserRatingsList() {
                     </div>
                 )}
             />
+
+            {/* message popup*/}
             {message && (
                 <div
                     className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-2 rounded-3 shadow"

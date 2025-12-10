@@ -35,9 +35,9 @@ export default function UserPage() {
         },
         {
             titleId: "tt7366338",
-            title: "Chernobyl",
+            title: "Surf's Up",
             rating: 1,
-            startYear: 2019,
+            startYear: 2007,
             mediaType: "tvSeries",
             poster: lion,
         },
@@ -214,7 +214,7 @@ export default function UserPage() {
                 onShareClick={handleShareClick}
             />
 
-            {/* latest ratings */}
+            {/* latest 3 ratings */}
             <section className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h3 className="h5 mb-0">Latest ratings</h3>
@@ -260,7 +260,7 @@ export default function UserPage() {
                                     </div>
                                 </div>
 
-                                {/* Rating and Remove button grouped together on the right */}
+                                {/* Rating and Remove button */}
                                 <div className="d-flex align-items-center gap-2 ms-md-auto">
                                     <Rating
                                         initialRating={item.rating}
@@ -283,7 +283,7 @@ export default function UserPage() {
                 )}
             </section>
 
-            {/* latest bookmarks */}
+            {/* latest 3 bookmarks & 'browse all' button */}
             <section className="mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-3">
                     <h3 className="h5 mb-0">Latest bookmarks</h3>
@@ -319,7 +319,7 @@ export default function UserPage() {
                                 />
                                 <div className="fw-semibold">{item.title}</div>
 
-                                {/* delete bookmark button shown only to profile owner */}
+                                {/* Delete bookmark button */}
                                 {isOwnProfile && (
                                     <button
                                         type="button"
@@ -335,7 +335,7 @@ export default function UserPage() {
                 )}
             </section>
 
-            {/* bottom-centered share profile-message */}
+            {/* share profile-message popup */}
             {shareMessage && (
                 <div
                     className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-3 rounded-3 shadow"
