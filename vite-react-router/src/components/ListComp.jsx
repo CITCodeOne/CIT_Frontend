@@ -12,10 +12,22 @@ const chunkItems = (items, size) => {
     return chunks.length ? chunks : [[]];
 };
 
+/*Default size values*/
+    const aH = "88";
+    const aW = "100";
+    const aYP = "0";
+    const aXP = "0";
+    const iH = "120";
+/* ----------------- */
+
+
 function MakeList({
     itemArray = [],
-    areaWidth = "100",
-    areaHeight = "0",
+    areaHeight = aH,
+    areaWidth = aW,
+    areaYPos = aYP,
+    areaXPos = aXP,
+    itemHeight = iH,
     renderItem
 }) {
     const [itemsListed, setListedItems] = useState([]);
@@ -33,15 +45,15 @@ function MakeList({
         <>
             {items.map((listItems, listIndex) => (
                 <Container className="overflow-auto" style={{
-                                                        height: "30vh",
-                                                        width: areaWidth+"%",
-                                                        position: "relative",
-                                                        top: areaHeight+"%",
-                                                        left: "0%"
-                                                        }}
-                                                        key={`list-${listIndex}`}>
+                    height: areaHeight + "vh",
+                    width: areaWidth + "%",
+                    position: "relative",
+                    top: areaYPos + "%",
+                    left: areaXPos + "%"
+                }}
+                    key={`list-${listIndex}`}>
                     {listItems.map((item, itemIndex) => (
-                        <Container className="d-flex my-2 bg-success rounded-4 px-0" style={{ height: "100px" }} key={`item-${listIndex}-${itemIndex}`} >
+                        <Container className="d-flex my-2 bg-success rounded-4 px-0" style={{ height: itemHeight + "px" }} key={`item-${listIndex}-${itemIndex}`} >
                             {renderListItem(item, listIndex * listItems + itemIndex)}
                         </Container>
                     ))}
@@ -51,18 +63,22 @@ function MakeList({
     );
 }
 
-
-
-
-
 export default function ItemList({
-    itemsRecieved = []
+    itemsRecieved = [],
+    areaH = aH,
+    areaW = aW,
+    areaYP = aYP,
+    areaXP = aXP,
+    itemH = iH
 }) {
     return (
         <MakeList
             itemArray={itemsRecieved}
-            areaWidth= "100"
-            areaHeight= "60"
+            areaHeight={areaH}
+            areaWidth={areaW}
+            areaYPos={areaYP}
+            areaXPos={areaXP}
+            itemHeight={itemH}
             renderItem={(item) => (
                 <>
                     <img src={item.banner} alt={item.name} className="img-fluid py-1 px-1 rounded-4 w-25 object-fit-cover overflow-hidden" />
