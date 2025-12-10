@@ -31,7 +31,6 @@ const testItems = [];
   for (let i = 0; i < sizeTest; i++) {
     testItems.push(
       new Movie({
-      name: "ep"+i,
       releaseYear: 1998,
       directors: ["Mike Hunt", "Hunter Mike"]
     })
@@ -77,6 +76,10 @@ function AppRoutes() {
         // List comp page
         <Route path="/list" element={<ItemList
           itemsRecieved={testItems}
+          sizeSettings={{
+                          aH : 88,
+                          iH : 100
+                        }}
         />} />
       </Route>
 
