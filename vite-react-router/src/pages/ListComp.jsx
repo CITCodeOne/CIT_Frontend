@@ -4,9 +4,11 @@ import lion from "../pics/lion.jpg";
 import girl from "../pics/girl.jpg";
 import mike from "../pics/mike.jpg";
 import Movie from "../business-logic-layer/data-models/Movie"
+import FetchTest from "../data-access-layer/FetchTest";
 
 //dummy object array
-let size = 20;
+/*
+let size = 1;
 let demoItems = [];
 for(let i = 0; i < size; i++){
     demoItems.push(
@@ -17,8 +19,9 @@ for(let i = 0; i < size; i++){
         })
     )
 }
+    */
 
-
+const demoItems = FetchTest("tt0108549");
 
 
 export default function ListPage() {
