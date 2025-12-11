@@ -23,9 +23,12 @@ import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
 
-import Movie from "../business-logic-layer/data-models/Movie"
+import { MapToMovie } from '../business-logic-layer/ItemMapper';
+
+//import {Movie} from "../business-logic-layer/DataClasses";
 
 //dummy data
+/*
 const sizeTest = 10;
 const testItems = [];
   for (let i = 0; i < sizeTest; i++) {
@@ -36,6 +39,30 @@ const testItems = [];
     })
     )
   }
+    */
+
+  const testItems = [
+  {
+    id: "tt10377880",
+    name: "Episode #1.226",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate : "0001-01-01T00:00:00",
+    poster: "N/A",
+    genres: '["ass", "shit", "Richar Nixon"]'
+  },
+  {
+    id: "tt10377882",
+    name: "Episode #1.227",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate : "0001-01-01T00:00:00",
+    poster: "N/A",
+    genres: '["ass", "Richar Nixon"]'
+  }
+  ]
+
+const testMap = MapToMovie(JSON.stringify(testItems));
 
 function AppRoutes() {
   return (
@@ -75,7 +102,7 @@ function AppRoutes() {
 
         // List comp page
         <Route path="/list" element={<ItemList
-          itemsRecieved={testItems}
+          itemsRecieved={testMap}
           sizeSettings={{
                           aH : 88,
                           iH : 100

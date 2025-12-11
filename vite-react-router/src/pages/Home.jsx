@@ -8,6 +8,7 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
