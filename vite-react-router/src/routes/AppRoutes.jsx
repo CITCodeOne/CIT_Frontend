@@ -22,6 +22,7 @@ import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
+import TestHealth from '../Tests/TestHealth';
 
 import { MapToMovie } from '../business-logic-layer/ItemMapper';
 
@@ -97,6 +98,7 @@ function AppRoutes() {
         <Route path="/test-rating" element={<TestRating />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
+        <Route path="/test-health" element={<TestHealth />} />
         <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
 
 

@@ -77,6 +77,12 @@ async function safeParseJson(response) {
         return null;
     }
 
+    const contentType = response.headers.get('content-type') || '';
+
+    if (!contentType.toLowerCase().includes('application/json')) {
+        return text;
+    }
+
     try {
         return JSON.parse(text);
     } catch (error) {
