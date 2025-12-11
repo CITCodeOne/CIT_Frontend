@@ -14,7 +14,7 @@ function Home() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch('https://localhost:5001/api/titles?page=1&pageSize=20');
+        const res = await fetch('https://localhost:5001/api/titles?page=100&pageSize=20');
         if (!res.ok) {
           throw new Error(`Server responded ${res.status}`);
         }

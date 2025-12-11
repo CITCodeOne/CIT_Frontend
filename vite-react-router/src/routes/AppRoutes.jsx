@@ -42,28 +42,70 @@ const testItems = [];
   }
     */
 
-  const testItems = [
+const testItems = [
   {
-    id: "tt10377880",
-    name: "Episode #1.226",
+    id: "tt10082486",
+    name: "Cat Build Gone Wild",
     mediaType: "tvEpisode",
     avgRating: 0,
-    releaseDate : "0001-01-01T00:00:00",
+    releaseDate: "2019-03-22T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BZDMyMzNkOTQtYTA0Mi00ZjExLWFjNzktODU5NzAxZTZhOGE5XkEyXkFqcGdeQXVyMTAwMzM3NDI3._V1_SX300.jpg"
+  },
+  {
+    id: "tt10377838",
+    name: "Episode #1.50",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "0001-01-01T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BZjkwMGMyOTUtMWE5My00NDMzLWE0NzgtMGZiYTZmNGQ4MTkwXkEyXkFqcGdeQXVyNzM4MjU3NzY@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10082480",
+    name: "Episode #1.11",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "2019-02-26T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BYzViYTUzZGItZTNkMC00NDIxLTk5ZDItNTQ2YjNmMDA1MmQ4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10082476",
+    name: "Episode #1.9",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "2019-02-25T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BYzViYTUzZGItZTNkMC00NDIxLTk5ZDItNTQ2YjNmMDA1MmQ4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10377836",
+    name: "Episode #1.49",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "0001-01-01T00:00:00",
+    poster: "N/A"
+  }
+
+/*  {
+    id: "tt10377880",
+    name: 'Episode #1.226',
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseYear: "1997",
     poster: "N/A",
-    genres: '["ass", "shit", "Richar Nixon"]'
+    genres: ["Action", "comedy"]
   },
   {
     id: "tt10377882",
     name: "Episode #1.227",
     mediaType: "tvEpisode",
     avgRating: 0,
-    releaseDate : "0001-01-01T00:00:00",
+    releaseYear: "2011",
     poster: "N/A",
-    genres: '["ass", "Richar Nixon"]'
+    genres: ["Drama", "Historical", "biopic"]
   }
-  ]
+*/
+];
 
-const testMap = MapToMovie(JSON.stringify(testItems));
+const testMap = MapToMovie(JSON.parse(JSON.stringify(testItems)));
 
 function AppRoutes() {
   return (
@@ -106,9 +148,9 @@ function AppRoutes() {
         <Route path="/list" element={<ItemList
           itemsRecieved={testMap}
           sizeSettings={{
-                          aH : 88,
-                          iH : 100
-                        }}
+            aH: 88,
+            iH: 100
+          }}
         />} />
       </Route>
 

@@ -22,7 +22,6 @@ const defaultSizing = {
 };
 /* ----------------- */
 
-
 function MakeList({
     itemArray = [],
     listSizing = defaultSizing,
@@ -71,23 +70,23 @@ export default function ItemList({
             listSizing={sizeSettings}
             renderItem={(item) => (
                 <>
-                    <img src={item.banner} alt={item.name} className="img-fluid py-1 px-1 rounded-4 w-25 object-fit-cover overflow-hidden" />
+                    <img src={item.poster} className="img-fluid py-1 px-1 rounded-4 w-25 object-fit-cover overflow-hidden" />
                     <Container className="overflow-hidden" style={{ height: "95%" }}>
                         <h3 className="overflow-hidden mb-0" style={{ height: "40%", whiteSpace: "nowrap" }}>{item.name}</h3>
                         <p className="overflow-hidden lh-sm" style={{ position: "relative", height: "45%", width: "98%", left: "3%", top: "-6%" }}>
                             {item.plot}
                         </p>
                         <Container className="overflow-hidden" style={{ whiteSpace: "nowrap", width: "70%", position: "relative", top: "-27%", left: "-18%" }}>
-                            {item.directors && item.directors.length > 0 && (
+                            {item.genres && item.genres.length > 0 && (
                                 <Container className="d-flex">
-                                    Directors: &nbsp;
-                                    {item.directors.map((dir, index) => (
-                                        <p key={index}>{dir},&nbsp;</p>
+                                    Genres: &nbsp;
+                                    {item.genres.map((gen, index) => (
+                                        <p key={index}>{gen},&nbsp;</p>
                                     ))}
                                 </Container>
                             )}
                         </Container>
-                        <p className="text-end" style={{position: "relative", top: "-67%",}}>Released: {item.releaseYear}</p>
+                        <p className="text-end" style={{position: "relative", top: "-67%",}}>Released: {item.releaseDate}</p>
                         
                     </Container>
                     <Container className="bg-warning rounded-end-4" style={{ width: "15%" }}>

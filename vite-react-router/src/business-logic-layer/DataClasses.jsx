@@ -1,16 +1,18 @@
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
+import defaultImage from "../pics/Image-not-found.png";
 
 export class Movie {
     constructor(options = {}) {
         Object.assign(this, {
             id: "n/a",
             name: "Unknown name",
-            banner: "Undefined image",
+            poster: defaultImage,
+            backUpImg : defaultImage,
             plot: "Undefined plot",
             releaseDate: "Unknown",
-            releaseYear: 9999,
+            releaseYear: "Unknown",
             runtime: 0,
-            genres: [],
+            genres: ["n/a"],
             actors: [],
             directors: [],
             rating: 0.0
