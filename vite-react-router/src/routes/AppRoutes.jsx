@@ -22,10 +22,14 @@ import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
+import TestHealth from '../Tests/TestHealth';
 
-import Movie from "../business-logic-layer/data-models/Movie"
+import { MapTitle, MapIndividual } from '../business-logic-layer/ItemMapper';
+
+//import {Movie} from "../business-logic-layer/DataClasses";
 
 //dummy data
+/*
 const sizeTest = 10;
 const testItems = [];
   for (let i = 0; i < sizeTest; i++) {
@@ -36,6 +40,69 @@ const testItems = [];
     })
     )
   }
+const testItems = [
+  {
+    id: "tt10082486",
+    name: "Cat Build Gone Wild",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "2019-03-22T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BZDMyMzNkOTQtYTA0Mi00ZjExLWFjNzktODU5NzAxZTZhOGE5XkEyXkFqcGdeQXVyMTAwMzM3NDI3._V1_SX300.jpg"
+  },
+  {
+    id: "tt10377838",
+    name: "Episode #1.50",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "0001-01-01T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BZjkwMGMyOTUtMWE5My00NDMzLWE0NzgtMGZiYTZmNGQ4MTkwXkEyXkFqcGdeQXVyNzM4MjU3NzY@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10082480",
+    name: "Episode #1.11",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "2019-02-26T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BYzViYTUzZGItZTNkMC00NDIxLTk5ZDItNTQ2YjNmMDA1MmQ4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10082476",
+    name: "Episode #1.9",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "2019-02-25T00:00:00",
+    poster: "https://m.media-amazon.com/images/M/MV5BYzViYTUzZGItZTNkMC00NDIxLTk5ZDItNTQ2YjNmMDA1MmQ4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
+  },
+  {
+    id: "tt10377836",
+    name: "Episode #1.49",
+    mediaType: "tvEpisode",
+    avgRating: 0,
+    releaseDate: "0001-01-01T00:00:00",
+    poster: "N/A"
+  }
+];
+*/
+const testItems = [
+{
+    id: "nm16716880",
+    name: "Teri DiRocco"
+  },
+  {
+    id: "nm12202246",
+    name: "Morgan Wade"
+  },
+  {
+    id: "nm12756006",
+    name: "Milena Ray"
+  },
+  {
+    id: "nm10172358",
+    name: "Munira Mirza"
+  }
+];
+
+const testMap = MapIndividual(JSON.parse(JSON.stringify(testItems)));
 
 function AppRoutes() {
   return (
@@ -70,16 +137,17 @@ function AppRoutes() {
         <Route path="/test-rating" element={<TestRating />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
+        <Route path="/test-health" element={<TestHealth />} />
         <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
 
 
         // List comp page
         <Route path="/list" element={<ItemList
-          itemsRecieved={testItems}
+          itemsRecieved={testMap}
           sizeSettings={{
-                          aH : 88,
-                          iH : 100
-                        }}
+            aH: 88,
+            iH: 100
+          }}
         />} />
       </Route>
 
