@@ -70,11 +70,11 @@ export default function ItemList({
             listSizing={sizeSettings}
             renderItem={(item) => (
                 <>
-                    <img src={item.poster} className="img-fluid py-1 px-1 rounded-4 w-25 object-fit-cover overflow-hidden" />
+                    <img src={item.image} className="img-fluid py-1 px-1 rounded-4 w-25 object-fit-cover overflow-hidden" />
                     <Container className="overflow-hidden" style={{ height: "95%" }}>
                         <h3 className="overflow-hidden mb-0" style={{ height: "40%", whiteSpace: "nowrap" }}>{item.name}</h3>
                         <p className="overflow-hidden lh-sm" style={{ position: "relative", height: "45%", width: "98%", left: "3%", top: "-6%" }}>
-                            {item.constructor.name}
+                            {item.plot}
                         </p>
                         <Container className="overflow-hidden" style={{ whiteSpace: "nowrap", width: "70%", position: "relative", top: "-27%", left: "-18%" }}>
                             {item.genres && item.genres.length > 0 && (
