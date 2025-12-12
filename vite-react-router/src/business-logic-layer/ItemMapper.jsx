@@ -1,36 +1,65 @@
-import { Movie, Episode } from "./DataClasses";
+import { Movie, TvEpisode, TvSeries, Individual } from "./DataClasses";
 
 
 
-export function MapToMovie(JSONarr) {
+export function MapTitle(JSONarr) {
 
     const itemArr = [];
     const minReleaseYear = 1920;
 
     for (let item of JSONarr) {
-        const movieItem = new Movie();
+        let titleItem;
+
+        switch (item.mediaType) {
+            case "movie":
+                titleItem = new Movie();
+                break;
+            case "tvEpisode":
+                titleItem = new TvEpisode();
+                break;
+            case "tvSeries":
+                titleItem = new TvSeries();
+                break;
+        }
+
         Object.entries(item).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== "N/A") {
                 try {
-                    if(key === "releaseDate"){
+                    if (key === "releaseDate") {
                         value = value.toString().split('T')[0];
 
-                        if(Number(value.toString().split('-')[0]) < minReleaseYear){
+                        if (Number(value.toString().split('-')[0]) < minReleaseYear) {
                             key = "noDate";
                         }
                     }
-                    Object.assign(movieItem, Object.fromEntries([[key, value]]));
+                    Object.assign(titleItem, Object.fromEntries([[key, value]]));
                 } catch (err) {
                     /* Error handling if datamodel doesn't contain field from JsonObj*/
                 }
             }
         });
-        itemArr.push(movieItem);
+        itemArr.push(titleItem);
     }
     return itemArr;
 }
 
-function MapToEpisode(episodeItem) {
+export function MapIndividual(JSONarr) {
+    const itemArr = [];
 
+    for (let item of JSONarr) {
+        const individualItem = new Individual();
+
+        Object.entries(item).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "N/A") {
+                try {
+                    Object.assign(individualItem, Object.fromEntries([[key, value]]));
+                } catch (err) {
+                    /* Error handling if datamodel doesn't contain field from JsonObj*/
+                }
+            }
+        });
+        itemArr.push(individualItem);
+    }
+    return itemArr;
 
 }

@@ -24,7 +24,7 @@ import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
 import TestHealth from '../Tests/TestHealth';
 
-import { MapToMovie } from '../business-logic-layer/ItemMapper';
+import { MapTitle, MapIndividual } from '../business-logic-layer/ItemMapper';
 
 //import {Movie} from "../business-logic-layer/DataClasses";
 
@@ -40,8 +40,6 @@ const testItems = [];
     })
     )
   }
-    */
-
 const testItems = [
   {
     id: "tt10082486",
@@ -83,29 +81,28 @@ const testItems = [
     releaseDate: "0001-01-01T00:00:00",
     poster: "N/A"
   }
-
-/*  {
-    id: "tt10377880",
-    name: 'Episode #1.226',
-    mediaType: "tvEpisode",
-    avgRating: 0,
-    releaseYear: "1997",
-    poster: "N/A",
-    genres: ["Action", "comedy"]
+];
+*/
+const testItems = [
+{
+    id: "nm16716880",
+    name: "Teri DiRocco"
   },
   {
-    id: "tt10377882",
-    name: "Episode #1.227",
-    mediaType: "tvEpisode",
-    avgRating: 0,
-    releaseYear: "2011",
-    poster: "N/A",
-    genres: ["Drama", "Historical", "biopic"]
+    id: "nm12202246",
+    name: "Morgan Wade"
+  },
+  {
+    id: "nm12756006",
+    name: "Milena Ray"
+  },
+  {
+    id: "nm10172358",
+    name: "Munira Mirza"
   }
-*/
 ];
 
-const testMap = MapToMovie(JSON.parse(JSON.stringify(testItems)));
+const testMap = MapIndividual(JSON.parse(JSON.stringify(testItems)));
 
 function AppRoutes() {
   return (

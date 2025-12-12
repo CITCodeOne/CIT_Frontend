@@ -20,22 +20,44 @@ export class Movie {
     }
 };
 
-export class Episode {
+export class TvSeries {
+    constructor(options = {}) {
+        Object.assign(this, {
+            id: "n/a",
+            name: "Unknown name",
+            banner: "Undefined image",
+            plot: "Undefined plot",
+            startYear: 9999,
+            endYear: 9999,
+            numbOfSeasons: 1,
+            numbOfEpisodes: 0,
+            episodes: [],
+            genres: ["Undefined"],
+            actors: [],
+            directors: [],
+            createdBy: [],
+            rating: 0.0
+        }, options);
+    }
+};
+
+export class TvEpisode {
     constructor(options = {}) {
         Object.assign(this, {
             id: "n/a",
             seriesName: "n/a",
             name: "Unknown name",
-            banner: "Undefined image",
+            poster: defaultImage,
             plot: "Undefined plot",
             releaseDate: "Unknown",
             episodeNumb: 0,
             seasonNumb: 0,
-            genres: [],
+            genres: ["Undefined"],
             actors: [],
             directors: [],
             rating: 0.0
         }, options);
+        Object.seal(this);
     }
 };
 
@@ -50,6 +72,7 @@ export class Individual {
             deathYear: 9999,
             knownFor: []
         }, options);
+        Object.seal(this);
     }
 };
 
@@ -68,27 +91,6 @@ export class MiscMedia {
             actors: [],
             directors: [],
             createdBy : [],
-            rating: 0.0
-        }, options);
-    }
-};
-
-export class Series {
-    constructor(options = {}) {
-        Object.assign(this, {
-            id: "n/a",
-            name: "Unknown name",
-            banner: "Undefined image",
-            plot: "Undefined plot",
-            startYear: 9999,
-            endYear: 9999,
-            numbOfSeasons: 1,
-            numbOfEpisodes: 0,
-            episodes: [],
-            genres: [],
-            actors: [],
-            directors: [],
-            createdBy: [],
             rating: 0.0
         }, options);
     }

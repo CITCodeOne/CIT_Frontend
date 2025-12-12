@@ -74,7 +74,7 @@ export default function ItemList({
                     <Container className="overflow-hidden" style={{ height: "95%" }}>
                         <h3 className="overflow-hidden mb-0" style={{ height: "40%", whiteSpace: "nowrap" }}>{item.name}</h3>
                         <p className="overflow-hidden lh-sm" style={{ position: "relative", height: "45%", width: "98%", left: "3%", top: "-6%" }}>
-                            {item.plot}
+                            {item.constructor.name}
                         </p>
                         <Container className="overflow-hidden" style={{ whiteSpace: "nowrap", width: "70%", position: "relative", top: "-27%", left: "-18%" }}>
                             {item.genres && item.genres.length > 0 && (
