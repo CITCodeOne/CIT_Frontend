@@ -13,7 +13,7 @@ import useAuthStatus from '../hooks/useAuthStatus';
 
 export default function NavbarLayout() {
         const [showSignIn, setShowSignIn] = useState(false);
-        const { isSignedIn, username, profileInitial, syncAuthState, handleLogout } = useAuthStatus();
+        const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
         return (
                 <div className="min-vh-100 d-flex flex-column">
                         <Navbar expand="lg" className="bg-body-tertiary">
@@ -91,8 +91,7 @@ export default function NavbarLayout() {
                                                                                 id="profile-dropdown"
                                                                                 align="end"
                                                                         >
-                                                                                <NavDropdown.Item as={Link} to="#profile">Profile</NavDropdown.Item>
-                                                                                <NavDropdown.Item as={Link} to="#settings">Settings</NavDropdown.Item>
+                                                                                <NavDropdown.Item as={Link} to={`/userpage/${userId}`}>Profile</NavDropdown.Item>
                                                                                 <NavDropdown.Divider />
                                                                                 <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                                                                         </NavDropdown>
