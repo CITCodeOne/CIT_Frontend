@@ -16,12 +16,14 @@ class baseTitleObject{
         Object.assign(this, new baseObject());
         Object.assign(this, {
             plot: "n/a",
+            adult: "n/a",
             releaseDate: "n/a",
             runtime: "n/a",
             genres: ["n/a"],
             actors: ["n/a"],
             directors: ["n/a"],
-            rating: "n/a"
+            rating: "n/a",
+            numVotes: "n/a"
         })
     }
 }
