@@ -40,6 +40,7 @@ const testItems = [];
     })
     )
   }
+*/
 const testItems = [
   {
     id: "tt10082486",
@@ -82,7 +83,7 @@ const testItems = [
     poster: "N/A"
   }
 ];
-*/
+/*
 const testItems = [
 {
     id: "nm16716880",
@@ -101,8 +102,9 @@ const testItems = [
     name: "Munira Mirza"
   }
 ];
+*/
 
-const testMap = MapIndividual(JSON.parse(JSON.stringify(testItems)));
+const testMap = MapTitle(JSON.parse(JSON.stringify(testItems)));
 
 function AppRoutes() {
   return (
