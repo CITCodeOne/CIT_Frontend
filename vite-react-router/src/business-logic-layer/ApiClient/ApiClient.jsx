@@ -36,11 +36,13 @@ const apiv2 = {
 		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options),
 	},
 	auth: {
+		// POST: /auth/signup
 		signup: (payload, options) => callV2('auth/signup', {
 			method: 'POST',
 			body: payload,
 			...options,
 		}),
+		// POST: /auth/login
 		login: (credentials, options) => callV2('auth/login', {
 			method: 'POST',
 			body: credentials,
