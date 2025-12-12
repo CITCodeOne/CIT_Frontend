@@ -80,6 +80,7 @@ export default function UserBookmarksList() {
 
                             {/* Poster image */}
                             <img
+                            
                                 src={item.poster}
                                 alt={item.title}
                                 className="img-fluid object-fit-cover"

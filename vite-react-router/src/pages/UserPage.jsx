@@ -213,6 +213,7 @@ export default function UserPage() {
 
             <UserBanner
                 username={apiUser.username}
+                
                 email={apiUser.email}
                 createdAt={apiUser.createdAt}
                 ratingsCount={ratedTitles.length}

@@ -22,6 +22,7 @@ export default function UserRatingsList() {
             rating: 5,
             startYear: 2025,
             mediaType: "movie",
+            
             poster: girl,
         },
         {
