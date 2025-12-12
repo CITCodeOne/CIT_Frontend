@@ -12,11 +12,13 @@ const apiv2 = {
 		status: (options) => callV2('health', options),
 	},
 	auth: {
+		// POST: /auth/signup
 		signup: (payload, options) => callV2('auth/signup', {
 			method: 'POST',
 			body: payload,
 			...options,
 		}),
+		// POST: /auth/login
 		login: (credentials, options) => callV2('auth/login', {
 			method: 'POST',
 			body: credentials,
