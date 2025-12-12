@@ -32,6 +32,9 @@ export function MapTitle(JSONarr) {
                             key = "noDate";
                         }
                     }
+                    if(key === "poster"){
+                        key = "image";
+                    }
                     Object.assign(titleItem, Object.fromEntries([[key, value]]));
                 } catch (err) {
                     /* Error handling if datamodel doesn't contain field from JsonObj*/
