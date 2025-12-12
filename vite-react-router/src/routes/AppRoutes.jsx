@@ -18,8 +18,7 @@ import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import TestMainDisplay from '../Tests/TestMainDisplay';
 import TestRating from '../Tests/TestRating';
-import TestTitlePage from '../Tests/TestTItlePage';
-import TestSimple from '../Tests/TestSimple';
+import TestTitlePage from '../Tests/TestTitlePage';
 import TestAPI from '../Tests/TestAPI';
 import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
@@ -141,7 +140,6 @@ function AppRoutes() {
         // Other minor pages
         <Route path="/about" element={<About />} />
         <Route path="/test" element={<TestMainDisplay />} />
-        <Route path="/test-simple" element={<TestSimple />} />
         <Route path="/test-rating" element={<TestRating />} />
         <Route path="/test-title" element={<TestTitlePage />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
