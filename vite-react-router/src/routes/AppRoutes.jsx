@@ -48,7 +48,7 @@ const testItems = [
   {
     id: "tt10082486",
     name: "Cat Build Gone Wild",
-    mediaType: "tvEpisode",
+    mediaType: "movie",
     avgRating: 0,
     releaseDate: "2019-03-22T00:00:00",
     poster: "https://m.media-amazon.com/images/M/MV5BZDMyMzNkOTQtYTA0Mi00ZjExLWFjNzktODU5NzAxZTZhOGE5XkEyXkFqcGdeQXVyMTAwMzM3NDI3._V1_SX300.jpg"
@@ -64,7 +64,7 @@ const testItems = [
   {
     id: "tt10082480",
     name: "Episode #1.11",
-    mediaType: "tvEpisode",
+    mediaType: "tvSeries",
     avgRating: 0,
     releaseDate: "2019-02-26T00:00:00",
     poster: "https://m.media-amazon.com/images/M/MV5BYzViYTUzZGItZTNkMC00NDIxLTk5ZDItNTQ2YjNmMDA1MmQ4XkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg"
