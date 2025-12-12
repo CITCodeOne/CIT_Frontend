@@ -11,6 +11,30 @@ const apiv2 = {
 	health: {
 		status: (options) => callV2('health', options),
 	},
+	titles: {
+		// GET: /titles?page=1&pageSize=20
+		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('titles', {
+			queryParams: { page, pageSize },
+			...options,
+		}),
+		// GET: /titles/{id}
+		getById: (id, options) => callV2(`titles/${id}`, options),
+		// GET: /titles/{id}/ratings
+		getRatings: (id, options) => callV2(`titles/${id}/ratings`, options),
+		// GET: /titles/{id}/individuals
+		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options),
+	},
+	individuals: {
+		// GET: /individuals?page=1&pageSize=20
+		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('individuals', {
+			queryParams: { page, pageSize },
+			...options,
+		}),
+		// GET: /individuals/{id}
+		getById: (id, options) => callV2(`individuals/${id}`, options),
+		// GET: /individuals/{id}/titles
+		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options),
+	},
 	auth: {
 		signup: (payload, options) => callV2('auth/signup', {
 			method: 'POST',
@@ -77,9 +101,13 @@ const apiv2 = {
 			...options,
 		}),
 	},
+
+	
 };
 
 Object.freeze(apiv2.health);
+Object.freeze(apiv2.titles);
+Object.freeze(apiv2.individuals);
 Object.freeze(apiv2.auth);
 Object.freeze(apiv2.user);
 
