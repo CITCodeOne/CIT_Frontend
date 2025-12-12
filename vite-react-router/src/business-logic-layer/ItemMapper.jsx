@@ -1,15 +1,13 @@
 import { Movie, TvEpisode, TvSeries, Individual } from "./DataClasses";
 
 
+const minReleaseYear = 1920;
 
 export function MapTitle(JSONarr) {
-
     const itemArr = [];
-    const minReleaseYear = 1920;
 
     for (let item of JSONarr) {
         let titleItem;
-
         switch (item.mediaType) {
             case "movie":
                 titleItem = new Movie();
@@ -25,15 +23,16 @@ export function MapTitle(JSONarr) {
         Object.entries(item).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== "N/A") {
                 try {
-                    if (key === "releaseDate") {
-                        value = value.toString().split('T')[0];
-
-                        if (Number(value.toString().split('-')[0]) < minReleaseYear) {
-                            key = "noDate";
-                        }
-                    }
-                    if(key === "poster"){
-                        key = "image";
+                    switch (key) {
+                        case "releaseDate":
+                            value = value.toString().split('T')[0];
+                            if (Number(value.toString().split('-')[0]) < minReleaseYear) {
+                                key = "noDate";
+                            }
+                            break;
+                        case "poster":
+                            key = "image";
+                            break;
                     }
                     Object.assign(titleItem, Object.fromEntries([[key, value]]));
                 } catch (err) {
@@ -45,6 +44,7 @@ export function MapTitle(JSONarr) {
     }
     return itemArr;
 }
+
 
 export function MapIndividual(JSONarr) {
     const itemArr = [];
@@ -64,5 +64,4 @@ export function MapIndividual(JSONarr) {
         itemArr.push(individualItem);
     }
     return itemArr;
-
 }

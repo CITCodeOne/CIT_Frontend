@@ -1,4 +1,3 @@
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import defaultImage from "../pics/Image-not-found.png";
 
 class baseObject{
