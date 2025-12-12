@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import MakeList from "../components/MakeList";
+import MakeList from "../components/ListComp";
 import Rating from "../components/Rating";
 import girl from "../pics/girl.jpg";
 import lion from "../pics/lion.jpg";
