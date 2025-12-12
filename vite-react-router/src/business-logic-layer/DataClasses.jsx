@@ -7,7 +7,6 @@ export class Movie {
             id: "n/a",
             name: "Unknown name",
             poster: defaultImage,
-            backUpImg : defaultImage,
             plot: "Undefined plot",
             releaseDate: "Unknown",
             releaseYear: "Unknown",
@@ -17,6 +16,7 @@ export class Movie {
             directors: [],
             rating: 0.0
         }, options);
+        Object.seal(this);
     }
 };
 
