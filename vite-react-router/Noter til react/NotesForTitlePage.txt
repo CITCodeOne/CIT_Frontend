@@ -1,0 +1,120 @@
+## Title Page - Implementation Notes
+
+### Overview:
+- Complete Title page (src/pages/Title.jsx) with backend API integration
+- Uses MainDisplay component, helper components (Cast, Similar Titles, Reviews)
+- Routes: /title/:titleId (shortcut) or /page/title/:titleId
+- Backend: https://localhost:5001 | Frontend: http://localhost:5173
+
+### Page Sections:
+1. **Header** (MainDisplay): Poster (3 cols) + info (9 cols) with title, rating, bookmark, metadata, genres, overview
+2. **Cast** (CastSection): Top 3 cast with circular photos (120px), names, characters
+3. **Similar Titles** (SimilarTitlesSection): Top 3 similar titles with posters (350px), buttons
+4. **Reviews** (ReviewsSection): Top 3 reviews with author photo (80px), rating box, text (250 char limit)
+
+### API Integration (src/config/api.js):
+**Implemented:** getTitleById() - GET /api/titles/:id
+**Not Yet Implemented:** getTitleCast(), getSimilarTitles(), getTitleReviews()
+
+Uses Promise.allSettled() - sections display if data available, gracefully skip if not.
+
+**Key Data Mapping:**
+- genres[] → genres.map(g => g.name) for badges
+- plotPre → Overview (currently truncated by backend)
+- avgRating → Star rating (0-10 scale)
+- mediaType, runtime, startYear → Metadata badges
+
+### Key Files:
+- **src/pages/Title.jsx** - Main page with helper components (CastSection, SimilarTitlesSection, ReviewsSection)
+- **src/components/MainDisplay.jsx** - Reusable header layout
+- **src/config/api.js** - Centralized API configuration
+- **src/style/CTitlePage.css** - Page styling
+- **src/routes/AppRoutes.jsx** - Route configuration
+
+### Architecture:
+- 7 state variables: title, cast, similarTitles, reviews, loading, error, isBookmarked
+- useEffect fetches data on mount/titleId change
+- Data prepared in 3 objects (header, metadata, sections) before rendering MainDisplay
+- Helper components conditionally render based on data availability
+
+### Quick Start:
+Backend: `cd CIT_Backend/BackendSolution && dotnet run --project WebServiceLayer`
+Frontend: `cd CIT_Frontend/vite-react-router && npm run dev`
+Test URL: http://localhost:5173/title/tt0052520
+
+**Test Pages:** /test-title (TMDB data) | /test-api (API dashboard)
+
+### Current Limitations:
+1. **Plot truncation** - Backend returns incomplete text
+2. **Missing endpoints:** /api/titles/:id/cast, /similar, /reviews (individuals endpoints exist, need relationship endpoint)
+3. **Bookmarks** - Local state only, backend integration pending
+
+### Why Dedicated Relationship Endpoints Are Essential:
+
+#### Current Situation:
+The backend has two separate entity endpoints:
+- GET /api/titles/:id - Returns title information
+- GET /api/individuals/:id - Returns individual/actor information
+
+However, these endpoints don't provide the RELATIONSHIP between titles and individuals (i.e., which actors appear in which titles, and in what roles).
+
+#### Why NOT to Use Workarounds:
+
+**Option A: Fetch ALL Individuals**
+- Performance disaster (10MB+, 5-10s load times)
+- No relationship data (character names, billing order missing)
+- Can't filter - individuals table has no titleId
+
+**Option B: Add titleId to Individuals**
+- Violates normalization (many-to-many relationship)
+- Breaks REST principles (mixing entity concerns)
+- Still inefficient
+
+**Option C: Embed Cast in Title**
+- Data bloat (not every request needs cast)
+- No granular control (can't limit, sort, or filter)
+
+#### Correct Solution: GET /api/titles/:id/cast
+
+**Benefits:**
+1. **Performance:** Single JOIN query, 3-20 records, KB instead of MB
+2. **Proper Data:** Includes character, billing order, category from junction table
+3. **REST Compliant:** Separate endpoints for entities vs relationships
+4. **Scalable:** Easy pagination, filtering, sorting
+
+**Backend Query Example:**
+```sql
+SELECT i.id, i.name, i.profilePath, tp.character, tp.order
+FROM title_principals tp
+JOIN individuals i ON tp.individualId = i.id
+WHERE tp.titleId = :titleId
+ORDER BY tp.order LIMIT 10
+```
+
+**Real-World Pattern:** TMDB (/movie/:id/credits), Spotify (/playlists/:id/tracks), GitHub (/repos/:owner/:repo/contributors) all use relationship endpoints.
+
+**Conclusion:** Dedicated relationship endpoints are professional, scalable, and maintainable - not just "being picky."
+
+### Working Features:
+Title display, star rating, media badge, metadata, genres, overview, bookmark (local), loading/error states, responsive layout
+
+### Design Patterns:
+- MainDisplay for consistency, helper components for sections
+- Promise.allSettled for non-blocking parallel API calls
+- Conditional rendering based on data availability
+- Data prep: header, metadata, sections objects before rendering
+
+### Next Steps:
+
+**Backend:**
+- Implement /api/titles/:id/cast (relationship endpoint)
+- Implement /api/titles/:id/similar and /reviews
+- Fix plot truncation
+
+**Frontend:**
+- Integrate bookmark API
+- Add navigation (cast links to /individual/:id, Info/Rate buttons)
+- Build Individual page (endpoints ready)
+- Add review posting and rating submission
+
+**Reference:** /test-title (TestTitlePage with TMDB data)
