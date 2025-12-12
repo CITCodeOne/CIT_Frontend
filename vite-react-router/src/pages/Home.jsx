@@ -8,12 +8,13 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch('https://localhost:5001/api/titles?page=1&pageSize=20');
+        const res = await fetch('https://localhost:5001/api/v2/individuals?page=1&pageSize=20');
         if (!res.ok) {
           throw new Error(`Server responded ${res.status}`);
         }
