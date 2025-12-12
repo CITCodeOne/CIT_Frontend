@@ -22,14 +22,15 @@ export default function UserRatingsList() {
             rating: 5,
             startYear: 2025,
             mediaType: "movie",
-            poster: girl
+            poster: girl,
         },
         {
             titleId: "tt7366338",
             title: "Surf's Up",
-            rating: 10, startYear: 2019,
+            rating: 10,
+            startYear: 2019,
             mediaType: "movie",
-            poster: lion
+            poster: lion,
         },
         {
             titleId: "tt0903747",
@@ -37,7 +38,7 @@ export default function UserRatingsList() {
             rating: 10,
             startYear: 2008,
             mediaType: "tvSeries",
-            poster: mike
+            poster: mike,
         },
         {
             titleId: "tt1234567",
@@ -45,15 +46,15 @@ export default function UserRatingsList() {
             rating: 1,
             startYear: 2020,
             mediaType: "movie",
-            poster: girl
+            poster: girl,
         },
-                {
+        {
             titleId: "tt1233567",
             title: "Shawshank Redemption",
             rating: 3,
             startYear: 1994,
             mediaType: "movie",
-            poster: lion
+            poster: lion,
         },
     ]);
 
@@ -70,60 +71,60 @@ export default function UserRatingsList() {
         setTimeout(() => setMessage(""), 1500);
     };
 
-    // returns a list of all the user's ratings
     return (
         <main className="container py-4">
             <h2 className="h4 mb-3">Ratings by user: {userId}</h2>
 
-            <MakeList
-                itemArray={ratedTitles}
-                renderItem={(item) => (
-                    <div
-                        className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center"
-                    >
-
-                        {/* Poster image */}
-                        <img
-                            src={item.poster}
-                            alt={item.title}
-                            className="img-fluid object-fit-cover"
-                            style={{ width: "80px", height: "120px", objectFit: "cover" }}
-                        />
-
-                        {/* Title, year & media type */}
-                        <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
-                            <h3 className="mb-1 fs-5">
-                                {item.title}{" "}
-                                {item.startYear && (
-                                    <span className="text-muted">({item.startYear})</span>
-                                )}
-                            </h3>
-                            <p className="mb-1 text-muted small">{item.mediaType}</p>
-                        </div>
-
-                        {/* Rating and Remove button */}
-                        <div
-                            className="d-flex align-items-center justify-content-center px-3 rounded-end-4"
-                            style={{ minWidth: "90px", backgroundColor: "#ffffff" }}
-                        >
-                            <Rating
-                                initialRating={item.rating}
-                                editable={false}
-                                showNumber={true}
+            {ratedTitles.length === 0 ? (
+                <p className="text-muted">This user has not rated any titles yet.</p>
+            ) : (
+                <MakeList
+                    itemArray={ratedTitles}
+                    renderItem={(item) => (
+                        <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">
+                            {/* Poster image */}
+                            <img
+                                src={item.poster}
+                                alt={item.title}
+                                className="img-fluid object-fit-cover"
+                                style={{ width: "80px", height: "120px", objectFit: "cover" }}
                             />
-                            {isOwnProfile && (
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-danger ms-2"
-                                    onClick={() => handleRemoveRating(item.titleId)}
-                                >
-                                    Remove
-                                </button>
-                            )}
+
+                            {/* Title, year & media type */}
+                            <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
+                                <h3 className="mb-1 fs-5">
+                                    {item.title}{" "}
+                                    {item.startYear && (
+                                        <span className="text-muted">({item.startYear})</span>
+                                    )}
+                                </h3>
+                                <p className="mb-1 text-muted small">{item.mediaType}</p>
+                            </div>
+
+                            {/* Rating and Remove button */}
+                            <div
+                                className="d-flex align-items-center justify-content-center px-3 rounded-end-4"
+                                style={{ minWidth: "90px", backgroundColor: "#ffffff" }}
+                            >
+                                <Rating
+                                    initialRating={item.rating}
+                                    editable={false}
+                                    showNumber={true}
+                                />
+                                {isOwnProfile && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger ms-2"
+                                        onClick={() => handleRemoveRating(item.titleId)}
+                                    >
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
-            />
+                    )}
+                />
+            )}
 
             {/* message popup*/}
             {message && (
@@ -136,4 +137,4 @@ export default function UserRatingsList() {
             )}
         </main>
     );
-}   
+}
