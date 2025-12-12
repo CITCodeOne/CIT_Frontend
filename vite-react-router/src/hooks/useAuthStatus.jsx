@@ -1,54 +1,51 @@
 import { useState, useEffect, useCallback } from 'react';
+import {
+        TOKEN_STORAGE_KEY,
+        deriveUserId,
+        deriveUsername,
+        getStoredToken,
+        parseJwtClaims,
+} from '../components/extractJwtData';
 
-const TOKEN_KEY = 'cit.jwt';
-
-const extractUsernameFromToken = (token) => {
-        try {
-                const payloadSegment = token?.split?.('.')[1];
-                if (!payloadSegment) return null;
-
-                // Decode Base64URL payload so we can read the username claim.
-                const normalized = payloadSegment.replace(/-/g, '+').replace(/_/g, '/');
-                const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, '=');
-                const decoded = (typeof window !== 'undefined' ? window.atob : atob)(padded);
-                const jsonString = decodeURIComponent(
-                        decoded
-                                .split('')
-                                .map((char) => `%${(`00${char.charCodeAt(0).toString(16)}`).slice(-2)}`)
-                                .join('')
-                );
-                const payload = JSON.parse(jsonString);
-                return payload?.username || payload?.user?.username || payload?.sub || '';
-        } catch (error) {
-                console.warn('Unable to parse cit.jwt payload', error);
-                return null;
-        }
-};
-
+/**
+ * Tracks JWT authentication state sourced from localStorage.
+ * @returns {{
+ *  isSignedIn: boolean,
+ *  username: string,
+ *  userId: string,
+ *  profileInitial: string,
+ *  syncAuthState: () => void,
+ *  handleLogout: () => void
+ * }} Memoized auth snapshot plus helpers for resyncing/logging out.
+ */
 export default function useAuthStatus() {
         const [isSignedIn, setIsSignedIn] = useState(false);
         const [username, setUsername] = useState('');
+        const [userId, setUserId] = useState('');
 
+        // Refresh all auth-derived state from the persisted token.
         const syncAuthState = useCallback(() => {
                 if (typeof window === 'undefined') return;
-                const token = window.localStorage.getItem(TOKEN_KEY);
+                const token = getStoredToken();
 
                 if (!token) {
                         setIsSignedIn(false);
                         setUsername('');
+                        setUserId('');
                         return;
                 }
 
-                const extractedUsername = extractUsernameFromToken(token);
-
-                if (extractedUsername === null) {
+                const claims = parseJwtClaims(token);
+                if (!claims) {
                         setIsSignedIn(false);
                         setUsername('');
+                        setUserId('');
                         return;
                 }
 
                 setIsSignedIn(true);
-                setUsername(extractedUsername || '');
+                setUsername(deriveUsername(claims));
+                setUserId(deriveUserId(claims));
         }, []);
 
         useEffect(() => {
@@ -59,7 +56,7 @@ export default function useAuthStatus() {
                 if (typeof window === 'undefined') return undefined;
 
                 const handleStorageChange = (event) => {
-                        if (event.key === TOKEN_KEY) {
+                        if (event.key === TOKEN_STORAGE_KEY) {
                                 syncAuthState();
                         }
                 };
@@ -68,17 +65,20 @@ export default function useAuthStatus() {
                 return () => window.removeEventListener('storage', handleStorageChange);
         }, [syncAuthState]);
 
+        // Clears token, then wipe auth state locally.
         const handleLogout = useCallback(() => {
                         if (typeof window !== 'undefined') {
-                                window.localStorage.removeItem(TOKEN_KEY);
+                                window.localStorage.removeItem(TOKEN_STORAGE_KEY);
                         }
                         setIsSignedIn(false);
                         setUsername('');
+                        setUserId('');
         }, []);
 
         return {
                 isSignedIn,
                 username,
+                userId,
                 profileInitial: username ? username.trim().charAt(0).toUpperCase() : 'P',
                 syncAuthState,
                 handleLogout

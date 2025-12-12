@@ -1,158 +1,153 @@
 import React from 'react';
-import { Badge, Image, ListGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import Rating from './Rating';
+import BookmarkButton from './BookmarkButton';
 
 /**
- * MainDisplay Component (React Bootstrap Version)
+ * MainDisplay Component
  * 
- * A reusable component that displays detailed information for titles (movies/shows) or actors.
- * Uses React Bootstrap components for consistent styling.
+ * Reusable layout component for detail pages (titles, individuals, etc.)
+ * Layout: Image left (3 cols), Info right (9 cols) with header, metadata, and sections
  * 
- * @param {string} type - Either 'title' or 'actor' to determine display layout
- * @param {object} data - Object containing all the information to display
+ * @param {object} header - Image, title, subtitle, rating, bookmark controls
+ * @param {array} metadata - Array of metadata items (labels, values, badges)
+ * @param {array} sections - Array of content sections with titles and content
+ * @param {node} children - Additional content to render below main card
  */
-function MainDisplay({ type, data }) {
-    // Destructure data with default fallback values to prevent errors if data is missing
+
+/**
+ * Helper: Render badges from array of strings or objects
+ */
+const renderBadges = (items, color = 'primary') => {
+    if (!items || !items.length) return null;
+    
+    return (
+        <div>
+            {items.map((item, index) => (
+                <Badge 
+                    key={index} 
+                    bg={color} 
+                    className="me-2"
+                    style={color === 'primary' ? { backgroundColor: '#1f90f3' } : {}}
+                >
+                    {typeof item === 'string' ? item : item.name}
+                </Badge>
+            ))}
+        </div>
+    );
+};
+
+/**
+ * Helper: Render text content with optional fallback
+ */
+const renderText = (text, fallback = 'No information available') => {
+    return <p className="text-muted">{text || fallback}</p>;
+};
+
+/**
+ * MainDisplay - Reusable layout component for detail pages
+ * Layout: Image left (3 cols), Info right (9 cols)
+ */
+function MainDisplay({ header, metadata = [], sections = [], children }) {
     const {
-        // Title/Movie properties
-        title = 'No Title Available',
-        banner = null,
-        plot = 'No plot information available.',
-        rating = null,
-        year = null,
-        genres = [],
-        actors = [],
-        directors = [],
-        // Actor properties
-        name = 'No Name Available',
-        poster = null,
-        bio = null,
-        birthYear = null,
-        knownFor = []
-    } = data || {};
+        image,
+        title,
+        subtitle,
+        rating,
+        showBookmark = false,
+        isBookmarked = false,
+        onBookmarkToggle
+    } = header || {};
 
     return (
-        // Use existing ContainerCstyle class for consistent padding across the app
-        <div className="ContainerCstyle py-4">
-            
-            {/* Header Section - Display title or actor name with year/birth year */}
-            <div className="mb-4">
-                <h1>{type === 'title' ? title : name}</h1>
-                {/* Show birth year only for actors */}
-                {type === 'actor' && birthYear && (
-                    <p className="fs-5 text-secondary">Born: {birthYear}</p>
-                )}
-                {/* Show release year only for titles */}
-                {type === 'title' && year && (
-                    <p className="fs-5 text-secondary">Year: {year}</p>
-                )}
-            </div>
-
-            {/* Banner/Poster Image Section - Only display if image exists */}
-            {(banner || poster) && (
-                <div className="mb-4">
-                    <Image 
-                        src={banner || poster} 
-                        alt={type === 'title' ? title : name}
-                        fluid
-                        rounded
-                        style={{ 
-                            maxHeight: '400px', 
-                            objectFit: 'cover',  // Crop to fit while maintaining aspect ratio
-                            width: '100%'
-                        }} 
-                    />
-                </div>
-            )}
-
-            {/* Main Content Section - Different content based on type */}
-            <div className="mb-4">
-                {/* TITLE/MOVIE DISPLAY */}
-                {type === 'title' && (
-                    <>
-                        {/* Rating display with Rating component */}
-                        {rating && (
-                            <div className="mb-3">
-                                <h3>Rating</h3>
-                                <Rating initialRating={rating} />
-                            </div>
-                        )}
-                        
-                        {/* Plot/storyline description */}
-                        {plot && (
-                            <div className="mb-3">
-                                <h3>Plot</h3>
-                                <p className="lh-lg">{plot}</p>
-                            </div>
-                        )}
-
-                        {/* Genre tags - displayed as Bootstrap badges */}
-                        {genres && genres.length > 0 && (
-                            <div className="mb-3">
-                                <h3>Genres</h3>
-                                <div className="d-flex gap-2 flex-wrap">
-                                    {genres.map((genre, index) => (
-                                        <Badge 
-                                            key={index}
-                                            bg="primary"
-                                            style={{ backgroundColor: '#1f90f3' }}
+        <Container fluid className="ContainerCstyle py-4">
+            <Card>
+                <Card.Body>
+                    <Row>
+                        {/* Left: Image */}
+                        <Col md={3} className="text-center">
+                            <div style={{ position: 'relative' }}>
+                                {image ? (
+                                    <img 
+                                        src={image}
+                                        alt={title || 'Image'}
+                                        className="img-fluid rounded"
+                                        style={{ maxWidth: '100%', height: 'auto' }}
+                                    />
+                                ) : (
+                                    <div className="bg-secondary rounded d-flex align-items-center justify-content-center text-white"
+                                         style={{ width: '100%', height: '300px' }}>
+                                        No Image
+                                    </div>
+                                )}
+                                
+                                {showBookmark && (
+                                    <div style={{ position: 'absolute', top: '10px', right: '10px' }}>
+                                        <BookmarkButton
+                                            isBookmarked={isBookmarked}
+                                            onToggle={onBookmarkToggle}
+                                            style={{
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '4px',
+                                                border: 'none',
+                                                backgroundColor: isBookmarked ? '#1f90f3' : 'rgba(0, 0, 0, 0.6)',
+                                                color: 'white',
+                                                fontSize: '1.2rem'
+                                            }}
                                         >
-                                            {genre}
-                                        </Badge>
+                                            {isBookmarked ? '★' : '☆'}
+                                        </BookmarkButton>
+                                    </div>
+                                )}
+                            </div>
+                        </Col>
+
+                        {/* Right: Info */}
+                        <Col md={9}>
+                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h2 className="mb-1">{title || 'No Title'}</h2>
+                                    {subtitle && <p className="text-muted mb-0">{subtitle}</p>}
+                                </div>
+                                {rating && <Rating initialRating={rating} />}
+                            </div>
+
+                            {metadata.length > 0 && (
+                                <div className="mb-3">
+                                    {metadata.map((item, index) => (
+                                        <span key={index} className="me-2">
+                                            {item.badge ? (
+                                                <Badge bg={item.badgeColor || 'secondary'} className="me-1">
+                                                    {item.value}
+                                                </Badge>
+                                            ) : (
+                                                <span className={item.muted ? 'text-muted' : ''}>
+                                                    {item.label && <strong>{item.label}: </strong>}
+                                                    {item.value}
+                                                </span>
+                                            )}
+                                        </span>
                                     ))}
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Cast list - only show if actors exist */}
-                        {actors && actors.length > 0 && (
-                            <div className="mb-3">
-                                <h3>Cast</h3>
-                                <ListGroup variant="flush">
-                                    {actors.map((actor, index) => (
-                                        <ListGroup.Item key={index}>{actor}</ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            </div>
-                        )}
+                            {sections.map((section, index) => (
+                                <div key={index} className="mb-3">
+                                    {section.title && <h5>{section.title}</h5>}
+                                    <div>{section.content}</div>
+                                </div>
+                            ))}
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
 
-                        {/* Directors - handles singular/plural heading */}
-                        {directors && directors.length > 0 && (
-                            <div className="mb-3">
-                                <h3>Director{directors.length > 1 ? 's' : ''}</h3>
-                                <p>{directors.join(', ')}</p>
-                            </div>
-                        )}
-                    </>
-                )}
-
-                {/* ACTOR DISPLAY */}
-                {type === 'actor' && (
-                    <>
-                        {/* Actor biography/description */}
-                        {bio && (
-                            <div className="mb-3">
-                                <h3>Biography</h3>
-                                <p className="lh-lg">{bio}</p>
-                            </div>
-                        )}
-
-                        {/* List of notable works */}
-                        {knownFor && knownFor.length > 0 && (
-                            <div className="mb-3">
-                                <h3>Known For</h3>
-                                <ListGroup variant="flush">
-                                    {knownFor.map((item, index) => (
-                                        <ListGroup.Item key={index}>{item}</ListGroup.Item>
-                                    ))}
-                                </ListGroup>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
-        </div>
+            {children && <div className="mt-4">{children}</div>}
+        </Container>
     );
 }
 
+// Export helpers for use in pages
+export { renderBadges, renderText };
 export default MainDisplay;

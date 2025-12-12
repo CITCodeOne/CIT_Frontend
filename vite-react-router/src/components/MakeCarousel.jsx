@@ -8,7 +8,6 @@ const TARGET_CARD_WIDTH = 280;
 const CARD_GAP = 24;
 const FALLBACK_MESSAGE = "No items were given to make the carousel.";
 
-// Splits the incoming items array into evenly sized chunks (slides) for the carousel.
 const chunkItems = (items, size) => {
 	if (!Array.isArray(items) || !items.length) {
 		return [];
@@ -29,7 +28,6 @@ const computeCardsPerSlide = (width) => {
 		return DEFAULT_CARD_COUNT;
 	}
 
-	// Each card occupies its width plus the gap to the next card (its visual "footprint").
 	const footprint = TARGET_CARD_WIDTH + CARD_GAP;
 	const capacity = Math.floor(width / footprint);
 
@@ -48,7 +46,6 @@ const CarouselRenderer = ({ items, focusKey }) => {
 		const getWindowWidth = () =>
 			typeof window !== "undefined" ? window.innerWidth : TARGET_CARD_WIDTH * DEFAULT_CARD_COUNT;
 
-		// Recomputes layout when the container or window width changes.
 		const updateLayout = (width) => {
 			const measuredWidth = Number.isFinite(width) && width > 0 ? width : getWindowWidth();
 			setLayout({
@@ -65,12 +62,7 @@ const CarouselRenderer = ({ items, focusKey }) => {
 		updateLayout(node.offsetWidth || getWindowWidth());
 
 		if (typeof ResizeObserver !== "undefined") {
-			// ResizeObserver reads the container's content box width, so even if the
-			// carousel lives inside a constrained column, we react to its actual
-			// rendered width instead of the global window width.
 			const observer = new ResizeObserver((entries) => {
-				// We inspect each entry because a single observer could watch multiple
-				// nodes; contentRect.width is the precise, post-layout width.
 				entries.forEach((entry) => updateLayout(entry.contentRect.width));
 			});
 
@@ -92,7 +84,6 @@ const CarouselRenderer = ({ items, focusKey }) => {
 			return TARGET_CARD_WIDTH;
 		}
 
-		// Deduct total gap space first, then divide remaining pixels between cards.
 		const totalGap = CARD_GAP * Math.max(cardsPerSlide - 1, 0);
 		const available = Math.max(width - totalGap, TARGET_CARD_WIDTH);
 		const computed = available / cardsPerSlide;
@@ -128,9 +119,9 @@ const CarouselRenderer = ({ items, focusKey }) => {
 
 /**
  * makeCarousel Component
- * A reusable Bootstrap-driven carousel that lays out preview cards for actors or titles.
+ * A reusable Bootstrap-driven carousel that lays out preview cards for contributors or titles.
  * @param {Array} items - List of objects representing each card the carousel should render.
- * @param {string} focusKey - Hint about the card context (e.g., "actor" or "title") that PreviewCards can display.
+ * @param {string} focusKey - Hint about the card context (e.g., "actor" or "movie") that PreviewCards can display.
  */
 export default function makeCarousel(items = [], focusKey = DEFAULT_FOCUS_KEY) {
 	const safeItems = Array.isArray(items) ? items : [];
