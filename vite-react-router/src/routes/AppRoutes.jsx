@@ -28,6 +28,7 @@ import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
 import ProfileImageBase64 from '../pages/ProfileImageBase64';
 import TestHealth from '../Tests/TestHealth';
+import TestApiClient from '../Tests/TestApiClient';
 
 import { MapTitle, MapIndividual } from '../business-logic-layer/ItemMapper';
 
@@ -152,6 +153,7 @@ function AppRoutes() {
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
         <Route path="/test-api" element={<TestAPI />} />
+        <Route path="/test-apiclient" element={<TestApiClient />} />
         <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
 
 

@@ -1,4 +1,4 @@
-import fetchSimplified from '../helper-function/fecthSimplyfied';
+import fetchSimplified from '../helper-function/FetchSimplified';
 
 // Internal helper so every call in this module targets the v2 API segment.
 const callV2 = (endpoint, options = {}) => fetchSimplified({

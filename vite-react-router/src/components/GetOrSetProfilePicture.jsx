@@ -1,4 +1,4 @@
-import fetchSimplified from "../business-logic-layer/helper-function/fecthSimplyfied";
+import fetchSimplified from "../business-logic-layer/helper-function/FetchSimplified";
 import { encodeImageToBase64 } from "./EncodeImageBase64";
 
 export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => { // Default to JPEG
