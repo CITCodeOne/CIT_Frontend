@@ -1,0 +1,103 @@
+/* Title Page Styles */
+
+/* Background for entire page */
+.title-page-background {
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    padding-bottom: 2rem;
+}
+
+/* Circular profile images for cast and reviews */
+.circular-image-120 {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 3px solid #dee2e6;
+    background-color: #e9ecef;
+}
+
+.circular-image-80 {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 2px solid #dee2e6;
+    background-color: #e9ecef;
+}
+
+.circular-image-120 img,
+.circular-image-80 img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Cast member name box */
+.cast-name-box {
+    min-height: 50px;
+}
+
+/* Poster container for similar titles */
+.poster-container {
+    height: 350px;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.poster-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Similar titles button container */
+.similar-buttons {
+    min-height: 50px;
+}
+
+/* Review rating box */
+.review-rating-box {
+    border: 2px solid #ffc107;
+    border-radius: 4px;
+    padding: 8px;
+    background-color: #fff3cd;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-rating-number {
+    font-size: 1.2rem;
+    color: #856404;
+}
+
+.review-rating-scale {
+    font-size: 0.7rem;
+    color: #856404;
+}
+
+.review-rating-na {
+    font-size: 0.8rem;
+    color: #856404;
+}
+
+/* Review content box */
+.review-content-box {
+    min-height: 80px;
+}
+
+.review-text {
+    font-size: 0.9rem;
+}
+
+/* Loading spinner container */
+.loading-container {
+    min-height: 400px;
+}

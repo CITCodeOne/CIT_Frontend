@@ -5,6 +5,7 @@ export class Movie {
     constructor(options = {}) {
         Object.assign(this, {
             id: "n/a",
+            pageLink: "n/a",
             name: "Unknown name",
             poster: defaultImage,
             plot: "Undefined plot",

@@ -18,6 +18,8 @@ import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import TestMainDisplay from '../Tests/TestMainDisplay';
 import TestRating from '../Tests/TestRating';
+import TestTitlePage from '../Tests/TestTitlePage';
+import TestAPI from '../Tests/TestAPI';
 import UserBanner from '../components/UserBanner';
 import TestBookmark from '../Tests/TestBookmark';
 import TestBookmarkUserProfile from '../Tests/TestBookmarkUserProfile';
@@ -25,8 +27,6 @@ import ProfileImageBase64 from '../pages/ProfileImageBase64';
 import TestHealth from '../Tests/TestHealth';
 
 import { MapTitle, MapIndividual } from '../business-logic-layer/ItemMapper';
-
-//import {Movie} from "../business-logic-layer/DataClasses";
 
 //dummy data
 /*
@@ -40,6 +40,7 @@ const testItems = [];
     })
     )
   }
+*/
 const testItems = [
   {
     id: "tt10082486",
@@ -82,7 +83,7 @@ const testItems = [
     poster: "N/A"
   }
 ];
-*/
+/*
 const testItems = [
 {
     id: "nm16716880",
@@ -101,8 +102,9 @@ const testItems = [
     name: "Munira Mirza"
   }
 ];
+*/
 
-const testMap = MapIndividual(JSON.parse(JSON.stringify(testItems)));
+const testMap = MapTitle(JSON.parse(JSON.stringify(testItems)));
 
 function AppRoutes() {
   return (
@@ -121,7 +123,9 @@ function AppRoutes() {
         // Titles and individual pages
         <Route path="/page/:pageId" element={<Page />} />
         <Route path="/page/title/:titleId" element={<Title />} />
+        <Route path="/title/:titleId" element={<Title />} />
         <Route path="/page/individual/:individualId" element={<Individual />} />
+        <Route path="/individual/:individualId" element={<Individual />} />
 
         // Search page
         <Route path="/search" element={<Search />} />
@@ -135,9 +139,10 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="/test" element={<TestMainDisplay />} />
         <Route path="/test-rating" element={<TestRating />} />
+        <Route path="/test-title" element={<TestTitlePage />} />
         <Route path="/test-bookmark" element={<TestBookmark />} />
         <Route path="/test-user-profile" element={<TestBookmarkUserProfile />} />
-        <Route path="/test-health" element={<TestHealth />} />
+        <Route path="/test-api" element={<TestAPI />} />
         <Route path="/profile-image-base64" element={<ProfileImageBase64 />} />
 
 
