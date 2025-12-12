@@ -26,8 +26,6 @@ import TestHealth from '../Tests/TestHealth';
 
 import { MapTitle, MapIndividual } from '../business-logic-layer/ItemMapper';
 
-//import {Movie} from "../business-logic-layer/DataClasses";
-
 //dummy data
 /*
 const sizeTest = 10;
