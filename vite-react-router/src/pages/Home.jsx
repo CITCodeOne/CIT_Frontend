@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import MainDisplay from '../components/MainDisplay';
 import SignInOffcanvas from '../components/SignInOffcanvas';
+import makeCarousel from '../components/MakeCarousel';
 import lionImage from '../pics/lion.jpg';
 
-// Toggle this to true to use only dummy data
+/* Toggle this to true to use only dummy data for local testing */
 const USE_DUMMY_ONLY = true;
 
-/*
-  Dummy data - this page expects backend to provide an endpoint consisting of a 
-  list of newest released titles + the TitlePreviewDTO properties.
-*/
+/* Dummy top 5 titles by rating list */
 const dummyTitlePreviews = [
   {
     id: '1',
@@ -38,61 +36,193 @@ const dummyTitlePreviews = [
     poster: lionImage,
     plotPre: 'Fox and bunny solve city,',
   },
+  {
+    id: '4',
+    name: 'IT Chapter 3',
+    mediaType: 'Movie',
+    avgRating: 5.4,
+    releaseDate: '2025-01-15T00:00:00Z',
+    poster: lionImage,
+    plotPre: 'Clown returns to terrorize town',
+  },
+  {
+    id: '5',
+    name: 'The Conjuring: Last Rites',
+    mediaType: 'Movie',
+    avgRating: 5.4,
+    releaseDate: '2025-12-24T00:00:00Z',
+    poster: lionImage,
+    plotPre: 'Paranormal investigators face new evil',
+  },
 ];
 
-// helper to format plot preview strings with "..."
+/* Dummy individuals for carousel filtered by nameRating testing */
+const dummyIndividuals = [
+  {
+    id: 'nm0001',
+    name: 'Teri DiRocco',
+    nameRating: 9.2,
+  },
+  {
+    id: 'nm0002',
+    name: 'Sam Actor',
+    nameRating: 8.7,
+  },
+  {
+    id: 'nm0003',
+    name: 'Alex Star',
+    nameRating: 8.3,
+  },
+  {
+    id: 'nm0004',
+    name: 'Jamie Lead',
+    nameRating: 7.9,
+  },
+];
+
+/* helper to format plot preview strings with "..." */
 const formatPlotPre = (s) => {
   if (!s) return '';
   if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
   return s.trim() + '...';
 };
 
+// Setup
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const [featuredTitle, setFeaturedTitle] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [individuals, setIndividuals] = useState([]);
+  const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
 
+  // Toggle bookmark for featured title
+  const handleToggleFeaturedBookmark = async () => {
+    // In DEV mode, just toggle local state (no backend call)
+    if (USE_DUMMY_ONLY) {
+      setIsFeaturedBookmarked((prev) => !prev);
+      return;
+    }
+
+    if (!featuredTitle) return;
+
+    try {
+      // When not bookmarked, call POST /api/v2/users/55/bookmarks with pageId
+      if (!isFeaturedBookmarked) {
+        const res = await fetch('/api/v2/users/55/bookmarks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Adjust if backend expects a different field than pageId
+            pageId: Number(featuredTitle.id),
+          }),
+        });
+        if (!res.ok) throw new Error('Failed to add bookmark');
+        // const data = await res.json(); // you can use this later if needed
+      } else {
+        // Optional: call DELETE endpoint here when you have it
+        // For now we only toggle UI state
+      }
+
+      setIsFeaturedBookmarked((prev) => !prev);
+    } catch (err) {
+      console.error('Failed to toggle bookmark', err);
+    }
+  };
+
+  // Fetch featured title on mount
   useEffect(() => {
-    let mounted = true;
-
     // DEV mode: use dummy data only
     if (USE_DUMMY_ONLY) {
       const latest = dummyTitlePreviews.reduce((a, b) =>
         new Date(a.releaseDate) > new Date(b.releaseDate) ? a : b
       );
-      if (mounted) {
-        setFeaturedTitle(latest);
-        setLoading(false);
-      }
-      return () => {
-        mounted = false;
-      };
+      setFeaturedTitle(latest);
+      setLoading(false);
+      return;
     }
 
-    // PROD mode: backend only, no dummy fallback
-    const endpoint = '/api/v2/titles?sort=releaseDate_desc&limit=20';
+    // PROD mode: fetch from backend, no dummy fallback
+    const endpoint = '/api/v2/titles?sort=releaseDate_desc&limit=10';
+    const controller = new AbortController();
+    let ignore = false;
 
     async function fetchLatest() {
       try {
-        const res = await fetch(endpoint);
+        const res = await fetch(endpoint, { signal: controller.signal });
         if (!res.ok) throw new Error('fetch failed');
         const data = await res.json();
         const item = Array.isArray(data) ? data[0] : data;
-        if (mounted) setFeaturedTitle(item || null);
+        if (ignore) return;
+        setFeaturedTitle(item || null);
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.error('Failed to load latest titles', err);
       } finally {
-        if (mounted) setLoading(false);
+        if (!ignore) setLoading(false);
       }
     }
 
     fetchLatest();
     return () => {
-      mounted = false;
+      ignore = true;
+      controller.abort();
     };
   }, []);
 
-  if (loading)
+  // Fetch individuals for carousel
+  useEffect(() => {
+    // DEV mode: use dummy individuals only
+    if (USE_DUMMY_ONLY) {
+      const mapped = dummyIndividuals
+        .slice()
+        .sort((a, b) => (b.nameRating ?? 0) - (a.nameRating ?? 0))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          nameRating: p.nameRating,
+        }));
+      setIndividuals(mapped);
+      return;
+    }
+
+    // PROD mode: backend only
+    const endpoint = '/api/v2/individuals?limit=10';
+    const controller = new AbortController();
+    let ignore = false;
+
+    async function fetchIndividuals() {
+      try {
+        const res = await fetch(endpoint, { signal: controller.signal });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        if (ignore) return;
+        const list = Array.isArray(data) ? data : [];
+        // sort by nameRating, highest first, take top 10
+        const sorted = list
+          .slice()
+          .sort((a, b) => (b.nameRating ?? 0) - (a.nameRating ?? 0))
+          .slice(0, 10)
+          .map((p) => ({
+            id: p.id,
+            name: p.name,
+            nameRating: p.nameRating,
+          }));
+        setIndividuals(sorted);
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        console.error('Failed to load individuals', err);
+        if (!ignore) setIndividuals([]);
+      }
+    }
+
+    fetchIndividuals();
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
+  }, []);
+
+  if (loading) {
     return (
       <div style={{ padding: '1rem' }}>
         <p>Loading...</p>
@@ -104,8 +234,9 @@ function Home() {
         />
       </div>
     );
+  }
 
-  if (!featuredTitle)
+  if (!featuredTitle) {
     return (
       <div style={{ padding: '1rem' }}>
         <p>No titles found.</p>
@@ -117,10 +248,9 @@ function Home() {
         />
       </div>
     );
+  }
 
-  // Normalize avgRating to 0–10 (if <=5 assume 0–5 input)
-  const rawAvg = featuredTitle.avgRating ?? 0;
-  const avgOn10 = rawAvg <= 5 ? rawAvg * 2 : rawAvg;
+  const avgOn10 = featuredTitle.avgRating ?? 0;
 
   const header = {
     image: featuredTitle.poster || lionImage,
@@ -129,21 +259,34 @@ function Home() {
       featuredTitle.releaseDate
     ).toLocaleDateString('da-DK')}`,
     rating: avgOn10,
-    showBookmark: false,
+    showBookmark: true,
+    isBookmarked: isFeaturedBookmarked,
+    onBookmarkToggle: handleToggleFeaturedBookmark,
   };
 
-  // Pass plot preview into MainDisplay
   const sections = featuredTitle.plotPre
-    ? [
-        {
-          content: formatPlotPre(featuredTitle.plotPre),
-        },
-      ]
+    ? [{ content: formatPlotPre(featuredTitle.plotPre) }]
     : [];
 
   return (
     <div style={{ padding: '1rem' }}>
+      {/* Render featured movie card */}
+      <h2 style={{ margin: '0 0 12px 0' }}>Featured today</h2>
+
       <MainDisplay header={header} metadata={[]} sections={sections} />
+
+      {/* Render top picks carousel */}
+      <div style={{ marginTop: 24 }}>
+        <h3 style={{ margin: '0 0 12px 0' }}>Top picks</h3>
+        {makeCarousel([], 'actor')}
+      </div>
+
+      {/* Render individuals carousel */}
+      <div style={{ marginTop: 24 }}>
+        <h3 style={{ margin: '0 0 12px 0' }}>Most popular celebrities</h3>
+        {makeCarousel(individuals, 'Contribution type?')}
+      </div>
+
       <SignInOffcanvas
         show={showAuth}
         onClose={() => setShowAuth(false)}
