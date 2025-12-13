@@ -1,4 +1,6 @@
 import fetchSimplified from '../helper-function/FetchSimplified';
+import { MapTitle, MapIndividual } from '../ItemMapper';
+import { User } from '../DataClasses';
 
 // Internal helper so every call in this module targets the v2 API segment.
 const callV2 = (endpoint, options = {}) => fetchSimplified({
@@ -6,6 +8,54 @@ const callV2 = (endpoint, options = {}) => fetchSimplified({
 	endpoint,
 	...options,
 });
+
+const toArray = (data) => Array.isArray(data) ? data : (data ? [data] : []);
+
+const mapTitles = (payload) => {
+	const mapped = MapTitle(toArray(payload));
+	return Array.isArray(payload) ? mapped : mapped[0] ?? null;
+};
+
+const mapIndividuals = (payload) => {
+	const mapped = MapIndividual(toArray(payload));
+	return Array.isArray(payload) ? mapped : mapped[0] ?? null;
+};
+
+const mapUser = (dto) => {
+	if (!dto) return null;
+	return new User({
+		id: dto.id ?? dto.userId ?? dto.Id ?? dto.UserId ?? 'n/a',
+		name: dto.name ?? dto.username ?? dto.Name ?? 'n/a',
+		email: dto.email ?? dto.Email ?? 'n/a',
+		createdAt: dto.time ?? dto.Time ?? dto.createdAt ?? 'n/a',
+		ratingsCount: dto.ratingsCount ?? (Array.isArray(dto.ratings) ? dto.ratings.length : 0),
+		bookmarksCount: dto.bookmarksCount ?? (Array.isArray(dto.bookmarks) ? dto.bookmarks.length : 0),
+		ratings: dto.ratings ?? undefined,
+		bookmarks: dto.bookmarks ?? undefined,
+		visitedPages: dto.visitedPages ?? dto.visitedpages ?? undefined,
+		role: dto.role ?? dto.Role ?? 'n/a',
+		image: dto.image ?? dto.profileImage ?? dto.profileImageBase64 ?? undefined,
+	});
+};
+
+const mapRatings = (payload) => toArray(payload).map((dto) => ({
+	userId: dto?.userId ?? dto?.UserId ?? null,
+	titleId: dto?.titleId ?? dto?.TitleId ?? dto?.id ?? dto?.Id ?? null,
+	rating: dto?.rating ?? dto?.Rating ?? null,
+	time: dto?.time ?? dto?.Time ?? null,
+}));
+
+const mapSingleRating = (payload) => mapRatings(payload)[0] ?? null;
+
+const mapBookmarks = (payload) => toArray(payload).map((dto) => ({
+	userId: dto?.userId ?? dto?.UserId ?? null,
+	pageId: dto?.pageId ?? dto?.PageId ?? null,
+	titleId: dto?.titleId ?? dto?.TitleId ?? null,
+	individualId: dto?.individualId ?? dto?.IndividualId ?? null,
+	time: dto?.time ?? dto?.Time ?? null,
+}));
+
+const mapSingleBookmark = (payload) => mapBookmarks(payload)[0] ?? null;
 
 const apiv2 = {
 	health: {
@@ -16,24 +66,24 @@ const apiv2 = {
 		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('titles', {
 			queryParams: { page, pageSize },
 			...options,
-		}),
+		}).then(mapTitles),
 		// GET: /titles/{id}
-		getById: (id, options) => callV2(`titles/${id}`, options),
+		getById: (id, options) => callV2(`titles/${id}`, options).then(mapTitles),
 		// GET: /titles/{id}/ratings
-		getRatings: (id, options) => callV2(`titles/${id}/ratings`, options),
+		getRatings: (id, options) => callV2(`titles/${id}/ratings`, options).then(mapRatings),
 		// GET: /titles/{id}/individuals
-		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options),
+		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options).then(mapIndividuals),
 	},
 	individuals: {
 		// GET: /individuals?page=1&pageSize=20
 		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('individuals', {
 			queryParams: { page, pageSize },
 			...options,
-		}),
+		}).then(mapIndividuals),
 		// GET: /individuals/{id}
-		getById: (id, options) => callV2(`individuals/${id}`, options),
+		getById: (id, options) => callV2(`individuals/${id}`, options).then(mapIndividuals),
 		// GET: /individuals/{id}/titles
-		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options),
+		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options).then(mapTitles),
 	},
 	auth: {
 		// POST: /auth/signup
@@ -51,13 +101,13 @@ const apiv2 = {
 	},
 	user: {
 		// GET: /users/{userId}
-		get: (userId, options) => callV2(`users/${userId}`, options),
+		get: (userId, options) => callV2(`users/${userId}`, options).then(mapUser),
 
 		// BOOKMARKS
 		// GET: /users/{userId}/bookmarks
-		getBookmarks: (userId, options) => callV2(`users/${userId}/bookmarks`, options),
+		getBookmarks: (userId, options) => callV2(`users/${userId}/bookmarks`, options).then(mapBookmarks),
 		// GET: /users/{userId}/bookmarks/{pageId}
-		getBookmark: (userId, pageId, options) => callV2(`users/${userId}/bookmarks/${pageId}`, options),
+		getBookmark: (userId, pageId, options) => callV2(`users/${userId}/bookmarks/${pageId}`, options).then(mapSingleBookmark),
 		// POST: /users/{userId}/bookmarks
 		addBookmark: (userId, pageId, options) => callV2(`users/${userId}/bookmarks`, {
 			method: 'POST',
@@ -72,9 +122,9 @@ const apiv2 = {
 
 		// RATINGS
 		// GET: /users/{userId}/ratings
-		getRatings: (userId, options) => callV2(`users/${userId}/ratings`, options),
+		getRatings: (userId, options) => callV2(`users/${userId}/ratings`, options).then(mapRatings),
 		// GET: /users/{userId}/ratings/{titleId}
-		getRating: (userId, titleId, options) => callV2(`users/${userId}/ratings/${titleId}`, options),
+		getRating: (userId, titleId, options) => callV2(`users/${userId}/ratings/${titleId}`, options).then(mapSingleRating),
 		// POST: /users/{userId}/ratings
 		addRating: (userId, titleId, rating, options) => callV2(`users/${userId}/ratings`, {
 			method: 'POST',
@@ -104,7 +154,7 @@ const apiv2 = {
 		}),
 	},
 
-	
+
 };
 
 Object.freeze(apiv2.health);

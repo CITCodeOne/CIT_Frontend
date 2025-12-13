@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/extractJwtData';
 
 // Utility to render the latest result/error for quick inspection.
@@ -13,6 +14,7 @@ const ResultPane = ({ label, data }) => (
 );
 
 export default function TestApiClient() {
+	const { userId: authUserId, isSignedIn, syncAuthState } = useAuthStatus();
     const [output, setOutput] = useState('');
     const [error, setError] = useState('');
     const [token, setToken] = useState(() => getStoredToken());
@@ -24,6 +26,13 @@ export default function TestApiClient() {
     useEffect(() => {
         setToken(getStoredToken());
     }, []);
+
+    // Keep userId/token aligned with the signed-in user when available.
+    useEffect(() => {
+        if (!isSignedIn) return;
+        setUserId(authUserId || '');
+        setToken(getStoredToken());
+    }, [authUserId, isSignedIn]);
 
     const refreshStoredToken = () => setToken(getStoredToken());
 
@@ -62,7 +71,12 @@ export default function TestApiClient() {
                     Auth token (Bearer):
                     <input value={token} onChange={(e) => setToken(e.target.value)} style={{ width: '100%' }} placeholder={TOKEN_STORAGE_KEY} />
                 </label>
-                <button onClick={refreshStoredToken}>Reload token from storage</button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={refreshStoredToken}>Reload token from storage</button>
+                    <button onClick={() => { syncAuthState(); setUserId(authUserId || ''); setToken(getStoredToken()); }} disabled={!isSignedIn}>
+                        Use logged-in user
+                    </button>
+                </div>
             </div>
 
             {/* Health */}

@@ -1,0 +1,56 @@
+Simple guide: adding/adjusting JSON -> object mappings
+=====================================================
+
+Where things live
+-----------------
+- Mapper logic: src/business-logic-layer/ItemMapper.jsx
+- Domain classes: src/business-logic-layer/DataClasses.jsx
+- API client wiring: src/business-logic-layer/ApiClient/ApiClient.jsx
+
+How mapping works today
+-----------------------
+- Title/individual DTOs are normalized via alias maps inside ItemMapper.jsx.
+- Keys are lowercased and stripped of _ and - before alias lookup.
+- Only properties that already exist on the target class are assigned (sealed objects), so you must add new fields to the class if you want them mapped.
+
+Checklist to add a new incoming field
+-------------------------------------
+1) Add the field to the relevant class (DataClasses.jsx)
+   - Example: add `popularity: "n/a"` to Movie/TvSeries base if you expect it.
+2) Add an alias entry (ItemMapper.jsx)
+   - TITLE_KEY_ALIASES or INDIVIDUAL_KEY_ALIASES.
+   - Key should be lowercase with punctuation removed; value is the class property name.
+   - Example: `popularityscore: "popularity"`
+3) Handle shape tweaks if needed
+   - For special formatting (dates, arrays), adjust in the mapper before assignment.
+   - Example: normalize an array of objects into strings like normalizeGenres does.
+4) (Optional) Adjust API-level mappers
+   - If you add user/bookmark/rating fields, also mirror in ApiClient.jsx mapUser/mapRatings/mapBookmarks.
+5) Test quickly
+   - Use src/Tests/TestApiClient.jsx to call the endpoint and inspect the mapped output.
+
+Examples
+--------
+- New title field `voteCount` coming as `Vote_Count`:
+  - DataClasses: ensure `numVotes` exists.
+  - ItemMapper: add `votecount: "numVotes"` (already present).
+- New individual field `primaryProfession` coming as `primaryProfession`:
+  - DataClasses: add `primaryProfession: "n/a"` to Individual.
+  - ItemMapper: add `primaryprofession: "primaryProfession"`.
+
+Gotchas
+-------
+- Sealed objects: if the property does not exist on the class, assignment is skipped; add it first.
+- Case/underscores: alias keys should be lowercase and punctuation-free because the mapper lowercases/strips before lookup.
+- Dates: releaseDate is trimmed to YYYY-MM-DD and ignored if year < 1920.
+- Genres: object arrays are mapped to their `name`/`Name` values; strings are passed through.
+
+Quick alias snippet pattern
+---------------------------
+TITLE_KEY_ALIASES entry:
+    "incomingfield": "targetProperty"
+
+Need more help?
+---------------
+- Search for TITLE_KEY_ALIASES or INDIVIDUAL_KEY_ALIASES in ItemMapper.jsx and mirror the pattern.
+- If the new field belongs to users/bookmarks/ratings, edit the small mapping helpers in ApiClient.jsx.
