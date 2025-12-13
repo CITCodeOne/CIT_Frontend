@@ -18,7 +18,7 @@ Steps to map a new field
 1) Add the property to the class in DataClasses.jsx (e.g., add `popularity: "n/a"`).
 2) Add an alias in KeyAliases.js:
    - TITLE_KEY_ALIASES for titles, INDIVIDUAL_KEY_ALIASES for people,
-     USER_KEY_ALIASES / RATING_KEY_ALIASES / BOOKMARK_KEY_ALIASES for user-related payloads.
+     USER_KEY_ALIASES / RATING_KEY_ALIASES / BOOKMARK_KEY_ALIASES for user-related responses.
    - Use lowercase, no underscores/dashes for the key; value is the class property name.
    - Example: `popularityscore: "popularity"`.
 3) If the value shape needs tweaking (dates, arrays), adjust the mapper (e.g., normalizeGenres or releaseDate trim).
@@ -32,4 +32,4 @@ Gotchas
 
 Need more?
 ----------
-Search for the alias maps in KeyAliases.js and mirror the pattern. Users/ratings/bookmarks use the USER/RATING/BOOKMARK alias maps in the same file.
+Search for the alias maps in KeyAliases.jsx and mirror the pattern.
