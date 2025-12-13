@@ -1,0 +1,153 @@
+## Title Page - Implementation Notes
+
+### Overview:
+- Refactored Title page (src/pages/Title.jsx) using custom hook architecture
+- 241 lines (reduced from 512 lines, 53% improvement)
+- Uses useTitleData hook for data management, MainDisplay for layout
+- Route: /title/:titleId
+- Backend: https://localhost:5001 | Frontend: http://localhost:5173
+
+### Page Sections:
+1. **Header** (MainDisplay): Poster + title, year, rating, bookmark, badges (mediaType, runtime), sections (genres, overview)
+2. **Cast**: GridListComp with MediaCard components (circular photos, names, characters)
+3. **Similar Titles**: GridListComp with MediaCard components (posters, Info/Rate buttons) - DUMMY DATA
+4. **Reviews**: User's own review (editable UserCard) + all reviews (read-only UserCards)
+
+### API Integration (src/business-logic-layer/ApiClient/ApiClient.jsx):
+
+**Working Endpoints:**
+- mdb.apiv2.titles.getById(id) - Main title data
+- mdb.apiv2.titles.getIndividuals(id) - Cast/crew data
+- mdb.apiv2.titles.getRatings(id) - Reviews/ratings
+- mdb.apiv2.user.getBookmark(userId, titleId) - Check bookmark status
+- mdb.apiv2.user.addBookmark(userId, titleId) - Add bookmark
+- mdb.apiv2.user.removeBookmark(userId, titleId) - Remove bookmark
+- mdb.apiv2.user.getRating(userId, titleId) - Get user rating
+- mdb.apiv2.user.addRating(userId, titleId, rating) - Add rating
+- mdb.apiv2.user.updateRating(userId, titleId, rating) - Update rating
+
+**Missing/Dummy Data:**
+- Similar titles endpoint (using hardcoded dummy data)
+- Review text submission (ratings work, but review content not saved to backend)
+
+**Key Data Mapping:**
+- genres[] → Badge components in sections array
+- plotPre/plot → Overview section
+- avgRating → Displayed in MainDisplay (shows "N/A" if 0)
+- mediaType, runtime → Badge array passed to MainDisplay
+
+### Key Files:
+- **src/pages/Title.jsx** (241 lines) - Main page component
+- **src/hooks/useTitleData.jsx** (252 lines) - Custom hook for all data fetching
+- **src/components/MainDisplay.jsx** - Reusable header layout
+- **src/components/MediaCard.jsx** - Reusable card for cast/titles
+- **src/components/UserCard.jsx** - Reusable card for reviews
+- **src/components/GridListComp.jsx** - Grid/list layout wrapper
+- **src/business-logic-layer/ApiClient/ApiClient.jsx** - API client
+- **src/style/CTitlePage.css** - Page styling
+- **src/routes/AppRoutes.jsx** - Route configuration
+
+### Architecture:
+
+**Title.jsx Structure:**
+- Uses useTitleData hook (returns 14 values)
+- Local state for userReviewText only
+- Dummy data for similar titles
+- Conditional rendering: loading → error → no title → success
+- Prepares badges and sections arrays before rendering
+- MainDisplay with three Container sections (Cast, Similar Titles, Reviews)
+
+**useTitleData Hook:**
+- 10 state variables: title, loading, error, cast, loadingCast, reviews, loadingReviews, isBookmarked, userRating, loadingUserRating
+- 5 useEffect hooks (title, cast, reviews, bookmark status, user rating)
+- 3 handler functions (toggleBookmark, updateUserRating, deleteUserRating)
+- All data fetching and API calls centralized in hook
+- Returns all state and handlers to Title component
+
+### Quick Start:
+Backend: `cd CIT_Backend/BackendSolution && dotnet run --project WebServiceLayer`
+Frontend: `cd CIT_Frontend/vite-react-router && npm run dev`
+Test URL: http://localhost:5173/title/tt10034318
+
+### Current Limitations:
+1. **Similar titles** - No backend endpoint, using dummy data
+2. **Review text** - Can submit ratings but review content not saved to backend
+3. **Authentication** - Using dummy userId='55', isLoggedIn=true (needs real auth)
+
+### Refactoring History:
+- **Phase 1:** Created MediaCard and UserCard reusable components
+- **Phase 2:** Created useTitleData custom hook (extracted all data fetching logic)
+- **Result:** Title.jsx reduced from 512 to 241 lines (53% reduction)
+- **Benefits:** Better separation of concerns, easier testing, reusable components
+
+### Working Features:
+- Title display with poster, name, year, rating
+- Bookmark functionality (add/remove)
+- User rating functionality (add/update/delete)
+- Cast display with photos and character names
+- Reviews display with user ratings
+- Loading and error states for all sections
+- Responsive Bootstrap layout
+- Similar titles display (dummy data)
+- Genres badges and overview section
+
+### Why Dedicated Relationship Endpoints Are Beneficial:
+
+#### Current Situation:
+The backend provides:
+- GET /api/titles/:id - Returns title information
+- GET /api/individuals/:id - Returns individual/actor information
+- GET /api/titles/:id/individuals - Returns cast for a specific title (WORKING)
+- GET /api/titles/:id/ratings - Returns ratings/reviews for a title (WORKING)
+
+#### Still Missing:
+- GET /api/titles/:id/similar - Similar titles recommendation endpoint
+
+#### Why Relationship Endpoints Matter:
+
+**Performance:**
+- Single JOIN query returns only needed data (KB instead of MB)
+- No need to fetch entire database and filter client-side
+- Faster load times and better user experience
+
+**Data Quality:**
+- Includes relationship metadata (character names, billing order, categories)
+- Provides properly structured data for UI components
+- Enables pagination, filtering, and sorting
+
+**REST Best Practices:**
+- Separate endpoints for entities vs relationships
+- Clear, predictable API structure
+- Follows industry standards (TMDB, Spotify, GitHub patterns)
+
+**Example Query Pattern:**
+```sql
+SELECT i.id, i.name, i.profilePath, tp.character, tp.order
+FROM title_principals tp
+JOIN individuals i ON tp.individualId = i.id
+WHERE tp.titleId = :titleId
+ORDER BY tp.order LIMIT 10
+```
+
+### Design Patterns Used:
+- Custom hooks for data management (useTitleData)
+- Component composition (MainDisplay, MediaCard, UserCard, GridListComp)
+- Separation of concerns (UI vs data fetching)
+- Conditional rendering for loading/error states
+- Props drilling minimized through hook pattern
+
+### Next Steps:
+
+**Backend:**
+- Implement /api/titles/:id/similar endpoint for recommendations
+- Add review text storage (currently only ratings are saved)
+- Implement proper authentication system
+
+**Frontend:**
+- Replace dummy auth with real authentication
+- Implement review text submission
+- Add navigation improvements
+- Build Individual page (person detail page)
+- Improve error handling and user feedback
+
+Last Updated: December 13, 2025

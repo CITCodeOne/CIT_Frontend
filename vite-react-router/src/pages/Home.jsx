@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import lionImage from '../pics/lion.jpg';
+import placeholderImage from '../pics/Image-not-found.png';
 import SignInOffcanvas from '../components/SignInOffcanvas';
-//Test
+
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const [movies, setMovies] = useState([]);
@@ -30,12 +30,10 @@ function Home() {
   }, []);
 
   const handleSignIn = (data) => {
-    console.log('Sign in data', data);
     setShowAuth(false);
   };
 
   const handleSignUp = (data) => {
-    console.log('Sign up data', data);
     setShowAuth(false);
   };
 
@@ -43,9 +41,9 @@ function Home() {
     <div>
       <h1>Homepage!</h1>
       <p>Der her er vores mega seje hjemmeskærm med en sej løve</p>
-      <img src={lionImage} alt="LIWON" />
+      <img src={placeholderImage} alt="LIWON" />
       <section style={{ marginTop: '2rem' }}>
-        <h2>Film (debug fra API)</h2>
+        <h2>Featured Content</h2>
         {loading && <p>Henter film...</p>}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {!loading && !error && (

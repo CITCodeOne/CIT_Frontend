@@ -1,256 +1,372 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { normalizeDataUrl, setProfilePicture } from "../components/GetOrSetProfilePicture";
-import { useParams } from "react-router-dom";
+import React, { useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
-import useAuthStatus from "../hooks/useAuthStatus";
-import { getStoredToken } from "../components/extractJwtData";
+import Rating from "../components/Rating";
+import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
+import placeholderImage from "../pics/Image-not-found.png";
 
-// Adapts backend DTO (id, name, email, time, profileImage, …) to the shape the UI consumes.
-const normalizeUserPayload = (payload) => {
-  if (!payload) return null; // Guard against empty responses.
-
-  return {
-    ...payload,
-    uid: payload.id ? String(payload.id) : "",
-    user_name: payload.name ?? "",
-    email: payload.email ?? "",
-    createdAt: payload.time ?? "",
-    profile_image: payload.profileImage ?? "",
-    ratingsCount: payload.ratingsCount ?? 0,
-    bookmarksCount: payload.bookmarksCount ?? 0,
-    role: payload.role ?? "",
-  };
-};
 export default function User() {
-  const { userId: routeUserId } = useParams(); // `/user/:userId` parameter.
-  const authDetails = useAuthStatus(); // Snapshot of current auth state.
-  const { isSignedIn, userId: authUserId } = authDetails; // Destructure for easier use.
+    const { userId } = useParams();
+    const navigate = useNavigate();
+    const fileInputRef = useRef(null); // for avatar file input
 
-  // Tracks latest user profile plus loading and edit state.
-  const [userData, setUserData] = useState(null); // Normalized payload.
-  const [loading, setLoading] = useState(true); // Spinner toggle.
-  const [errorMessage, setErrorMessage] = useState(null); // Friendly error text.
-  const [isEditMode, setIsEditMode] = useState(false); // Client-side edit toggle.
-
-  // Local preview file handling for avatar uploads.
-  const fileInputRef = useRef(null); // Hidden file input element.
-  const imageObjectUrlRef = useRef(null); // Stores current blob URL in use.
-  const [profileImageOverride, setProfileImageOverride] = useState(null); // Blob preview URL.
-
-  // Releases any blob URLs created for preview when no longer needed.
-  const clearProfileImageOverride = useCallback(() => {
-    if (imageObjectUrlRef.current) {
-      URL.revokeObjectURL(imageObjectUrlRef.current);
-      imageObjectUrlRef.current = null;
-    }
-    setProfileImageOverride(null);
-  }, []);
-
-  // Cleanup guard on unmount so we never leak object URLs.
-  useEffect(() => () => {
-    clearProfileImageOverride();
-  }, [clearProfileImageOverride]);
-
-  // Fetches the user whenever the route param changes.
-  useEffect(() => {
-    if (!routeUserId) {
-      setUserData(null);
-      setLoading(false);
-      setIsEditMode(false);
-      setErrorMessage("User not found.");
-      clearProfileImageOverride();
-      return;
-    }
-
-    const controller = new AbortController(); // Allows abort when route changes.
-    const { signal } = controller; // Extract abort signal.
-
-    async function loadUserProfile() { //
-      try {
-        setLoading(true); 
-        setErrorMessage(null);
-        clearProfileImageOverride();
-
-        const response = await fetch(
-          `https://localhost:5001/api/v2/users/${routeUserId}`,
-          { signal } // Pass abort signal to fetch.
-        );
-
-        if (!response.ok) {
-          throw new Error("User not found.");
-        }
-
-        const payload = await response.json();
-        const normalized = normalizeUserPayload(payload); // Maps json to frontend object
-
-        setUserData(normalized);
-        setIsEditMode(false);
-      } catch (error) {
-        if (signal.aborted) {
-          return;
-        }
-
-        console.error("Failed to load user profile", error);
-        setUserData(null);
-        setIsEditMode(false);
-
-        const message =
-          error instanceof Error ? error.message : "Failed to load user profile.";
-        setErrorMessage(message);
-      } finally {
-        if (!signal.aborted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    loadUserProfile();
-
-    return () => {
-      controller.abort(); // Cancel in-flight fetch on cleanup.
+    // dummy user
+    const apiUser = {
+        uconst: userId,
+        username: "PixelPirat_47",
+        email: "pixelpirat47@moonmail.net",
+        createdAt: "2023-01-10T12:00:00Z",
+        bookmarksCount: 12,
+        role: "Admin",
+        avatarUrl: null,
     };
-  }, [routeUserId, clearProfileImageOverride]); // Re-run when route param changes.
 
-  // Determines if viewer owns this profile.
-  const userUid = userData?.uid ?? ""; // Always compare against string.
-  const isOwnProfile = isSignedIn && String(authUserId ?? "") === String(userUid);
+    // dummy ratings list as state
+    const [ratedTitles, setRatedTitles] = useState([
+        {
+            titleId: "tt10052520",
+            title: "Zootopia 2",
+            rating: 5,
+            startYear: 2025,
+            mediaType: "movie",
+            poster: placeholderImage,
+        },
+        {
+            titleId: "tt7366338",
+            title: "Surf's Up",
+            rating: 10,
+            startYear: 2007,
+            mediaType: "movie",
+            poster: placeholderImage,
+        },
+        {
+            titleId: "tt0903747",
+            title: "Breaking Bad",
+            rating: 10,
+            startYear: 2008,
+            mediaType: "tvSeries",
+            poster: placeholderImage,
+        },
+        {
+            titleId: "tt1234567",
+            title: "My Little Pony: The Movie",
+            rating: 1,
+            startYear: 2020,
+            mediaType: "movie",
+            poster: placeholderImage,
+        },
+    ]);
 
-  // Protects against stale edit state when opening other profiles.
-  // This happens when navigating from one profile to another while in edit mode.
-  useEffect(() => {
-    if (!isOwnProfile && isEditMode) {
-      setIsEditMode(false);
-    }
-  }, [isOwnProfile, isEditMode]);
+    // get latest 3 ratings
+    const latestRatedTitles = ratedTitles.slice(0, 3);
 
-  // Toggles edit mode for own profile.
-  const handleToggleEditMode = useCallback(() => {
-    if (!isOwnProfile) return;
-    setIsEditMode((previous) => !previous);
-  }, [isOwnProfile]);
+    // dummy bookmarks as state
+    const [bookmarkedPages, setBookmarkedPages] = useState([
+        {
+            pageId: 2,
+            title: "Zootopia 2",
+            poster: placeholderImage,
+            time: "2025-12-05T12:26:13.960Z",
+            plotPre: "In a city of anthropomorp",
+        },
+        {
+            pageId: 5,
+            title: "Surf's Up",
+            poster: placeholderImage,
+            time: "2025-12-05T12:28:32.770Z",
+            plotPre: "A documentary-style look ",
+        },
+        {
+            pageId: 1,
+            title: "Breaking Bad",
+            poster: placeholderImage,
+            time: "2025-12-05T13:07:52.623Z",
+            plotPre: "A high school chemistry t",
+        },
+        {
+            pageId: 3,
+            title: "My Little Pony: The Movie",
+            poster: placeholderImage,
+            time: "2025-12-06T09:15:00.000Z",
+            plotPre: "When a dark force threate",
+            
+        },
+    ]);
 
-  // Copies profile URL to clipboard (share button).
-  const handleShareClick = useCallback(async () => {
-    if (!userUid || typeof window === "undefined") return;
+    // helper to format plot preview strings with "..."
+    const formatPlotPre = (s) => {
+        if (!s) return "";
+        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
+        return s.trim() + "...";
+    };
 
-    const shareUrl = `${window.location.origin}/user/${userUid}`;
+    // get latest 3 bookmarks
+    const latestBookmarks = bookmarkedPages.slice(0, 3);
 
-    if (!navigator?.clipboard?.writeText) {
-      window.prompt("Copy this profile URL", shareUrl);
-      return;
-    }
+    const [avatarUrl, setAvatarUrl] = useState(apiUser.avatarUrl);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [shareMessage, setShareMessage] = useState("");
 
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      window.alert("Profile URL copied to clipboard");
-    } catch (error) {
-      console.error("Failed to share profile URL", error);
-      window.prompt("Copy this profile URL", shareUrl);
-    }
-  }, [userUid, userData?.user_name]);
+    // dummy auth 
+    const loggedInUserId = "55";
+    const isLoggedIn = true;
+    const isOwnProfile = isLoggedIn && loggedInUserId === userId;
 
-  // Opens hidden file input so owner can select new avatar.
-  const handleAvatarClick = useCallback(() => {
-    if (!isOwnProfile || !isEditMode) return;
-    fileInputRef.current?.click();
-  }, [isOwnProfile, isEditMode]);
+    const handleToggleEditMode = () => {
+        if (!isOwnProfile) return;
+        setIsEditMode((prev) => !prev);
+    };
 
-  // Builds a temporary preview from an uploaded file.
-  const handleAvatarFileChange = useCallback(
-    async (event) => {
-      if (!isOwnProfile || !isEditMode) return;
+    // share profile handler - copies profile URL to clipboard or shows fallback message
+    const handleShareClick = async () => {
+        const profileUrl = window.location.href;
 
-      const file = event.target.files?.[0];
-      if (!file) return;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(profileUrl);
+                setShareMessage("Profile link copied to clipboard!");
+                setTimeout(() => setShareMessage(""), 2000);
+            } else {
+                setShareMessage("Could not copy profile link.");
+                setTimeout(() => setShareMessage(""), 4000);
+            }
+        } catch {
+            setShareMessage("Could not copy profile link.");
+            setTimeout(() => setShareMessage(""), 4000);
+        }
+    };
 
-      clearProfileImageOverride();
+    // avatar click handler
+    const handleAvatarClick = () => {
+        if (!isOwnProfile || !isEditMode) return;
+        fileInputRef.current?.click();
+    };
 
-      const objectUrl = URL.createObjectURL(file); // Blob URL for local preview.
-      imageObjectUrlRef.current = objectUrl;
-      setProfileImageOverride(objectUrl);
+    // avatar file change handler
+    const handleAvatarFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const newUrl = URL.createObjectURL(file);
+        setAvatarUrl(newUrl);
+    };
 
-      event.target.value = "";
-      const token = getStoredToken();
-      if (!token || !userUid) {
-        console.warn("Cannot upload profile picture without auth token or user id");
-        return;
-      }
+    // navigate to user's full ratings list
+    const handleBrowseAllRatings = () => {
+        navigate(`/userpage/${userId}/ratings`);
+    };
 
-      try {
-        await setProfilePicture({ userId: userUid, token, file });
-        console.info("Profile picture uploaded successfully");
-      } catch (error) {
-        console.error("Failed to upload profile picture", error);
-      }
-    },
-    [clearProfileImageOverride, isEditMode, isOwnProfile, userUid]
-  );
+    // navigate to user's full bookmarks list
+    const handleBrowseAllBookmarks = () => {
+        navigate(`/userpage/${userId}/bookmarks`);
+    };
 
-  // Chooses between local preview and backend-supplied base64 image.
-  const profileImageSrc = useMemo(() => {
-    if (profileImageOverride) { // If user has a local preview, use that.
-      return profileImageOverride;
-    }
+    // delete bookmark handler (using dummy auth)
+    const handleDeleteBookmark = (pageId) => {
+        if (!isLoggedIn) {
+            setShareMessage("You must be logged in to remove bookmarks.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
 
-    const raw = userData?.profile_image; // Backend stores base64 (or nothing).
-    if (!raw) { // No image provided.
-      return null; // Will fallback to default avatar in UserBanner.
-    }
+        if (!isOwnProfile) {
+            setShareMessage("You can only remove bookmarks from your own profile.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
 
-    const dataUrl = normalizeDataUrl(String(raw).trim());
-    if (!dataUrl) {
-      return null;
-    }
+        setBookmarkedPages((prev) => prev.filter((b) => b.pageId !== pageId));
+        setShareMessage("Bookmark removed.");
+        setTimeout(() => setShareMessage(""), 2000);
+    };
 
-    return dataUrl;
-  }, [profileImageOverride, userData?.profile_image]); // Recompute when override or user data changes.
+    // delete rating handler (using dummy auth)
+    const handleDeleteRating = (titleId) => {
+        if (!isLoggedIn) {
+            setShareMessage("You must be logged in to remove ratings.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
 
-  if (loading) {
+        if (!isOwnProfile) {
+            setShareMessage("You can only remove ratings from your own profile.");
+            setTimeout(() => setShareMessage(""), 2500);
+            return;
+        }
+
+        setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
+        setShareMessage("Rating removed.");
+        setTimeout(() => setShareMessage(""), 2000);
+    };
+
     return (
-      <main className="container py-4">
-        <div>Loading...</div>
-      </main>
+        <main className="container py-4">
+            {/* avatar change */}
+            <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                className="d-none"
+                onChange={handleAvatarFileChange}
+            />
+
+            <UserBanner
+                username={apiUser.username}
+                
+                email={apiUser.email}
+                createdAt={apiUser.createdAt}
+                ratingsCount={ratedTitles.length}
+                bookmarksCount={apiUser.bookmarksCount}
+                avatarUrl={avatarUrl || defaultAvatar}
+                role={apiUser.role}
+                isOwnProfile={isOwnProfile}
+                isEditMode={isEditMode}
+                onEditClick={handleToggleEditMode}
+                onAvatarClick={handleAvatarClick}
+                onShareClick={handleShareClick}
+            />
+
+            {/* latest 3 ratings */}
+            <section className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h3 className="h5 mb-0">Latest ratings</h3>
+                    {ratedTitles.length > 3 && (
+                        <button
+                            type="button"
+                            className="btn btn-link p-0"
+                            onClick={handleBrowseAllRatings}
+                        >
+                            Browse all ratings
+                        </button>
+                    )}
+                </div>
+
+                {latestRatedTitles.length === 0 ? (
+                    <p className="text-muted">This user has not rated any titles yet.</p>
+                ) : (
+                    <div className="list-group">
+                        {latestRatedTitles.map((item) => (
+                            <div
+                                key={item.titleId}
+                                className="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2"
+                            >
+                                <div className="d-flex align-items-center gap-3">
+                                    <img
+                                        src={item.poster}
+                                        alt={item.title}
+                                        style={{
+                                            width: "100px",
+                                            height: "140px",
+                                            objectFit: "cover",
+                                            borderRadius: "4px",
+                                        }}
+                                    />
+                                    <div>
+                                        <div className="fs-5 fw-semibold">
+                                            {item.title}{" "}
+                                            {item.startYear && (
+                                                <span className="text-muted">({item.startYear})</span>
+                                            )}
+                                        </div>
+                                        <div className="text-muted small">{item.mediaType}</div>
+                                    </div>
+                                </div>
+
+                                {/* Rating and Remove button */}
+                                <div className="d-flex align-items-center gap-2 ms-md-auto">
+                                    <Rating
+                                        initialRating={item.rating}
+                                        editable={false}
+                                        showNumber={true}
+                                    />
+                                    {isOwnProfile && (
+                                        <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            onClick={() => handleDeleteRating(item.titleId)}
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* latest 3 bookmarks & 'browse all' button */}
+            <section className="mt-4">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h3 className="h5 mb-0">Latest bookmarks</h3>
+                    {bookmarkedPages.length > 0 && (
+                        <button
+                            type="button"
+                            className="btn btn-link p-0"
+                            onClick={handleBrowseAllBookmarks}
+                        >
+                            Browse all bookmarks
+                        </button>
+                    )}
+                </div>
+
+                {latestBookmarks.length === 0 ? (
+                    <p className="text-muted">This user has not bookmarked any titles yet.</p>
+                ) : (
+                    <div className="list-group">
+                        {latestBookmarks.map((item) => (
+                            <div
+                                key={item.pageId}
+                                className="list-group-item d-flex align-items-center gap-3"
+                            >
+                                <img
+                                    src={item.poster}
+                                    alt={item.title}
+                                    style={{
+                                        width: "100px",
+                                        height: "140px",
+                                        objectFit: "cover",
+                                        borderRadius: "4px",
+                                    }}
+                                />
+
+                                {/* Title & plot preview*/}
+                                <div className="flex-grow-1">
+                                    <div className="fs-5 fw-semibold">
+                                        {item.title}</div>
+                                    <div className="text-muted small">
+                                        {formatPlotPre(item.plotPre)}</div>
+                                </div>
+
+                                {/* Delete bookmark button */}
+                                {isOwnProfile && (
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger ms-auto"
+                                        onClick={() => handleDeleteBookmark(item.pageId)}
+                                    >
+                                        Remove
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
+
+            {/* share profile-message popup */}
+            {shareMessage && (
+                <div
+                    className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-3 rounded-3 shadow"
+                    style={{
+                        zIndex: 1080,
+                        fontSize: "1rem",
+                        textAlign: "center",
+                        marginBottom: "2rem",
+                    }}
+                >
+                    {shareMessage}
+                </div>
+            )}
+        </main>
     );
-  }
-
-  if (!userData) {
-    return (
-      <main className="container py-4">
-        <div>{errorMessage ?? "User not found."}</div>
-      </main>
-    );
-  }
-
-  return (
-    <main className="container py-4">
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        className="d-none"
-        onChange={handleAvatarFileChange}
-      />
-
-      <UserBanner
-        user_name={userData.user_name}
-        email={userData.email}
-        createdAt={userData.createdAt}
-        ratingsCount={userData.ratingsCount}
-        bookmarksCount={userData.bookmarksCount}
-        profile_image={profileImageSrc ?? undefined}
-        role={userData.role}
-        isOwnProfile={isOwnProfile}
-        isEditMode={isEditMode}
-        onEditClick={handleToggleEditMode}
-        onAvatarClick={handleAvatarClick}
-        onShareClick={handleShareClick}
-      />
-    </main>
-  );
 }

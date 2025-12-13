@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MakeList from "../components/ListComp";
-import girl from "../pics/girl.jpg";
-import lion from "../pics/lion.jpg";
-import mike from "../pics/mike.jpg";
+import placeholderImage from "../pics/Image-not-found.png";
 
 export default function UserBookmarksList() {
     const { userId } = useParams();
@@ -18,28 +16,28 @@ export default function UserBookmarksList() {
         {
             pageId: 2,
             title: "Zootopia 2",
-            poster: girl,
+            poster: placeholderImage,
             time: "2025-12-05T12:26:13.960Z",
             plotPre: "In a city of anthropomorph",
         },
         {
             pageId: 5,
             title: "Surf's Up",
-            poster: lion,
+            poster: placeholderImage,
             time: "2025-12-05T12:28:32.770Z",
             plotPre: "A documentary-style look ",
         },
         {
             pageId: 1,
             title: "Breaking Bad",
-            poster: mike,
+            poster: placeholderImage,
             time: "2025-12-05T13:07:52.623Z",
             plotPre: "A high school chemistry t",
         },
         {
             pageId: 3,
             title: "My Little Pony: The Movie",
-            poster: girl,
+            poster: placeholderImage,
             time: "2025-12-06T09:15:00.000Z",
             plotPre: "When a dark force threate",
         },

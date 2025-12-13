@@ -1,0 +1,26 @@
+                                                        {
+  /* Commented out to show how to define links to a page with text 
+  
+  <Nav.Link as={Link} to="/about">How to website</Nav.Link>
+  */
+}
+
+{/* How to create a dropdown menu in the navbar 
+  <NavDropdown title=" ⋮ " id="navbarScrollingDropdown" className="no-caret">
+    <NavDropdown.Item as={Link} to="/CompAndProps">Random pictures</NavDropdown.Item>
+    <NavDropdown.Item as={Link} to="/Carousel">
+      Carousel
+    </NavDropdown.Item>
+    <NavDropdown.Divider />
+    <NavDropdown.Item as={Link} to="/">
+      Something even cooler here?
+    </NavDropdown.Item>
+  </NavDropdown>
+*/}
+
+{/* How to disable a link, not sure if we'll use this.
+  <Nav.Link href="#" disabled>
+    Link
+  </Nav.Link>
+*/}
+

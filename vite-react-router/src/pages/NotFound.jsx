@@ -1,40 +1,14 @@
 import React from 'react';
-import figlet from 'figlet';
-import standard from 'figlet/fonts/Standard';
 import flamingoImage from '../pics/404notfound.png';
+import figlet from 'figlet';
+import standard from 'figlet/importable-fonts/Standard.js';
 
 figlet.parseFont('Standard', standard);
 
 function NotFound() {
-        const [figletText, setFigletText] = React.useState('');
-        const [figletFontSize, setFigletFontSize] = React.useState('1.5rem');
-
-        React.useEffect(() => {
-                figlet.text(
-                        'ERROR 404',
-                        {
-                                font: 'Standard',
-                                horizontalLayout: 'default',
-                                verticalLayout: 'default',
-                                width: 200,
-                                whitespaceBreak: false,
-                        },
-                        (err, data) => {
-                                if (err) {
-                                        console.error('Figlet error:', err);
-                                        setFigletText('ERROR 404');
-                                        setFigletFontSize('min(1.5rem, calc(100vw / 10))');
-                                        return;
-                                }
-                                const asciiText = data;
-                                setFigletText(asciiText);
-                                const longestLine = asciiText
-                                        .split('\n')
-                                        .reduce((max, line) => Math.max(max, line.length), 1);
-                                setFigletFontSize(`min(1.5rem, calc(100vw / ${longestLine}))`);
-                        },
-                );
-        }, []);
+        const asciiArt = figlet.textSync('ERROR 404', {
+                font: 'Standard',
+        });
 
         return (
                 <div
@@ -50,21 +24,19 @@ function NotFound() {
                 >
                         <pre
                                 style={{
+                                        fontSize: 'clamp(0.5rem, 2vw, 1rem)',
+                                        fontWeight: 'bold',
+                                        color: '#dc3545',
+                                        margin: '0 0 1rem 0',
                                         fontFamily: 'monospace',
-                                        whiteSpace: 'pre',
-                                        lineHeight: 1,
-                                        textAlign: 'center',
-                                        color: 'red',
-                                        margin: 0,
-                                        overflow: 'hidden',
-                                        fontSize: figletFontSize,
-                                        maxWidth: '100vw',
+                                        lineHeight: '1',
                                 }}
                         >
-                                {figletText}
+                                {asciiArt}
                         </pre>
-                        <p>The page you are looking for does not exist.</p>
-                        <img src={flamingoImage} alt="Flamingo" style={{ maxWidth: '1200px', marginTop: '1rem' }} />
+                        <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Page Not Found</h2>
+                        <p style={{ fontSize: '1.1rem', color: '#666' }}>The page you are looking for does not exist.</p>
+                        <img src={flamingoImage} alt="404 Error" style={{ maxWidth: '100%', width: '600px', marginTop: '2rem' }} />
                 </div>
         );
 }

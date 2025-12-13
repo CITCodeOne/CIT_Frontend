@@ -1,0 +1,78 @@
+# List Components Guide
+
+## When to Use Which List Component
+
+### 🔲 GridListComp
+**Use for:** Grid layouts with Bootstrap Row/Col (items displayed side by side)
+
+**Examples:**
+- Cast members grid (3 columns)
+- Similar titles grid (3 columns)
+- Product grids
+- Image galleries
+
+**Usage:**
+```jsx
+import GridListComp from '../components/GridListComp';
+
+<GridListComp
+  items={castMembers}
+  renderItem={(actor) => (
+    <Col key={actor.id} xs={12} sm={6} md={4}>
+      {/* Your content */}
+    </Col>
+  )}
+/>
+```
+
+**Important:** 
+- `renderItem` MUST return a `<Col>` component
+- The component wraps items in a `<Row>`
+- Don't wrap GridListComp in a Row - it creates its own
+
+---
+
+### 📋 ListComp
+**Use for:** Vertical stacked lists (items displayed one after another)
+
+**Examples:**
+- Reviews list
+- User ratings list
+- User bookmarks list
+- Comment threads
+- Timeline items
+
+**Usage:**
+```jsx
+import ListComp from '../components/ListComp';
+
+<ListComp
+  items={reviews}
+  renderItem={(review) => (
+    <Card className="mb-3">
+      {/* Your content */}
+    </Card>
+  )}
+/>
+```
+
+**Important:**
+- `renderItem` returns ANY component (Card, div, etc.)
+- Items are stacked vertically
+- Each item is wrapped in a div with className
+
+---
+
+## Quick Decision Guide
+
+**Do items need to be side by side?**
+- ✅ Yes → Use `GridListComp`
+- ❌ No → Use `ListComp`
+
+**Are you using Bootstrap Row/Col grid?**
+- ✅ Yes → Use `GridListComp`
+- ❌ No → Use `ListComp`
+
+**Is it a vertical list?**
+- ✅ Yes → Use `ListComp`
+- ❌ No (horizontal/grid) → Use `GridListComp`

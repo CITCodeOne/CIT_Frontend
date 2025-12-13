@@ -1,206 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Spinner, Alert, Row, Col, Card, Button } from 'react-bootstrap';
-import { getTitleById, getTitleCast, getSimilarTitles, getTitleReviews } from '../config/api';
-import MainDisplay, { renderBadges, renderText } from '../components/MainDisplay';
+import { Container, Spinner, Alert, Card, Badge } from 'react-bootstrap';
+import MainDisplay from '../components/MainDisplay';
+import GridListComp from '../components/GridListComp';
+import MediaCard from '../components/MediaCard';
+import UserCard from '../components/UserCard';
+import useTitleData from '../hooks/useTitleData';
+import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 
 /**
  * Title Page Component
  * 
  * Displays detailed information about a specific title including cast, similar titles, and reviews.
- * Fetches data from multiple API endpoints and renders using MainDisplay component.
+ * 
+ * API Endpoints Used:
+ * ✅ titles.getById(id) - Fetches main title data
+ * ✅ titles.getIndividuals(id) - Fetches cast/crew data
+ * ✅ titles.getRatings(id) - Fetches reviews/ratings
+ * ✅ user.getBookmark(userId, titleId) - Checks bookmark status
+ * ✅ user.addBookmark(userId, titleId) - Adds bookmark
+ * ✅ user.removeBookmark(userId, titleId) - Removes bookmark
+ * ✅ user.getRating(userId, titleId) - Fetches user's rating
+ * ✅ user.addRating(userId, titleId, rating) - Adds new rating
+ * ✅ user.updateRating(userId, titleId, rating) - Updates existing rating
+ * 
+ * Dummy Data (no endpoints available):
+ * ❌ Similar Titles - using hardcoded dummy data
  */
-
-// ============================================
-// Helper Components
-// ============================================
-
-/**
- * CastSection - Displays cast members with circular profile images
- * Shows up to 3 cast members with names and character information
- */
-const CastSection = ({ cast }) => {
-    return (
-        <Container className="mt-4">
-            <Card className="shadow-sm">
-                <Card.Body>
-                    <h4 className="mb-4">Cast</h4>
-                    {cast?.length > 0 ? (
-                        <Row className="justify-content-start">
-                            {cast.slice(0, 3).map((actor) => (
-                                <Col key={actor.id} xs={4} md={4} className="mb-3">
-                                    <div className="text-center">
-                                        <div className="circular-image-120">
-                                            <img
-                                                src={actor.profilePath || actor.poster || 'https://via.placeholder.com/120?text=Picture'}
-                                                alt={actor.name}
-                                            />
-                                        </div>
-                                        <div className="mt-2 p-2 border rounded bg-white cast-name-box">
-                                            <small className="d-block"><strong>{actor.name}</strong></small>
-                                            {actor.character && <small className="text-muted">{actor.character}</small>}
-                                        </div>
-                                    </div>
-                                </Col>
-                            ))}
-                        </Row>
-                    ) : (
-                        <Alert variant="info">
-                            Cast information is coming soon! Backend endpoint needed: <code>GET /api/titles/:id/cast</code>
-                        </Alert>
-                    )}
-                </Card.Body>
-            </Card>
-        </Container>
-    );
-};
-
-/**
- * SimilarTitlesSection - Displays similar titles with poster images
- * Shows up to 3 similar titles with Info and Rate buttons
- */
-const SimilarTitlesSection = ({ similarTitles }) => {
-    if (!similarTitles?.length) return null;
-
-    return (
-        <Container className="mt-4">
-            <Card className="shadow-sm">
-                <Card.Body>
-                    <h4 className="mb-4">Similar Titles</h4>
-                    <Row>
-                        {similarTitles.slice(0, 3).map((title) => (
-                            <Col key={title.id} xs={12} sm={6} md={4} className="mb-3">
-                                <Card className="h-100 shadow-sm">
-                                    <div className="poster-container">
-                                        <img
-                                            src={title.poster || 'https://via.placeholder.com/342x513?text=Movie+Poster'}
-                                            alt={title.name || title.title}
-                                        />
-                                    </div>
-                                    <Card.Body>
-                                        <div className="d-flex justify-content-between similar-buttons">
-                                            <Button variant="outline-primary" size="sm">Info</Button>
-                                            <Button variant="outline-warning" size="sm">Rate</Button>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            </Col>
-                        ))}
-                    </Row>
-                </Card.Body>
-            </Card>
-        </Container>
-    );
-};
-
-/**
- * ReviewsSection - Displays user reviews with ratings
- * Shows up to 3 reviews with author avatar, rating, and truncated content
- */
-const ReviewsSection = ({ reviews }) => {
-    if (!reviews?.length) return null;
-
-    return (
-        <Container className="mt-4">
-            <Card className="shadow-sm">
-                <Card.Body>
-                    <h4 className="mb-4">Reviews</h4>
-                    {reviews.slice(0, 3).map((review) => (
-                        <Card key={review.id} className="mb-3 shadow-sm">
-                            <Card.Body>
-                                <Row className="align-items-center">
-                                    <Col xs={3} md={2} lg={1} className="text-center">
-                                        <div className="circular-image-80">
-                                            <img
-                                                src={review.authorAvatar || 'https://via.placeholder.com/80?text=Profile'}
-                                                alt={review.author}
-                                            />
-                                        </div>
-                                    </Col>
-                                    <Col xs={3} md={2} lg={1} className="text-center">
-                                        <div className="review-rating-box">
-                                            {review.rating ? (
-                                                <div>
-                                                    <strong className="review-rating-number">
-                                                        {review.rating}
-                                                    </strong>
-                                                    <div className="review-rating-scale">/10</div>
-                                                </div>
-                                            ) : (
-                                                <span className="review-rating-na">N/A</span>
-                                            )}
-                                        </div>
-                                    </Col>
-                                    <Col xs={12} md={8} lg={10} className="mt-3 mt-md-0">
-                                        <div className="border rounded p-3 bg-white review-content-box">
-                                            <div className="mb-2"><strong>{review.author}</strong></div>
-                                            <p className="mb-0 text-muted review-text">
-                                                {review.content?.length > 250
-                                                    ? `${review.content.substring(0, 250)}...`
-                                                    : review.content || 'No review text available'}
-                                            </p>
-                                        </div>
-                                    </Col>
-                                </Row>
-                            </Card.Body>
-                        </Card>
-                    ))}
-                </Card.Body>
-            </Card>
-        </Container>
-    );
-};
-
-// ============================================
-// Main Component
-// ============================================
 
 function Title() {
     const { titleId } = useParams();
-    const [title, setTitle] = useState(null);
-    const [cast, setCast] = useState([]);
-    const [similarTitles, setSimilarTitles] = useState([]);
-    const [reviews, setReviews] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [isBookmarked, setIsBookmarked] = useState(false);
+    
+    // Dummy auth (replace with real auth later)
+    const userId = '55';
+    const isLoggedIn = true;
 
-    // Fetch title data and related information on component mount
-    useEffect(() => {
-        const fetchAllData = async () => {
-            try {
-                setLoading(true);
-                const titleData = await getTitleById(titleId);
-                setTitle(titleData);
-                
-                // Fetch related data in parallel
-                const [castData, similarData, reviewsData] = await Promise.allSettled([
-                    getTitleCast(titleId),
-                    getSimilarTitles(titleId),
-                    getTitleReviews(titleId)
-                ]);
-                
-                if (castData.status === 'fulfilled') setCast(castData.value || []);
-                if (similarData.status === 'fulfilled') setSimilarTitles(similarData.value || []);
-                if (reviewsData.status === 'fulfilled') setReviews(reviewsData.value || []);
-                
-                setError(null);
-            } catch (err) {
-                setError(err.message || 'Failed to load title');
-            } finally {
-                setLoading(false);
-            }
-        };
+    // Use custom hook for all data fetching and state management
+    const {
+        title,
+        loading,
+        error,
+        cast,
+        loadingCast,
+        reviews,
+        loadingReviews,
+        isBookmarked,
+        toggleBookmark,
+        userRating,
+        loadingUserRating,
+        updateUserRating,
+        deleteUserRating
+    } = useTitleData(titleId, userId, isLoggedIn);
 
-        if (titleId) fetchAllData();
-    }, [titleId]);
+    // Local state for user review text (not saved to backend yet)
+    const [userReviewText, setUserReviewText] = useState('');
 
-    // Toggle bookmark status (TODO: integrate with API)
-    const handleBookmarkToggle = () => {
-        setIsBookmarked(!isBookmarked);
-        // TODO: Call API to save bookmark
-    };
+    // Dummy data for similar titles (no API endpoint available)
+    const dummySimilarTitles = [
+        {
+            id: 'tt0111161',
+            name: 'The Green Mile',
+            poster: placeholderImage
+        },
+        {
+            id: 'tt0468569',
+            name: 'The Dark Knight',
+            poster: placeholderImage
+        },
+        {
+            id: 'tt0137523',
+            name: 'Fight Club',
+            poster: placeholderImage
+        }
+    ];
 
     if (loading) return (
         <Container className="d-flex justify-content-center align-items-center loading-container">
@@ -223,47 +96,171 @@ function Title() {
         </Container>
     );
 
-    // Prepare data structure for MainDisplay component
-    const header = {
-        image: title.poster,
-        title: title.name || 'No Title',
-        subtitle: title.startYear ? `(${title.startYear})` : null,
-        rating: title.avgRating,
-        itemId: title.id,  // Add itemId for bookmark functionality
-        showBookmark: true,
-        isBookmarked,
-        onBookmarkToggle: handleBookmarkToggle
-    };
+    // Prepare badges (mediaType, runtime)
+    const badges = [];
+    if (title.mediaType) {
+        badges.push({ text: title.mediaType, variant: 'primary' });
+    }
+    if (title.runtime > 0) {
+        badges.push({ text: `${title.runtime} min`, variant: 'secondary' });
+    }
 
-    const metadata = [
-        title.mediaType && { badge: true, value: title.mediaType, badgeColor: 'secondary' },
-        title.runtime > 0 && { label: 'Runtime', value: `${title.runtime} min` },
-        title.startYear && { label: 'Year', value: title.startYear }
-    ].filter(Boolean);
-
-    const sections = [
-        title.genres?.length > 0 && {
+    // Prepare sections (Genres, Overview)
+    const sections = [];
+    if (title.genres?.length > 0) {
+        sections.push({
             title: 'Genres',
-            content: renderBadges(title.genres.map(g => g.name))
-        },
-        {
+            content: title.genres.map((genre, index) => (
+                <Badge key={index} bg="secondary" className="me-2">
+                    {genre.name || genre}
+                </Badge>
+            ))
+        });
+    }
+    if (title.plotPre || title.plot) {
+        sections.push({
             title: 'Overview',
-            content: renderText(title.plotPre || title.plot, 'No plot available')
-        }
-    ].filter(Boolean);
+            content: <p className="text-muted">{title.plotPre || title.plot}</p>
+        });
+    }
 
     return (
-        <div className="title-page-background">
-            <MainDisplay 
-                header={header}
-                metadata={metadata}
-                sections={sections}
-            />
-            
-            <CastSection cast={cast} />
-            <SimilarTitlesSection similarTitles={similarTitles} />
-            <ReviewsSection reviews={reviews} />
-        </div>
+        <MainDisplay
+            image={title.poster || placeholderImage}
+            title={title.name || 'No Title'}
+            subtitle={title.startYear ? `(${title.startYear})` : null}
+            rating={title.rating}
+            badges={badges}
+            sections={sections}
+            bookmark={{
+                itemId: title.id,
+                isBookmarked: isBookmarked,
+                onToggle: toggleBookmark
+            }}
+        >
+            {/* Cast Section */}
+            <Container className="mt-4">
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h4 className="mb-4">Cast</h4>
+                        {loadingCast ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : cast.length === 0 ? (
+                            <p className="text-muted">No cast information available.</p>
+                        ) : (
+                            <GridListComp
+                                items={cast}
+                                renderItem={(actor) => (
+                                    <MediaCard
+                                        key={actor.id}
+                                        id={actor.id}
+                                        type="person"
+                                        image={actor.profilePath}
+                                        title={actor.name}
+                                        subtitle={actor.character}
+                                        size="large"
+                                    />
+                                )}
+                            />
+                        )}
+                    </Card.Body>
+                </Card>
+            </Container>
+
+            {/* Similar Titles Section */}
+            <Container className="mt-4">
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h4 className="mb-4">Similar Titles</h4>
+                        <GridListComp
+                            items={dummySimilarTitles}
+                            renderItem={(similarTitle) => (
+                                <MediaCard
+                                    key={similarTitle.id}
+                                    id={similarTitle.id}
+                                    type="title"
+                                    image={similarTitle.poster}
+                                    title={similarTitle.name}
+                                    actions={[
+                                        {
+                                            label: 'Info',
+                                            variant: 'outline-primary',
+                                            onClick: (id) => window.location.href = `/title/${id}`
+                                        },
+                                        {
+                                            label: 'Rate',
+                                            variant: 'outline-warning',
+                                            onClick: (id) => window.location.href = `/title/${id}#reviews-section`
+                                        }
+                                    ]}
+                                />
+                            )}
+                        />
+                    </Card.Body>
+                </Card>
+            </Container>
+
+            {/* Reviews Section */}
+            <Container className="mt-4 mb-4" id="reviews-section">
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h4 className="mb-4">Reviews</h4>
+                        
+                        {/* User Rating Box (if logged in) */}
+                        {isLoggedIn && (
+                            loadingUserRating ? (
+                                <div className="text-center py-3">
+                                    <Spinner animation="border" size="sm" />
+                                </div>
+                            ) : (
+                                <UserCard
+                                    userId={userId}
+                                    username="You"
+                                    avatar={placeholderImage}
+                                    rating={userRating}
+                                    content={userReviewText}
+                                    editable={true}
+                                    showRating={true}
+                                    onRatingChange={updateUserRating}
+                                    onContentChange={setUserReviewText}
+                                    onDelete={deleteUserRating}
+                                    showDeleteButton={userRating > 0}
+                                    maxContentLength={0}
+                                    placeholder="Write your review here... (optional)"
+                                />
+                            )
+                        )}
+
+                        {/* All Reviews */}
+                        {loadingReviews ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : reviews.length === 0 ? (
+                            <p className="text-muted">No reviews available yet.</p>
+                        ) : (
+                            <>
+                                {reviews.map((review) => (
+                                    <UserCard
+                                        key={review.id}
+                                        userId={review.userId}
+                                        username={review.author}
+                                        avatar={review.authorAvatar}
+                                        rating={review.rating}
+                                        content={review.content}
+                                        editable={false}
+                                        showRating={true}
+                                        maxContentLength={250}
+                                    />
+                                ))}
+                            </>
+                        )}
+                    </Card.Body>
+                </Card>
+            </Container>
+        </MainDisplay>
     );
 }
 

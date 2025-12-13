@@ -1,0 +1,32 @@
+# Repository Cleanup Notes - December 13, 2025
+
+## Deleted
+- /Tests folder (8 test files with exposed API keys)
+- Demo pages: CompAndProps, CustomCarousel, CustomCarouselFilterTest, Figlet, ProfileImageBase64
+- Components: RandPic, Page
+- Files: Bookmarks.jsx, User.jsx (old), /config/api.js
+- Images: girl.jpg, lion.jpg, mike.jpg, sponge.jpg
+
+## Created/Combined
+- ImageBase64Utils.jsx (combined encode + decode utilities)
+
+## Renamed
+- UserPage.jsx → User.jsx
+- extractJwtData.jsx → ExtractJwtData.jsx
+
+## Updated
+- About.jsx: Rewrote with production content
+- Navbar.jsx: Removed 15 dead links (18 → 3 links)
+- AppRoutes.jsx: Cleaned duplicate routes
+- Title.jsx: Migrated to ApiClient
+- NotFound.jsx: Uses figlet for ASCII art
+- package.json: Project renamed to "cit-movie-database"
+- All dummy data pages: Use placeholderImage instead of deleted images
+
+## Standardized
+- API calls: Now use ApiClient exclusively (deleted config/api.js)
+- Naming: PascalCase for all component files
+- Routes: Simplified patterns (/title/:id, /individual/:id, /user/:userId)
+
+## Result
+Clean, production-ready codebase with no errors or broken imports.

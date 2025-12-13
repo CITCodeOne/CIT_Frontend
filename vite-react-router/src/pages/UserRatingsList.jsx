@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MakeList from "../components/ListComp";
 import Rating from "../components/Rating";
-import girl from "../pics/girl.jpg";
-import lion from "../pics/lion.jpg";
-import mike from "../pics/mike.jpg";
+import placeholderImage from "../pics/Image-not-found.png";
 
 export default function UserRatingsList() {
     const { userId } = useParams();
@@ -22,7 +20,7 @@ export default function UserRatingsList() {
             rating: 5,
             startYear: 2025,
             mediaType: "movie",
-            poster: girl,
+            poster: placeholderImage,
         },
         {
             titleId: "tt7366338",
@@ -30,7 +28,7 @@ export default function UserRatingsList() {
             rating: 10,
             startYear: 2019,
             mediaType: "movie",
-            poster: lion,
+            poster: placeholderImage,
         },
         {
             titleId: "tt0903747",
@@ -38,7 +36,7 @@ export default function UserRatingsList() {
             rating: 10,
             startYear: 2008,
             mediaType: "tvSeries",
-            poster: mike,
+            poster: placeholderImage,
         },
         {
             titleId: "tt1234567",
@@ -46,7 +44,7 @@ export default function UserRatingsList() {
             rating: 1,
             startYear: 2020,
             mediaType: "movie",
-            poster: girl,
+            poster: placeholderImage,
         },
         {
             titleId: "tt1233567",
@@ -54,7 +52,7 @@ export default function UserRatingsList() {
             rating: 3,
             startYear: 1994,
             mediaType: "movie",
-            poster: lion,
+            poster: placeholderImage,
         },
     ]);
 

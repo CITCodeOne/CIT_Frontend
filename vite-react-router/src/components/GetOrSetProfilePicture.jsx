@@ -1,5 +1,5 @@
 import fetchSimplified from "../business-logic-layer/helper-function/FetchSimplified";
-import { encodeImageToBase64 } from "./EncodeImageBase64";
+import { encodeImageToBase64 } from "./ImageBase64Utils";
 
 export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => { // Default to JPEG
     const sanitized = (rawValue || "").trim().replace(/^"|"$/g, ""); // Remove surrounding quotes
