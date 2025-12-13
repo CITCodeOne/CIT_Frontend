@@ -1,43 +1,5 @@
 import { Movie, TvEpisode, TvSeries, Individual, MiscMedia } from "./DataClasses";
-
-const TITLE_KEY_ALIASES = {
-    avgrating: "rating",
-    iconst: "id",
-    mediatype: "mediaType",
-    numvotes: "numVotes",
-    plotpre: "plot",
-    poster: "image",
-    releasedate: "releaseDate",
-    runtimeminutes: "runtime",
-    season: "seasonNumb",
-    episodenumber: "episodeNumb",
-    parentid: "seriesLink",
-    seriesid: "seriesLink",
-    seriesname: "seriesName",
-    startyear: "startYear",
-    endyear: "endYear",
-    tconst: "id",
-    titleid: "id",
-    votecount: "numVotes",
-    primaryname: "name"
-};
-
-const INDIVIDUAL_KEY_ALIASES = {
-    iconst: "id",
-    nconst: "id",
-    namerating: "rating",
-    primaryname: "name",
-    birthyear: "birthYear",
-    deathyear: "deathYear",
-    knownfor: "knownFor"
-};
-
-const normalizeKey = (aliases, rawKey) => {
-    const compact = (rawKey ?? "").toString();
-    const lookupKey = compact.replace(/[_\-]/g, "").toLowerCase();
-    const fallback = compact.charAt(0).toLowerCase() + compact.slice(1);
-    return aliases[lookupKey] ?? fallback;
-};
+import { TITLE_KEY_ALIASES, INDIVIDUAL_KEY_ALIASES, normalizeKey } from "./KeyAliases";
 
 const createTitleInstance = (mediaType) => {
     switch ((mediaType || "").toLowerCase()) {

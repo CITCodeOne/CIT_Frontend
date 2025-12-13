@@ -1,5 +1,6 @@
 import fetchSimplified from '../helper-function/FetchSimplified';
 import { MapTitle, MapIndividual } from '../ItemMapper';
+import { normalizeKey, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES } from '../KeyAliases';
 import { User } from '../DataClasses';
 
 // Internal helper so every call in this module targets the v2 API segment.
@@ -20,40 +21,51 @@ const mapIndividuals = (payload) => {
 	const mapped = MapIndividual(toArray(payload));
 	return Array.isArray(payload) ? mapped : mapped[0] ?? null;
 };
-
 const mapUser = (dto) => {
 	if (!dto) return null;
-	return new User({
-		id: dto.id ?? dto.userId ?? dto.Id ?? dto.UserId ?? 'n/a',
-		name: dto.name ?? dto.username ?? dto.Name ?? 'n/a',
-		email: dto.email ?? dto.Email ?? 'n/a',
-		createdAt: dto.time ?? dto.Time ?? dto.createdAt ?? 'n/a',
-		ratingsCount: dto.ratingsCount ?? (Array.isArray(dto.ratings) ? dto.ratings.length : 0),
-		bookmarksCount: dto.bookmarksCount ?? (Array.isArray(dto.bookmarks) ? dto.bookmarks.length : 0),
-		ratings: dto.ratings ?? undefined,
-		bookmarks: dto.bookmarks ?? undefined,
-		visitedPages: dto.visitedPages ?? dto.visitedpages ?? undefined,
-		role: dto.role ?? dto.Role ?? 'n/a',
-		image: dto.image ?? dto.profileImage ?? dto.profileImageBase64 ?? undefined,
+	const user = new User();
+	Object.entries(dto).forEach(([rawKey, value]) => {
+		if (value === undefined || value === null) return;
+		const key = normalizeKey(USER_KEY_ALIASES, rawKey);
+		if (key in user) {
+			user[key] = value;
+		}
 	});
+
+	if (user.ratingsCount === 0 && Array.isArray(user.ratings)) {
+		user.ratingsCount = user.ratings.length;
+	}
+	if (user.bookmarksCount === 0 && Array.isArray(user.bookmarks)) {
+		user.bookmarksCount = user.bookmarks.length;
+	}
+	return user;
 };
 
-const mapRatings = (payload) => toArray(payload).map((dto) => ({
-	userId: dto?.userId ?? dto?.UserId ?? null,
-	titleId: dto?.titleId ?? dto?.TitleId ?? dto?.id ?? dto?.Id ?? null,
-	rating: dto?.rating ?? dto?.Rating ?? null,
-	time: dto?.time ?? dto?.Time ?? null,
-}));
+const mapRatings = (payload) => toArray(payload).map((dto) => {
+	const rating = { userId: null, titleId: null, rating: null, time: null };
+	Object.entries(dto || {}).forEach(([rawKey, value]) => {
+		if (value === undefined || value === null) return;
+		const key = normalizeKey(RATING_KEY_ALIASES, rawKey);
+		if (key in rating) {
+			rating[key] = value;
+		}
+	});
+	return rating;
+});
 
 const mapSingleRating = (payload) => mapRatings(payload)[0] ?? null;
 
-const mapBookmarks = (payload) => toArray(payload).map((dto) => ({
-	userId: dto?.userId ?? dto?.UserId ?? null,
-	pageId: dto?.pageId ?? dto?.PageId ?? null,
-	titleId: dto?.titleId ?? dto?.TitleId ?? null,
-	individualId: dto?.individualId ?? dto?.IndividualId ?? null,
-	time: dto?.time ?? dto?.Time ?? null,
-}));
+const mapBookmarks = (payload) => toArray(payload).map((dto) => {
+	const bookmark = { userId: null, pageId: null, titleId: null, individualId: null, time: null };
+	Object.entries(dto || {}).forEach(([rawKey, value]) => {
+		if (value === undefined || value === null) return;
+		const key = normalizeKey(BOOKMARK_KEY_ALIASES, rawKey);
+		if (key in bookmark) {
+			bookmark[key] = value;
+		}
+	});
+	return bookmark;
+});
 
 const mapSingleBookmark = (payload) => mapBookmarks(payload)[0] ?? null;
 

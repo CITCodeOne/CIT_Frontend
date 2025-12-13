@@ -1,56 +1,35 @@
-Simple guide: adding/adjusting JSON -> object mappings
-=====================================================
+Quick guide: add/adjust JSON -> object mapping
+=============================================
 
-Where things live
------------------
-- Mapper logic: src/business-logic-layer/ItemMapper.jsx
+Key files
+---------
+- Aliases + normalize helper: src/business-logic-layer/KeyAliases.js
+- Mappers (titles/individuals): src/business-logic-layer/ItemMapper.jsx
+- User/bookmark/rating mapping: src/business-logic-layer/ApiClient/ApiClient.jsx
 - Domain classes: src/business-logic-layer/DataClasses.jsx
-- API client wiring: src/business-logic-layer/ApiClient/ApiClient.jsx
 
-How mapping works today
------------------------
-- Title/individual DTOs are normalized via alias maps inside ItemMapper.jsx.
-- Keys are lowercased and stripped of _ and - before alias lookup.
-- Only properties that already exist on the target class are assigned (sealed objects), so you must add new fields to the class if you want them mapped.
+How it works
+------------
+- Incoming keys are lowercased, punctuation stripped, then matched via alias maps to class properties.
+- Objects are sealed, so only properties that exist on the class are set.
 
-Checklist to add a new incoming field
--------------------------------------
-1) Add the field to the relevant class (DataClasses.jsx)
-   - Example: add `popularity: "n/a"` to Movie/TvSeries base if you expect it.
-2) Add an alias entry (ItemMapper.jsx)
-   - TITLE_KEY_ALIASES or INDIVIDUAL_KEY_ALIASES.
-   - Key should be lowercase with punctuation removed; value is the class property name.
-   - Example: `popularityscore: "popularity"`
-3) Handle shape tweaks if needed
-   - For special formatting (dates, arrays), adjust in the mapper before assignment.
-   - Example: normalize an array of objects into strings like normalizeGenres does.
-4) (Optional) Adjust API-level mappers
-   - If you add user/bookmark/rating fields, also mirror in ApiClient.jsx mapUser/mapRatings/mapBookmarks.
-5) Test quickly
-   - Use src/Tests/TestApiClient.jsx to call the endpoint and inspect the mapped output.
-
-Examples
---------
-- New title field `voteCount` coming as `Vote_Count`:
-  - DataClasses: ensure `numVotes` exists.
-  - ItemMapper: add `votecount: "numVotes"` (already present).
-- New individual field `primaryProfession` coming as `primaryProfession`:
-  - DataClasses: add `primaryProfession: "n/a"` to Individual.
-  - ItemMapper: add `primaryprofession: "primaryProfession"`.
+Steps to map a new field
+------------------------
+1) Add the property to the class in DataClasses.jsx (e.g., add `popularity: "n/a"`).
+2) Add an alias in KeyAliases.js:
+   - TITLE_KEY_ALIASES for titles, INDIVIDUAL_KEY_ALIASES for people,
+     USER_KEY_ALIASES / RATING_KEY_ALIASES / BOOKMARK_KEY_ALIASES for user-related payloads.
+   - Use lowercase, no underscores/dashes for the key; value is the class property name.
+   - Example: `popularityscore: "popularity"`.
+3) If the value shape needs tweaking (dates, arrays), adjust the mapper (e.g., normalizeGenres or releaseDate trim).
+4) Test with src/Tests/TestApiClient.jsx to see the mapped output.
 
 Gotchas
 -------
-- Sealed objects: if the property does not exist on the class, assignment is skipped; add it first.
-- Case/underscores: alias keys should be lowercase and punctuation-free because the mapper lowercases/strips before lookup.
-- Dates: releaseDate is trimmed to YYYY-MM-DD and ignored if year < 1920.
-- Genres: object arrays are mapped to their `name`/`Name` values; strings are passed through.
+- If the class lacks the property, nothing gets assigned—add it first.
+- Dates: releaseDate is trimmed to YYYY-MM-DD; years < 1920 are skipped.
+- Genres: object arrays map to name/Name; strings pass through.
 
-Quick alias snippet pattern
----------------------------
-TITLE_KEY_ALIASES entry:
-    "incomingfield": "targetProperty"
-
-Need more help?
----------------
-- Search for TITLE_KEY_ALIASES or INDIVIDUAL_KEY_ALIASES in ItemMapper.jsx and mirror the pattern.
-- If the new field belongs to users/bookmarks/ratings, edit the small mapping helpers in ApiClient.jsx.
+Need more?
+----------
+Search for the alias maps in KeyAliases.js and mirror the pattern. Users/ratings/bookmarks use the USER/RATING/BOOKMARK alias maps in the same file.
