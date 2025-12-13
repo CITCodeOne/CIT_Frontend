@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Card, Row, Col } from 'react-bootstrap';
-import BookmarkButton from '../components/BookmarkButton';
+import ToggleButton from '../components/ToggleButton';
 import Rating from '../components/Rating';
 
 function TestBookmark() {
@@ -103,10 +103,12 @@ function TestBookmark() {
                                         
                                         {/* Bookmark Button Overlay - Top Left */}
                                         <div style={{ position: 'absolute', top: '8px', left: '8px' }}>
-                                            <BookmarkButton
+                                            <ToggleButton
                                                 itemId={movie.id}
-                                                isBookmarked={isBookmarked(movie.id)}
+                                                isActive={isBookmarked(movie.id)}
                                                 onToggle={handleToggle}
+                                                activeLabel="Remove bookmark"
+                                                inactiveLabel="Add bookmark"
                                                 style={{
                                                     width: '36px',
                                                     height: '36px',
@@ -129,7 +131,7 @@ function TestBookmark() {
                                                 }}
                                             >
                                                 {isBookmarked(movie.id) ? '✓' : '+'}
-                                            </BookmarkButton>
+                                            </ToggleButton>
                                         </div>
                                     </div>
                                 </Col>

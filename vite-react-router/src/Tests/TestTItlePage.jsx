@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Spinner, Alert, Row, Col, Card, Button, Badge } from 'react-bootstrap';
 import MainDisplay, { renderBadges, renderText } from '../components/MainDisplay';
 import Rating from '../components/Rating';
-import BookmarkButton from '../components/BookmarkButton';
+import ToggleButton from '../components/ToggleButton';
 import '../style/CTitlePage.css';
 
 function TestTitlePage() {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
-import BookmarkButton from '../components/BookmarkButton';
+import ToggleButton from '../components/ToggleButton';
 import Rating from '../components/Rating';
 
 function TestBookmarkUserProfile() {

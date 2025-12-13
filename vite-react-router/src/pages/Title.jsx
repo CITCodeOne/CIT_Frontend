@@ -229,6 +229,7 @@ function Title() {
         title: title.name || 'No Title',
         subtitle: title.startYear ? `(${title.startYear})` : null,
         rating: title.avgRating,
+        itemId: title.id,  // Add itemId for bookmark functionality
         showBookmark: true,
         isBookmarked,
         onBookmarkToggle: handleBookmarkToggle
