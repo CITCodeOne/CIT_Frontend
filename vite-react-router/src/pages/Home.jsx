@@ -3,14 +3,7 @@ import MainDisplay from '../components/MainDisplay';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
-
-/* helper to format plot preview strings with "..." */
-const formatPlotPre = (s) => {
-  if (!s) return '';
-  const trimmed = String(s).trim();
-  if (/\u2026$|\.{3}$/.test(trimmed)) return trimmed;
-  return trimmed + '...';
-};
+import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
@@ -39,19 +32,39 @@ function Home() {
     }
   };
 
-  // Fetch featured title: GET /api/v2/titles/tt0052520 via ApiClient
+  // Fetch featured title via ApiClient
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        // This calls GET {{WebService_HostAddress}}/api/v2/titles/tt0052520
-        const data = await mdb.apiv2.titles.getById('tt0052520');
+        const list = await mdb.apiv2.titles.list({ page: 1, pageSize: 10 });
         if (cancelled) return;
-        setFeaturedTitle(data || null);
+
+        console.log('titles.list result:', list);
+
+        // Handle both array and paged object shapes: { items: [...] } / { data: [...] }
+        const arr = Array.isArray(list)
+          ? list
+          : list?.items ??
+          list?.data ??
+          [];
+
+        // Try to find movies first (mediaType = movie)
+        const movies = arr.filter((t) => {
+          const mt =
+            (t.mediaType).toString().toLowerCase();
+          return mt === 'movie';
+        });
+
+
+        // Prefer first movie; if none, just take the first title
+        const selected = movies[0] ?? arr[0] ?? null;
+
+        setFeaturedTitle(selected);
       } catch (err) {
         if (cancelled) return;
-        console.error('Failed to load latest titles', err);
+        console.error('Failed to load featured movie', err);
         setFeaturedTitle(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -63,7 +76,7 @@ function Home() {
     };
   }, []);
 
-  // Top rated section: use backend list
+  // Fetch top rated titles via ApiClient
   useEffect(() => {
     let cancelled = false;
 
@@ -97,7 +110,7 @@ function Home() {
     };
   }, [featuredTitle]);
 
-  // Fetch individuals list via ApiClient
+  // Fetch individuals list via ApiClient and filter by name rating
   useEffect(() => {
     let cancelled = false;
 
@@ -125,6 +138,7 @@ function Home() {
     };
   }, []);
 
+  // Show loading state
   if (loading) {
     return (
       <div style={{ padding: '1rem' }}>
@@ -138,7 +152,7 @@ function Home() {
       </div>
     );
   }
-
+// If no featured title found
   if (!featuredTitle) {
     return (
       <div style={{ padding: '1rem' }}>
@@ -153,8 +167,10 @@ function Home() {
     );
   }
 
+  // Get rating or default to 0
   const titleRating = featuredTitle.rating ?? 0;
 
+  // Construct header data for MainDisplay
   const header = {
     image: featuredTitle.image,
     title: featuredTitle.name,
@@ -186,7 +202,7 @@ function Home() {
       {topRatedTitles.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h3 style={{ margin: '0 0 12px 0' }}>Top rated titles</h3>
-          {makeCarousel(topRatedTitles, 'title')}
+          {makeCarousel(topRatedTitles, '<media type>')}
         </div>
       )}
 
