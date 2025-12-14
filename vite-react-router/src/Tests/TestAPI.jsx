@@ -1,17 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Card, Button, Alert, Row, Col, Form } from 'react-bootstrap';
-import {
-    getTitleById,
-    getTitles,
-    getIndividualById,
-    getIndividuals,
-    getRatingsByTitleId,
-    getBookmarks,
-    createBookmark,
-    deleteBookmark,
-    login,
-    signup
-} from '../config/api';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 
 /**
  * TestAPI Component
@@ -44,7 +33,7 @@ function TestAPI() {
         setLoading(true);
         setError(null);
         try {
-            const data = await login('testuser1', 'password12311');
+            const data = await mdb.apiv2.auth.login({ username: 'testuser1', password: 'password12311' });
             setResult(JSON.stringify(data, null, 2));
             if (data.token) {
                 setToken(data.token);
@@ -112,7 +101,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-success" 
                                 className="w-100"
-                                onClick={() => handleTest(getTitles, 1, 5)}
+                                onClick={() => handleTest(() => mdb.apiv2.titles.list({ page: 1, pageSize: 5 }))}
                                 disabled={loading}
                             >
                                 Get Titles (Page 1, Size 5)
@@ -122,7 +111,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-success" 
                                 className="w-100"
-                                onClick={() => handleTest(getTitleById, 'tt10257794')}
+                                onClick={() => handleTest(() => mdb.apiv2.titles.getById('tt10257794'))}
                                 disabled={loading}
                             >
                                 Get Title (tt10257794)
@@ -143,7 +132,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-info" 
                                 className="w-100"
-                                onClick={() => handleTest(getIndividualById, 'nm0000158')}
+                                onClick={() => handleTest(() => mdb.apiv2.individuals.getById('nm0000158'))}
                                 disabled={loading}
                             >
                                 Get Individual (nm0000158)
@@ -153,7 +142,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-info" 
                                 className="w-100"
-                                onClick={() => handleTest(getIndividuals, 1, 5)}
+                                onClick={() => handleTest(() => mdb.apiv2.individuals.list({ page: 1, pageSize: 5 }))}
                                 disabled={loading}
                             >
                                 Get Individuals (Page 1, Size 5)
@@ -174,7 +163,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-warning" 
                                 className="w-100"
-                                onClick={() => handleTest(getRatingsByTitleId, 'tt0052520')}
+                                onClick={() => handleTest(() => mdb.apiv2.titles.getRatings('tt0052520'))}
                                 disabled={loading}
                             >
                                 Get Ratings (tt0052520)
@@ -192,10 +181,10 @@ function TestAPI() {
                 <Card.Body>
                     <Row className="g-2">
                         <Col xs={12} md={4}>
-                            <Button 
-                                variant="outline-danger" 
+                            <Button
+                                variant="outline-danger"
                                 className="w-100"
-                                onClick={() => handleTest(getBookmarks, token)}
+                                onClick={() => handleTest(() => mdb.apiv2.user.getBookmarks(1, { authToken: token }))} // Note: requires userId, using 1 for testing
                                 disabled={loading || !token}
                             >
                                 Get My Bookmarks
@@ -205,7 +194,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-danger" 
                                 className="w-100"
-                                onClick={() => handleTest(createBookmark, 500, token)}
+                                onClick={() => handleTest(() => mdb.apiv2.user.addBookmark(1, 500, { authToken: token }))} // Note: requires userId, using 1 for testing
                                 disabled={loading || !token}
                             >
                                 Create Bookmark (500)
@@ -215,7 +204,7 @@ function TestAPI() {
                             <Button 
                                 variant="outline-danger" 
                                 className="w-100"
-                                onClick={() => handleTest(deleteBookmark, 500, token)}
+                                onClick={() => handleTest(() => mdb.apiv2.user.removeBookmark(1, 500, { authToken: token }))} // Note: requires userId, using 1 for testing
                                 disabled={loading || !token}
                             >
                                 Delete Bookmark (500)

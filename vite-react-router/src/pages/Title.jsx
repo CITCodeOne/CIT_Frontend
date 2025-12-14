@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Spinner, Alert, Row, Col, Card, Button } from 'react-bootstrap';
-import { getTitleById, getTitleCast, getSimilarTitles, getTitleReviews } from '../config/api';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import MainDisplay, { renderBadges, renderText } from '../components/MainDisplay';
 import '../style/CTitlePage.css';
 
@@ -171,16 +171,16 @@ function Title() {
         const fetchAllData = async () => {
             try {
                 setLoading(true);
-                const titleData = await getTitleById(titleId);
+                const titleData = await mdb.apiv2.titles.getById(titleId);
                 setTitle(titleData);
-                
+
                 // Fetch related data in parallel
                 const [castData, similarData, reviewsData] = await Promise.allSettled([
-                    getTitleCast(titleId),
-                    getSimilarTitles(titleId),
-                    getTitleReviews(titleId)
+                    mdb.apiv2.titles.getIndividuals(titleId), // Get cast/individuals for the title
+                    Promise.resolve([]), // getSimilarTitles not available in ApiClient yet
+                    mdb.apiv2.titles.getRatings(titleId) // Get ratings (serving as reviews)
                 ]);
-                
+
                 if (castData.status === 'fulfilled') setCast(castData.value || []);
                 if (similarData.status === 'fulfilled') setSimilarTitles(similarData.value || []);
                 if (reviewsData.status === 'fulfilled') setReviews(reviewsData.value || []);
