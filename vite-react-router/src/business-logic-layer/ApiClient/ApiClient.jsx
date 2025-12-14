@@ -161,6 +161,10 @@ const mapSingleBookmark = (payload) => mapBookmarks(payload)[0] ?? null;
  * All methods return Promises that resolve to the mapped data structures,
  * handling authentication, error responses, and data transformation automatically.
  */
+
+
+
+
 const apiv2 = {
 	/**
 	 * Health check endpoints for monitoring API availability and status.
@@ -230,6 +234,16 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of individual objects associated with the title
 		 */
 		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options).then(mapIndividuals),
+		// GET: /titles/{id}/similar
+		/**
+		 * Retrieves movies similar to the given title based on overlapping genres.
+		 * Returns titles with similar genre profiles, including overlap count.
+		 *
+		 * @param {string} id - Title ID (tt...) to find similar movies for
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of similar title objects with genre overlap information
+		 */
+		getSimilar: (id, options) => callV2(`titles/${id}/similar`, options).then(mapTitles),
 	},
 
 	/**
@@ -274,6 +288,42 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of title objects associated with the individual
 		 */
 		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options).then(mapTitles),
+		// GET: /individuals/{id}/popular-actors
+		/**
+		 * Retrieves popular actors related to a given individual or title.
+		 * Returns co-actors or cast members based on the provided ID.
+		 *
+		 * @param {string} id - Individual ID (nm...) or Title ID (tt...) to find related popular actors
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of popular actor objects (IndividualFullDTO)
+		 */
+		getPopularActors: (id, options) => callV2(`individuals/${id}/popular-actors`, options).then(mapIndividuals),
+		// GET: /individuals/co-actors?actorName={actorName}
+		/**
+		 * Finds co-actors for a given actor name, sorted by collaboration count.
+		 * Returns actors who have worked with the specified actor.
+		 *
+		 * @param {string} actorName - Name of the actor to find co-actors for
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of co-actor objects with collaboration counts
+		 */
+		getCoActors: (actorName, options) => callV2('individuals/co-actors', {
+			queryParams: { actorName },
+			...options,
+		}).then(mapIndividuals),
+		// GET: /individuals/search?name={name}
+		/**
+		 * Searches for individuals by name and returns their contributions to titles.
+		 * Performs case-insensitive partial matching. Returns all individuals if name is empty.
+		 *
+		 * @param {string} [name] - Name to search for (optional, returns all if empty)
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of individual search results with contributions
+		 */
+		search: (name, options) => callV2('individuals/search', {
+			queryParams: name ? { name } : {},
+			...options,
+		}).then(mapIndividuals),
 	},
 
 	/**

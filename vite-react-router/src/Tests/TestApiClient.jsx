@@ -110,6 +110,7 @@ export default function TestApiClient() {
                     <button onClick={() => runCall('titles.getById', () => mdb.apiv2.titles.getById(titleId))}>Get by id</button>
                     <button onClick={() => runCall('titles.getRatings', () => mdb.apiv2.titles.getRatings(titleId))}>Get ratings</button>
                     <button onClick={() => runCall('titles.getIndividuals', () => mdb.apiv2.titles.getIndividuals(titleId))}>Get individuals</button>
+                    <button onClick={() => runCall('titles.getSimilar', () => mdb.apiv2.titles.getSimilar(titleId))}>Get similar</button>
                 </div>
             </section>
 
@@ -120,6 +121,9 @@ export default function TestApiClient() {
                     <button onClick={() => runCall('individuals.list', () => mdb.apiv2.individuals.list({ page: 1, pageSize: 5 }))}>List page 1</button>
                     <button onClick={() => runCall('individuals.getById', () => mdb.apiv2.individuals.getById(individualId))}>Get by id</button>
                     <button onClick={() => runCall('individuals.getTitles', () => mdb.apiv2.individuals.getTitles(individualId))}>Get titles</button>
+                    <button onClick={() => runCall('individuals.getPopularActors', () => mdb.apiv2.individuals.getPopularActors(individualId))}>Get popular actors</button>
+                    <button onClick={() => runCall('individuals.getCoActors', () => mdb.apiv2.individuals.getCoActors('Tom Hanks'))}>Get co-actors</button>
+                    <button onClick={() => runCall('individuals.search', () => mdb.apiv2.individuals.search('Tom'))}>Search individuals</button>
                 </div>
             </section>
 

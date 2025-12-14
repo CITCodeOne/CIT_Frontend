@@ -177,7 +177,7 @@ function Title() {
                 // Fetch related data in parallel
                 const [castData, similarData, reviewsData] = await Promise.allSettled([
                     mdb.apiv2.titles.getIndividuals(titleId), // Get cast/individuals for the title
-                    Promise.resolve([]), // getSimilarTitles not available in ApiClient yet
+                    mdb.apiv2.titles.getSimilar(titleId), // Get similar titles based on genres
                     mdb.apiv2.titles.getRatings(titleId) // Get ratings (serving as reviews)
                 ]);
 
