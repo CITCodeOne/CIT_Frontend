@@ -234,6 +234,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of individual objects associated with the title
 		 */
 		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options).then(mapIndividuals),
+
 		// GET: /titles/{id}/similar
 		/**
 		 * Retrieves movies similar to the given title based on overlapping genres.
@@ -298,7 +299,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of popular actor objects (IndividualFullDTO)
 		 */
 		getPopularActors: (id, options) => callV2(`individuals/${id}/popular-actors`, options).then(mapIndividuals),
-		// GET: /individuals/co-actors?actorName={actorName}
+		// GET: /individuals/co-actors?name={name}
 		/**
 		 * Finds co-actors for a given actor name, sorted by collaboration count.
 		 * Returns actors who have worked with the specified actor.
@@ -308,7 +309,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of co-actor objects with collaboration counts
 		 */
 		getCoActors: (actorName, options) => callV2('individuals/co-actors', {
-			queryParams: { actorName },
+			queryParams: { name: actorName },
 			...options,
 		}).then(mapIndividuals),
 		// GET: /individuals/search?name={name}

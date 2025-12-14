@@ -134,8 +134,20 @@ export default function TestApiClient() {
                     <button onClick={() => runCall('user.get', () => mdb.apiv2.user.get(userId))}>Get user</button>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button onClick={() => runCall('user.getBookmarks', () => mdb.apiv2.user.getBookmarks(userId, { authToken: token }))}>Bookmarks</button>
+                        <button onClick={() => runCall('user.getBookmark', () => mdb.apiv2.user.getBookmark(userId, 500, { authToken: token }))}>Get bookmark (500)</button>
+                        <button onClick={() => runCall('user.addBookmark', () => mdb.apiv2.user.addBookmark(userId, 500, { authToken: token }))}>Add bookmark (500)</button>
+                        <button onClick={() => runCall('user.removeBookmark', () => mdb.apiv2.user.removeBookmark(userId, 500, { authToken: token }))}>Remove bookmark (500)</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button onClick={() => runCall('user.getRatings', () => mdb.apiv2.user.getRatings(userId, { authToken: token }))}>Ratings</button>
+                        <button onClick={() => runCall('user.getRating', () => mdb.apiv2.user.getRating(userId, titleId, { authToken: token }))}>Get rating</button>
+                        <button onClick={() => runCall('user.addRating', () => mdb.apiv2.user.addRating(userId, titleId, 5, { authToken: token }))}>Add rating (5)</button>
+                        <button onClick={() => runCall('user.updateRating', () => mdb.apiv2.user.updateRating(userId, titleId, 4, { authToken: token }))}>Update rating (4)</button>
+                        <button onClick={() => runCall('user.removeRating', () => mdb.apiv2.user.removeRating(userId, titleId, { authToken: token }))}>Remove rating</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button onClick={() => runCall('user.getProfileImage', () => mdb.apiv2.user.getProfileImage(userId, { authToken: token }))}>Profile image</button>
+                        <button onClick={() => runCall('user.upsertProfileImage', () => mdb.apiv2.user.upsertProfileImage(userId, 'base64imagedata', { authToken: token }))}>Update profile image</button>
                     </div>
                     {/* Example of using mapping to render a UserBanner */}
                     <button onClick={runUserBannerDemo}>Example of using mapping (UserBanner)</button>
