@@ -1,22 +1,26 @@
 import { useEffect, useState } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/extractJwtData';
+import UserBanner from '../components/UserBanner';
 
 // Utility to render the latest result/error for quick inspection.
 const ResultPane = ({ label, data }) => (
     <div style={{ marginTop: '0.5rem' }}>
         <strong>{label}</strong>
-        <pre style={{ background: '#f6f8fa', padding: '0.75rem', borderRadius: 6, overflowX: 'auto' }}>
+        <div style={{ background: '#f6f8fa', padding: '0.75rem', borderRadius: 6, overflowX: 'auto', maxHeight: '300px', overflowY: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
             {data}
-        </pre>
+        </div>
     </div>
 );
 
 export default function TestApiClient() {
+	const { userId: authUserId, isSignedIn, syncAuthState } = useAuthStatus();
     const [output, setOutput] = useState('');
     const [error, setError] = useState('');
     const [token, setToken] = useState(() => getStoredToken());
     const [userId, setUserId] = useState('');
+    const [demoUser, setDemoUser] = useState(null);
     const [titleId, setTitleId] = useState('tt10257794');
     const [individualId, setIndividualId] = useState('nm0000158');
 
@@ -24,6 +28,13 @@ export default function TestApiClient() {
     useEffect(() => {
         setToken(getStoredToken());
     }, []);
+
+    // Keep userId/token aligned with the signed-in user when available.
+    useEffect(() => {
+        if (!isSignedIn) return;
+        setUserId(authUserId || '');
+        setToken(getStoredToken());
+    }, [authUserId, isSignedIn]);
 
     const refreshStoredToken = () => setToken(getStoredToken());
 
@@ -36,6 +47,21 @@ export default function TestApiClient() {
         } catch (err) {
             setOutput('');
             setError(`${label}: ${err.message || err}`);
+        }
+    };
+    // creats a demo user banner by fetching user data and mapping it
+    // use this as an example of how to use the ApiClient and mapping functions
+    const runUserBannerDemo = async () => {
+        setError('');
+        setOutput('Loading user...');
+        setDemoUser(null);
+        try {
+            const res = await mdb.apiv2.user.get(userId);
+            setOutput(JSON.stringify(res, null, 2));
+            setDemoUser(res);
+        } catch (err) {
+            setOutput('');
+            setError(`user.bannerExample: ${err.message || err}`);
         }
     };
 
@@ -62,7 +88,12 @@ export default function TestApiClient() {
                     Auth token (Bearer):
                     <input value={token} onChange={(e) => setToken(e.target.value)} style={{ width: '100%' }} placeholder={TOKEN_STORAGE_KEY} />
                 </label>
-                <button onClick={refreshStoredToken}>Reload token from storage</button>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={refreshStoredToken}>Reload token from storage</button>
+                    <button onClick={() => { syncAuthState(); setUserId(authUserId || ''); setToken(getStoredToken()); }} disabled={!isSignedIn}>
+                        Use logged-in user
+                    </button>
+                </div>
             </div>
 
             {/* Health */}
@@ -102,6 +133,8 @@ export default function TestApiClient() {
                         <button onClick={() => runCall('user.getRatings', () => mdb.apiv2.user.getRatings(userId, { authToken: token }))}>Ratings</button>
                         <button onClick={() => runCall('user.getProfileImage', () => mdb.apiv2.user.getProfileImage(userId, { authToken: token }))}>Profile image</button>
                     </div>
+                    {/* Example of using mapping to render a UserBanner */}
+                    <button onClick={runUserBannerDemo}>Example of using mapping (UserBanner)</button>
                 </div>
             </section>
 
@@ -117,6 +150,25 @@ export default function TestApiClient() {
 
             {error && <ResultPane label="Error" data={error} />}
             {output && <ResultPane label="Result" data={output} />}
+            {demoUser && (
+                <div>
+                    <strong>Mapped user preview:</strong>
+                    <UserBanner
+                        user_name={demoUser.name}
+                        email={demoUser.email}
+                        createdAt={demoUser.createdAt}
+                        ratingsCount={demoUser.ratingsCount}
+                        bookmarksCount={demoUser.bookmarksCount}
+                        profile_image={demoUser.image}
+                        role={demoUser.role}
+                        isOwnProfile={String(userId) === String(demoUser.id)}
+                        isEditMode={false}
+                        onEditClick={() => {}}
+                        onAvatarClick={() => {}}
+                        onShareClick={() => {}}
+                    />
+                </div>
+            )}
         </div>
     );
 }
