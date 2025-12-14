@@ -88,6 +88,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [individuals, setIndividuals] = useState([]);
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
+  const [topRatedTitles, setTopRatedTitles] = useState([]);
 
   // Toggle bookmark for featured title
   const handleToggleFeaturedBookmark = async () => {
@@ -106,15 +107,12 @@ function Home() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            // Adjust if backend expects a different field than pageId
             pageId: Number(featuredTitle.id),
           }),
         });
         if (!res.ok) throw new Error('Failed to add bookmark');
-        // const data = await res.json(); // you can use this later if needed
       } else {
-        // Optional: call DELETE endpoint here when you have it
-        // For now we only toggle UI state
+        // Delete bookmark call
       }
 
       setIsFeaturedBookmarked((prev) => !prev);
@@ -123,7 +121,7 @@ function Home() {
     }
   };
 
-  // Fetch featured title on mount
+  // Fetch featured title
   useEffect(() => {
     // DEV mode: use dummy data only
     if (USE_DUMMY_ONLY) {
@@ -135,7 +133,7 @@ function Home() {
       return;
     }
 
-    // PROD mode: fetch from backend, no dummy fallback
+    // PROD mode: fetch from backend
     const endpoint = '/api/v2/titles?sort=releaseDate_desc&limit=10';
     const controller = new AbortController();
     let ignore = false;
@@ -163,6 +161,53 @@ function Home() {
     };
   }, []);
 
+  // Fetch top rated titles (exclude featured)
+  useEffect(() => {
+    if (!featuredTitle) {
+      setTopRatedTitles([]);
+      return;
+    }
+
+    // DEV mode: derive from dummyTitlePreviews
+    if (USE_DUMMY_ONLY) {
+      const top = dummyTitlePreviews
+        .filter((t) => t.id !== featuredTitle.id) // exclude featured
+        .slice()
+        .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0));
+      setTopRatedTitles(top);
+      return;
+    }
+
+    // PROD mode: fetch from backend
+    const endpoint = '/api/v2/titles?sort=avgRating_desc&limit=15';
+    const controller = new AbortController();
+    let ignore = false;
+
+    async function fetchTopRated() {
+      try {
+        const res = await fetch(endpoint, { signal: controller.signal });
+        if (!res.ok) throw new Error('fetch failed');
+        const data = await res.json();
+        if (ignore) return;
+        const list = Array.isArray(data) ? data : [];
+        const filtered = list.filter(
+          (t) => String(t.id) !== String(featuredTitle.id)
+        );
+        setTopRatedTitles(filtered);
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        console.error('Failed to load top rated titles', err);
+        if (!ignore) setTopRatedTitles([]);
+      }
+    }
+
+    fetchTopRated();
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
+  }, [featuredTitle]);
+
   // Fetch individuals for carousel
   useEffect(() => {
     // DEV mode: use dummy individuals only
@@ -184,6 +229,7 @@ function Home() {
     const controller = new AbortController();
     let ignore = false;
 
+    // Fetch individuals
     async function fetchIndividuals() {
       try {
         const res = await fetch(endpoint, { signal: controller.signal });
@@ -246,6 +292,7 @@ function Home() {
 
   const avgOn10 = featuredTitle.avgRating ?? 0;
 
+  // Header setup for MainDisplay (featured title)
   const header = {
     image: featuredTitle.poster || lionImage,
     title: featuredTitle.name,
@@ -269,10 +316,10 @@ function Home() {
 
       <MainDisplay header={header} metadata={[]} sections={sections} />
 
-      {/* Render top picks carousel */}
+      {/* Render top rated movies carousel */}
       <div style={{ marginTop: 24 }}>
-        <h3 style={{ margin: '0 0 12px 0' }}>Top picks</h3>
-        {makeCarousel([], 'actor')}
+        <h3 style={{ margin: '0 0 12px 0' }}>Top rated movies</h3>
+        {makeCarousel(topRatedTitles, 'movie')}
       </div>
 
       {/* Render individuals carousel */}
