@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import MainDisplay from '../components/MainDisplay';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 import makeCarousel from '../components/MakeCarousel';
@@ -16,7 +17,7 @@ const dummyTitlePreviews = [
     avgRating: 9.0,
     releaseDate: '1994-06-24T00:00:00Z',
     poster: lionImage,
-    plotPre: 'Lion prince cast out afar',
+    plotPre: formatPlotPre('Lion prince cast out afar'),
   },
   {
     id: '2',
@@ -25,7 +26,7 @@ const dummyTitlePreviews = [
     avgRating: 9.6,
     releaseDate: '2006-03-05T00:00:00Z',
     poster: lionImage,
-    plotPre: 'Documentary series about p',
+    plotPre: formatPlotPre('Documentary series about p'),
   },
   {
     id: '3',
@@ -34,29 +35,29 @@ const dummyTitlePreviews = [
     avgRating: 7.8,
     releaseDate: '2025-01-15T00:00:00Z',
     poster: lionImage,
-    plotPre: 'Fox and bunny solve city,',
+    plotPre: formatPlotPre('Fox and bunny solve city.'),
   },
   {
     id: '4',
     name: 'IT Chapter 3',
     mediaType: 'Movie',
     avgRating: 5.4,
-    releaseDate: '2025-01-15T00:00:00Z',
+    releaseDate: '2024-01-15T00:00:00Z',
     poster: lionImage,
-    plotPre: 'Clown returns to terrorize town',
+    plotPre: formatPlotPre('Clown returns to terrorize town'),
   },
   {
     id: '5',
     name: 'The Conjuring: Last Rites',
     mediaType: 'Movie',
     avgRating: 5.4,
-    releaseDate: '2025-12-24T00:00:00Z',
+    releaseDate: '2024-08-01T00:00:00Z',
     poster: lionImage,
-    plotPre: 'Paranormal investigators face new evil',
+    plotPre: formatPlotPre('Paranormal investigators face new evil'),
   },
 ];
 
-/* Dummy individuals for carousel filtered by nameRating testing */
+/* Dummy individuals for carousel filtered by highest nameRating testing */
 const dummyIndividuals = [
   {
     id: 'nm0001',
@@ -79,13 +80,6 @@ const dummyIndividuals = [
     nameRating: 7.9,
   },
 ];
-
-/* helper to format plot preview strings with "..." */
-const formatPlotPre = (s) => {
-  if (!s) return '';
-  if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
-  return s.trim() + '...';
-};
 
 // Setup
 function Home() {
