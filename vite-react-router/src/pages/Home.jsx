@@ -1,87 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import MainDisplay from '../components/MainDisplay';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 import makeCarousel from '../components/MakeCarousel';
-import lionImage from '../pics/lion.jpg';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 
-/* Toggle this to true to use only dummy data for local testing */
-const USE_DUMMY_ONLY = true;
+/* helper to format plot preview strings with "..." */
+const formatPlotPre = (s) => {
+  if (!s) return '';
+  const trimmed = String(s).trim();
+  if (/\u2026$|\.{3}$/.test(trimmed)) return trimmed;
+  return trimmed + '...';
+};
 
-/* Dummy top 5 titles by rating list */
-const dummyTitlePreviews = [
-  {
-    id: '1',
-    name: 'The Lion King',
-    mediaType: 'Movie',
-    avgRating: 9.0,
-    releaseDate: '1994-06-24T00:00:00Z',
-    poster: lionImage,
-    plotPre: formatPlotPre('Lion prince cast out afar'),
-  },
-  {
-    id: '2',
-    name: 'Planet Earth',
-    mediaType: 'Series',
-    avgRating: 9.6,
-    releaseDate: '2006-03-05T00:00:00Z',
-    poster: lionImage,
-    plotPre: formatPlotPre('Documentary series about p'),
-  },
-  {
-    id: '3',
-    name: 'Zootopia 2',
-    mediaType: 'Movie',
-    avgRating: 7.8,
-    releaseDate: '2025-01-15T00:00:00Z',
-    poster: lionImage,
-    plotPre: formatPlotPre('Fox and bunny solve city.'),
-  },
-  {
-    id: '4',
-    name: 'IT Chapter 3',
-    mediaType: 'Movie',
-    avgRating: 5.4,
-    releaseDate: '2024-01-15T00:00:00Z',
-    poster: lionImage,
-    plotPre: formatPlotPre('Clown returns to terrorize town'),
-  },
-  {
-    id: '5',
-    name: 'The Conjuring: Last Rites',
-    mediaType: 'Movie',
-    avgRating: 5.4,
-    releaseDate: '2024-08-01T00:00:00Z',
-    poster: lionImage,
-    plotPre: formatPlotPre('Paranormal investigators face new evil'),
-  },
-];
-
-/* Dummy individuals for carousel filtered by highest nameRating testing */
-const dummyIndividuals = [
-  {
-    id: 'nm0001',
-    name: 'Teri DiRocco',
-    nameRating: 9.2,
-  },
-  {
-    id: 'nm0002',
-    name: 'Sam Actor',
-    nameRating: 8.7,
-  },
-  {
-    id: 'nm0003',
-    name: 'Alex Star',
-    nameRating: 8.3,
-  },
-  {
-    id: 'nm0004',
-    name: 'Jamie Lead',
-    nameRating: 7.9,
-  },
-];
-
-// Setup
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const [featuredTitle, setFeaturedTitle] = useState(null);
@@ -90,175 +20,108 @@ function Home() {
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
   const [topRatedTitles, setTopRatedTitles] = useState([]);
 
-  // Toggle bookmark for featured title
+  // Toggle bookmark for featured title using ApiClient
   const handleToggleFeaturedBookmark = async () => {
-    // In DEV mode, just toggle local state (no backend call)
-    if (USE_DUMMY_ONLY) {
-      setIsFeaturedBookmarked((prev) => !prev);
-      return;
-    }
-
     if (!featuredTitle) return;
 
-    try {
-      // When not bookmarked, call POST /api/v2/users/55/bookmarks with pageId
-      if (!isFeaturedBookmarked) {
-        const res = await fetch('/api/v2/users/55/bookmarks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            pageId: Number(featuredTitle.id),
-          }),
-        });
-        if (!res.ok) throw new Error('Failed to add bookmark');
-      } else {
-        // Delete bookmark call
-      }
+    const userId = 55;
+    const pageId = Number(featuredTitle.id);
 
+    try {
+      if (!isFeaturedBookmarked) {
+        await mdb.apiv2.user.addBookmark(userId, pageId);
+      } else {
+        await mdb.apiv2.user.removeBookmark(userId, pageId);
+      }
       setIsFeaturedBookmarked((prev) => !prev);
     } catch (err) {
       console.error('Failed to toggle bookmark', err);
     }
   };
 
-  // Fetch featured title
+  // Fetch featured title: GET /api/v2/titles/tt0052520 via ApiClient
   useEffect(() => {
-    // DEV mode: use dummy data only
-    if (USE_DUMMY_ONLY) {
-      const latest = dummyTitlePreviews.reduce((a, b) =>
-        new Date(a.releaseDate) > new Date(b.releaseDate) ? a : b
-      );
-      setFeaturedTitle(latest);
-      setLoading(false);
-      return;
-    }
+    let cancelled = false;
 
-    // PROD mode: fetch from backend
-    const endpoint = '/api/v2/titles?sort=releaseDate_desc&limit=10';
-    const controller = new AbortController();
-    let ignore = false;
-
-    async function fetchLatest() {
+    (async () => {
       try {
-        const res = await fetch(endpoint, { signal: controller.signal });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
-        const item = Array.isArray(data) ? data[0] : data;
-        if (ignore) return;
-        setFeaturedTitle(item || null);
+        // This calls GET {{WebService_HostAddress}}/api/v2/titles/tt0052520
+        const data = await mdb.apiv2.titles.getById('tt0052520');
+        if (cancelled) return;
+        setFeaturedTitle(data || null);
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (cancelled) return;
         console.error('Failed to load latest titles', err);
+        setFeaturedTitle(null);
       } finally {
-        if (!ignore) setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
+    })();
 
-    fetchLatest();
     return () => {
-      ignore = true;
-      controller.abort();
+      cancelled = true;
     };
   }, []);
 
-  // Fetch top rated titles (exclude featured)
+  // Top rated section: use backend list
   useEffect(() => {
-    if (!featuredTitle) {
-      setTopRatedTitles([]);
-      return;
-    }
+    let cancelled = false;
 
-    // DEV mode: derive from dummyTitlePreviews
-    if (USE_DUMMY_ONLY) {
-      const top = dummyTitlePreviews
-        .filter((t) => t.id !== featuredTitle.id) // exclude featured
-        .slice()
-        .sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0));
-      setTopRatedTitles(top);
-      return;
-    }
-
-    // PROD mode: fetch from backend
-    const endpoint = '/api/v2/titles?sort=avgRating_desc&limit=15';
-    const controller = new AbortController();
-    let ignore = false;
-
-    async function fetchTopRated() {
+    (async () => {
       try {
-        const res = await fetch(endpoint, { signal: controller.signal });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
-        if (ignore) return;
-        const list = Array.isArray(data) ? data : [];
-        const filtered = list.filter(
-          (t) => String(t.id) !== String(featuredTitle.id)
-        );
-        setTopRatedTitles(filtered);
-      } catch (err) {
-        if (err.name === 'AbortError') return;
-        console.error('Failed to load top rated titles', err);
-        if (!ignore) setTopRatedTitles([]);
-      }
-    }
+        // GET /api/v2/titles?page=1&pageSize=10
+        const list = await mdb.apiv2.titles.list({ page: 1, pageSize: 10 });
+        if (cancelled) return;
 
-    fetchTopRated();
+        const arr = Array.isArray(list) ? list : [];
+
+        const top = arr
+          // exclude the featured title if we have one
+          .filter((t) =>
+            featuredTitle ? String(t.id) !== String(featuredTitle.id) : true
+          )
+          .slice()
+          // sort by rating (MapTitle already mapped "rating")
+          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+
+        setTopRatedTitles(top);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load top rated titles', err);
+        setTopRatedTitles([]);
+      }
+    })();
+
     return () => {
-      ignore = true;
-      controller.abort();
+      cancelled = true;
     };
   }, [featuredTitle]);
 
-  // Fetch individuals for carousel
+  // Fetch individuals list via ApiClient
   useEffect(() => {
-    // DEV mode: use dummy individuals only
-    if (USE_DUMMY_ONLY) {
-      const mapped = dummyIndividuals
-        .slice()
-        .sort((a, b) => (b.nameRating ?? 0) - (a.nameRating ?? 0))
-        .map((p) => ({
-          id: p.id,
-          name: p.name,
-          nameRating: p.nameRating,
-        }));
-      setIndividuals(mapped);
-      return;
-    }
+    let cancelled = false;
 
-    // PROD mode: backend only
-    const endpoint = '/api/v2/individuals?limit=10';
-    const controller = new AbortController();
-    let ignore = false;
-
-    // Fetch individuals
-    async function fetchIndividuals() {
+    (async () => {
       try {
-        const res = await fetch(endpoint, { signal: controller.signal });
-        if (!res.ok) throw new Error('fetch failed');
-        const data = await res.json();
-        if (ignore) return;
-        const list = Array.isArray(data) ? data : [];
-        // sort by nameRating, highest first, take top 10
-        const sorted = list
+        // GET /api/v2/individuals?page=1&pageSize=10
+        const list = await mdb.apiv2.individuals.list({ page: 1, pageSize: 10 });
+        if (cancelled) return;
+
+        const sorted = (list || [])
           .slice()
-          .sort((a, b) => (b.nameRating ?? 0) - (a.nameRating ?? 0))
-          .slice(0, 10)
-          .map((p) => ({
-            id: p.id,
-            name: p.name,
-            nameRating: p.nameRating,
-          }));
+          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+          .slice(0, 10);
+
         setIndividuals(sorted);
       } catch (err) {
-        if (err.name === 'AbortError') return;
+        if (cancelled) return;
         console.error('Failed to load individuals', err);
-        if (!ignore) setIndividuals([]);
+        setIndividuals([]);
       }
-    }
+    })();
 
-    fetchIndividuals();
     return () => {
-      ignore = true;
-      controller.abort();
+      cancelled = true;
     };
   }, []);
 
@@ -290,42 +153,47 @@ function Home() {
     );
   }
 
-  const avgOn10 = featuredTitle.avgRating ?? 0;
+  const titleRating = featuredTitle.rating ?? 0;
 
-  // Header setup for MainDisplay (featured title)
   const header = {
-    image: featuredTitle.poster || lionImage,
+    image: featuredTitle.image,
     title: featuredTitle.name,
-    subtitle: `${featuredTitle.mediaType} · ${new Date(
+    subtitle: [
+      featuredTitle.mediaType,
       featuredTitle.releaseDate
-    ).toLocaleDateString('da-DK')}`,
-    rating: avgOn10,
+        ? new Date(featuredTitle.releaseDate).toLocaleDateString('da-DK')
+        : '',
+    ]
+      .filter(Boolean)
+      .join(' · '),
+    rating: titleRating,
     showBookmark: true,
     isBookmarked: isFeaturedBookmarked,
     onBookmarkToggle: handleToggleFeaturedBookmark,
   };
 
-  const sections = featuredTitle.plotPre
-    ? [{ content: formatPlotPre(featuredTitle.plotPre) }]
+  const sections = featuredTitle.plot
+    ? [{ content: formatPlotPre(featuredTitle.plot) }]
     : [];
 
   return (
     <div style={{ padding: '1rem' }}>
-      {/* Render featured movie card */}
-      <h2 style={{ margin: '0 0 12px 0' }}>Featured today</h2>
+      <h2 style={{ margin: '0 0 12px 0' }}>Today&apos;s top pick</h2>
 
       <MainDisplay header={header} metadata={[]} sections={sections} />
 
-      {/* Render top rated movies carousel */}
-      <div style={{ marginTop: 24 }}>
-        <h3 style={{ margin: '0 0 12px 0' }}>Top rated movies</h3>
-        {makeCarousel(topRatedTitles, 'movie')}
-      </div>
+      {/* Top rated titles */}
+      {topRatedTitles.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Top rated titles</h3>
+          {makeCarousel(topRatedTitles, 'title')}
+        </div>
+      )}
 
-      {/* Render individuals carousel */}
+      {/* Individuals carousel */}
       <div style={{ marginTop: 24 }}>
         <h3 style={{ margin: '0 0 12px 0' }}>Most popular celebrities</h3>
-        {makeCarousel(individuals, 'Contribution type?')}
+        {makeCarousel(individuals, '<Contribution Type>')}
       </div>
 
       <SignInOffcanvas
