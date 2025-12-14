@@ -521,7 +521,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object>} Response containing image data
 		 */
-		getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
+		//getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
 		
 		// PUT: /users/{userId}/profile-image
 		/**

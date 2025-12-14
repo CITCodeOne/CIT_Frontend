@@ -146,21 +146,11 @@ export default function TestApiClient() {
                         <button onClick={() => runCall('user.removeRating', () => mdb.apiv2.user.removeRating(userId, titleId, { authToken: token }))}>Remove rating</button>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <button onClick={() => runCall('user.getProfileImage', () => mdb.apiv2.user.getProfileImage(userId, { authToken: token }))}>Profile image</button>
-                        <button onClick={() => runCall('user.upsertProfileImage', () => mdb.apiv2.user.upsertProfileImage(userId, 'base64imagedata', { authToken: token }))}>Update profile image</button>
+                        {/*<button onClick={() => runCall('user.getProfileImage', () => mdb.apiv2.user.getProfileImage(userId, { authToken: token }))}>Profile image</button>*/}
+                        {/*<button onClick={() => runCall('user.upsertProfileImage', () => mdb.apiv2.user.upsertProfileImage(userId, 'base64imagedata', { authToken: token }))}>Update profile image</button>*/}
                     </div>
                     {/* Example of using mapping to render a UserBanner */}
                     <button onClick={runUserBannerDemo}>Example of using mapping (UserBanner)</button>
-                </div>
-            </section>
-
-            {/* Auth */}
-            <section>
-                <h3>Auth</h3>
-                <p style={{ margin: 0 }}>These need valid payloads; adjust inside the calls if needed.</p>
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button onClick={() => runCall('auth.signup', () => mdb.apiv2.auth.signup({ username: 'demo', password: 'Password123!', email: 'demo@example.com' }))}>Signup (demo payload)</button>
-                    <button onClick={() => runCall('auth.login', () => mdb.apiv2.auth.login({ username: 'demo', password: 'Password123!' }))}>Login (demo payload)</button>
                 </div>
             </section>
 

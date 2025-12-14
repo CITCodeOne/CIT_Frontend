@@ -5,6 +5,7 @@ export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => { // Defa
     const sanitized = (rawValue || "").trim().replace(/^"|"$/g, ""); // Remove surrounding quotes
     if (!sanitized) return null; // Empty payload
     if (sanitized.startsWith("data:image")) return sanitized; // Already a data URL
+    if (sanitized.startsWith("/") || sanitized.startsWith("http") || sanitized.startsWith("./") || sanitized.startsWith("../")) return sanitized; // It's a path or URL
     return `data:${mimeType};base64,${sanitized}`; // Construct data URL
 };
 
