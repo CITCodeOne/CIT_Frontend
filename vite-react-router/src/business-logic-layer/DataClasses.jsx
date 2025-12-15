@@ -4,7 +4,7 @@ class baseObject{
     constructor(){
         Object.assign(this, {
             id: "n/a",
-            pageLink: "n/a",
+            pageId: "n/a",
             name: "n/a",
             image: defaultImage
         })
