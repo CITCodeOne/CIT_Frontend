@@ -5,6 +5,7 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 
@@ -42,6 +43,8 @@ function ListManager({
 
     // Load user lists when modal opens
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -96,6 +99,9 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -115,6 +121,7 @@ function ListManager({
         }
     }, [show, userId]);
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -170,6 +177,8 @@ function ListManager({
                 
                 console.log(`Creating new list "${newListName}" and adding ${itemType} ${itemId}`);
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -249,6 +258,9 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -271,6 +283,7 @@ function ListManager({
                     });
                 }
             } else {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -320,6 +333,11 @@ function ListManager({
                 console.log('Adding to existing list:', selectedList?.name);
                 console.log('Adding item:', { itemId, itemName, itemType });
 >>>>>>> Stashed changes
+=======
+                const selectedList = lists.find(l => l.id === selectedListId);
+                console.log('Adding to existing list:', selectedList?.name);
+                console.log('Adding item:', { itemId, itemName, itemType });
+>>>>>>> Stashed changes
                 
                 if (onSuccess) {
                     onSuccess({
@@ -331,7 +349,11 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                         listName: list?.name || 'Unknown List',
+=======
+                        listName: selectedList?.name || 'Unknown List',
+>>>>>>> Stashed changes
 =======
                         listName: selectedList?.name || 'Unknown List',
 >>>>>>> Stashed changes
@@ -365,12 +387,15 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             // Reset and close
             handleClose();
         } catch (err) {
             console.error('Error adding to list:', err);
             setError('Failed to add to list. Please try again.');
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -393,6 +418,9 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -412,6 +440,7 @@ function ListManager({
         }
     };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -455,6 +484,8 @@ function ListManager({
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     const getPlaceholder = () => {
         if (itemType === 'individual') {
             return 'e.g., Favorite Actors, Directors to Watch';
@@ -473,6 +504,9 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -493,6 +527,7 @@ function ListManager({
                     </Alert>
                 )}
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -580,6 +615,8 @@ function ListManager({
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
                 <p className="text-muted mb-3">
                     Add <strong>{itemName}</strong> to a list
                 </p>
@@ -646,6 +683,9 @@ function ListManager({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
