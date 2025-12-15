@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import List from "../components/List";
+import RowComp from "../components/RowList";
 import ListManager from "../components/ListManager";
 import placeholderImage from "../pics/Image-not-found.png";
 
@@ -98,7 +98,8 @@ export default function UserBookmarksList() {
             {bookmarkedPages.length === 0 ? (
                 <p className="text-muted">This user has not bookmarked any titles yet.</p>
             ) : (
-                <List
+                <RowComp
+                    variant="list"
                     items={bookmarkedPages}
                     renderItem={(item) => (
                         <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">

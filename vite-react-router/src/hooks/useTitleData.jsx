@@ -32,6 +32,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
 
     // User rating state
     const [userRating, setUserRating] = useState(0);
+    const [userReview, setUserReview] = useState('');
     const [loadingUserRating, setLoadingUserRating] = useState(true);
 
     // 1. Fetch main title data
@@ -181,22 +182,25 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
         }
     };
 
-    // Rating change handler (add or update)
-    const updateUserRating = async (newRating) => {
+    // Rating change handler (add or update rating with optional review)
+    const updateUserRating = async (newRating, reviewText = '') => {
         if (!isLoggedIn || !userId) {
             alert('Please log in to rate titles');
             return;
         }
 
         try {
+            const review = reviewText && reviewText.trim() ? reviewText.trim() : null;
+            
             if (userRating === 0) {
                 // Add new rating
-                await mdb.apiv2.user.addRating(userId, titleId, newRating);
+                await mdb.apiv2.user.addRating(userId, titleId, newRating, review);
             } else {
                 // Update existing rating
-                await mdb.apiv2.user.updateRating(userId, titleId, newRating);
+                await mdb.apiv2.user.updateRating(userId, titleId, newRating, review);
             }
             setUserRating(newRating);
+            setUserReview(reviewText);
         } catch (err) {
             console.error('Failed to update rating:', err);
             alert('Failed to update rating. Please try again.');
@@ -242,8 +246,10 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
         isBookmarked,
         toggleBookmark,
 
-        // User rating data
+        // User rating and review data
         userRating,
+        userReview,
+        setUserReview,
         loadingUserRating,
         updateUserRating,
         deleteUserRating

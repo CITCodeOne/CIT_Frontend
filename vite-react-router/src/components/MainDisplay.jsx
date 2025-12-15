@@ -15,6 +15,7 @@ import BookmarkButton from './BookmarkButton';
  * @param {Array} badges - Array of badge objects: [{ text: string, variant: string }]
  * @param {Array} sections - Array of content sections: [{ title: string, content: ReactNode }]
  * @param {Object} bookmark - Optional bookmark config: { itemId, isBookmarked, onToggle }
+ * @param {Object} customAction - Optional custom action button: { label, variant, icon, onClick }
  * @param {ReactNode} children - Additional content rendered below main card
  */
 function MainDisplay({
@@ -25,6 +26,7 @@ function MainDisplay({
     badges = [],
     sections = [],
     bookmark,
+    customAction,
     children
 }) {
     return (
@@ -51,8 +53,19 @@ function MainDisplay({
                                 )}
                             </div>
 
-                            {/* Rating in Top Right Corner */}
-                            {rating !== undefined && rating !== null ? (
+                            {/* Rating or Custom Action in Top Right Corner */}
+                            {customAction ? (
+                                <div className="text-end">
+                                    <Button 
+                                        variant={customAction.variant || 'primary'}
+                                        size="sm"
+                                        onClick={customAction.onClick}
+                                    >
+                                        {customAction.icon && <span className="me-1">{customAction.icon}</span>}
+                                        {customAction.label}
+                                    </Button>
+                                </div>
+                            ) : rating !== undefined && rating !== null ? (
                                 <div className="text-end">
                                     <div className="d-flex align-items-center gap-2 mb-2">
                                         <span className="rating-star">★</span>

@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Spinner, Alert, Card, Badge } from 'react-bootstrap';
+import { Container, Card, Badge, Spinner, Button, Alert, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import RowComp from '../components/RowComp';
+import RowComp from '../components/RowList';
 import MediaCard from '../components/MediaCard';
 import UserCard from '../components/UserCard';
+import makeCarousel from '../components/MakeCarousel';
+import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useTitleData from '../hooks/useTitleData';
+import useAuthStatus from '../hooks/useAuthStatus';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 
@@ -31,10 +35,7 @@ import '../style/CTitlePage.css';
 
 function Title() {
     const { titleId } = useParams();
-    
-    // Dummy auth (replace with real auth later)
-    const userId = '55';
-    const isLoggedIn = true;
+    const { isSignedIn, userId } = useAuthStatus();
 
     // Use custom hook for all data fetching and state management
     const {
@@ -48,53 +49,62 @@ function Title() {
         isBookmarked,
         toggleBookmark,
         userRating,
+        userReview,
+        setUserReview,
         loadingUserRating,
         updateUserRating,
         deleteUserRating
-    } = useTitleData(titleId, userId, isLoggedIn);
+    } = useTitleData(titleId, userId, isSignedIn);
 
-    // Local state for user review text (not saved to backend yet)
-    const [userReviewText, setUserReviewText] = useState('');
+    // Local state for temporary rating and review text
+    const [tempRating, setTempRating] = useState(0);
+    const [tempReviewText, setTempReviewText] = useState('');
+    const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', or null
 
-    // Dummy data for similar titles (no API endpoint available)
-    const dummySimilarTitles = [
-        {
-            id: 'tt0111161',
-            name: 'The Green Mile',
-            poster: placeholderImage
-        },
-        {
-            id: 'tt0468569',
-            name: 'The Dark Knight',
-            poster: placeholderImage
-        },
-        {
-            id: 'tt0137523',
-            name: 'Fight Club',
-            poster: placeholderImage
+    // Similar titles state
+    const [similarTitles, setSimilarTitles] = useState([]);
+    const [loadingSimilar, setLoadingSimilar] = useState(true);
+
+    // Fetch similar titles
+    useEffect(() => {
+        const fetchSimilarTitles = async () => {
+            try {
+                setLoadingSimilar(true);
+                const similar = await mdb.apiv2.titles.getSimilar(titleId);
+                setSimilarTitles(similar || []);
+            } catch (err) {
+                console.error('Error fetching similar titles:', err);
+                setSimilarTitles([]);
+            } finally {
+                setLoadingSimilar(false);
+            }
+        };
+
+        if (titleId) {
+            fetchSimilarTitles();
         }
-    ];
+    }, [titleId]);
 
-    if (loading) return (
-        <Container className="d-flex justify-content-center align-items-center loading-container">
-            <Spinner animation="border" />
-        </Container>
-    );
+    // Handle submitting rating and review
+    const handleSubmitReview = async () => {
+        if (tempRating === 0) {
+            alert('Please select a rating before submitting');
+            return;
+        }
 
-    if (error) return (
-        <Container className="mt-5">
-            <Alert variant="danger">
-                <Alert.Heading>Error</Alert.Heading>
-                <p>{error}</p>
-            </Alert>
-        </Container>
-    );
+        try {
+            await updateUserRating(tempRating, tempReviewText);
+            setSubmitStatus('success');
+            setTimeout(() => setSubmitStatus(null), 3000); // Clear success message after 3 seconds
+        } catch (err) {
+            setSubmitStatus('error');
+            setTimeout(() => setSubmitStatus(null), 3000);
+        }
+    };
 
-    if (!title) return (
-        <Container className="mt-5">
-            <Alert variant="warning">No title found</Alert>
-        </Container>
-    );
+    if (loading) return <LoadingState />;
+    if (error) return <ErrorState error={error} />;
+    if (!title) return <NotFoundState message="No title found" />;
 
     // Prepare badges (mediaType, runtime)
     const badges = [];
@@ -138,7 +148,48 @@ function Title() {
                 onToggle: toggleBookmark
             }}
         >
-            {/* Cast Section */}
+            {/* Top Cast Section - Show only 4 */}
+            <Container className="mt-4">
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h4 className="mb-4">Top Cast</h4>
+                        {loadingCast ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : cast.length === 0 ? (
+                            <p className="text-muted">No cast information available.</p>
+                        ) : (
+                            <Row className="g-4 justify-content-center">
+                                {cast.slice(0, 4).map((actor) => (
+                                    <Col key={actor.id} xs={6} sm={4} md={3} lg={3} className="text-center">
+                                        <div 
+                                            onClick={() => window.location.href = `/individual/${actor.id}`}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <img
+                                                src={actor.profilePath || placeholderImage}
+                                                alt={actor.name}
+                                                className="rounded-circle mb-3"
+                                                style={{
+                                                    width: '150px',
+                                                    height: '150px',
+                                                    objectFit: 'cover',
+                                                    border: '3px solid #e0e0e0'
+                                                }}
+                                            />
+                                            <h6 className="mb-1">{actor.name}</h6>
+                                            <p className="text-muted small mb-0">{actor.character}</p>
+                                        </div>
+                                    </Col>
+                                ))}
+                            </Row>
+                        )}
+                    </Card.Body>
+                </Card>
+            </Container>
+
+            {/* Full Cast Section */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -170,36 +221,41 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Similar Titles Section */}
+            {/* Similar Movies Section with Carousel */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
-                        <h4 className="mb-4">Similar Titles</h4>
-                        <RowComp
-                            variant="grid"
-                            items={dummySimilarTitles}
-                            renderItem={(similarTitle) => (
-                                <MediaCard
-                                    key={similarTitle.id}
-                                    id={similarTitle.id}
-                                    type="title"
-                                    image={similarTitle.poster}
-                                    title={similarTitle.name}
-                                    actions={[
-                                        {
-                                            label: 'Info',
-                                            variant: 'outline-primary',
-                                            onClick: (id) => window.location.href = `/title/${id}`
-                                        },
-                                        {
-                                            label: 'Rate',
-                                            variant: 'outline-warning',
-                                            onClick: (id) => window.location.href = `/title/${id}#reviews-section`
-                                        }
-                                    ]}
-                                />
-                            )}
-                        />
+                        <h4 className="mb-4">Similar Movies</h4>
+                        {loadingSimilar ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : similarTitles.length === 0 ? (
+                            <p className="text-muted">No similar titles available.</p>
+                        ) : (
+                            <>
+                                {console.log('Similar titles for carousel:', similarTitles)}
+                                {makeCarousel({
+                                    items: similarTitles.map((similar) => {
+                                        console.log('Mapping similar title:', similar);
+                                        return (
+                                            <MediaCard
+                                                key={similar.id}
+                                                id={similar.id}
+                                                type="title"
+                                                image={similar.image || similar.poster || placeholderImage}
+                                                title={similar.name}
+                                                subtitle={similar.startYear ? `(${similar.startYear})` : null}
+                                                size="large"
+                                            />
+                                        );
+                                    }),
+                                    itemsPerSlide: 4,
+                                    controls: true,
+                                    indicators: false
+                                })}
+                            </>
+                        )}
                     </Card.Body>
                 </Card>
             </Container>
@@ -210,29 +266,64 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Reviews</h4>
                         
-                        {/* User Rating Box (if logged in) */}
-                        {isLoggedIn && (
-                            loadingUserRating ? (
-                                <div className="text-center py-3">
-                                    <Spinner animation="border" size="sm" />
-                                </div>
-                            ) : (
+                        {/* User Rating Box - Always show, but prompt login if not signed in */}
+                        {!isSignedIn ? (
+                            <Card className="mb-4 bg-light">
+                                <Card.Body className="text-center py-4">
+                                    <p className="mb-2 text-muted">
+                                        <strong>Want to leave a review?</strong>
+                                    </p>
+                                    <p className="text-muted">
+                                        Please <a href="/signin" className="text-primary">sign in</a> to rate and review this title.
+                                    </p>
+                                </Card.Body>
+                            </Card>
+                        ) : loadingUserRating ? (
+                            <div className="text-center py-3">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : (
+                            <>
+                                {submitStatus === 'success' && (
+                                    <Alert variant="success" className="mb-3">
+                                        ✓ Your review has been submitted successfully!
+                                    </Alert>
+                                )}
+                                {submitStatus === 'error' && (
+                                    <Alert variant="danger" className="mb-3">
+                                        ✗ Failed to submit review. Please try again.
+                                    </Alert>
+                                )}
+                                
                                 <UserCard
                                     userId={userId}
                                     username="You"
                                     avatar={placeholderImage}
-                                    rating={userRating}
-                                    content={userReviewText}
+                                    rating={tempRating || userRating}
+                                    content={tempReviewText || userReview}
                                     editable={true}
                                     showRating={true}
-                                    onRatingChange={updateUserRating}
-                                    onContentChange={setUserReviewText}
+                                    onRatingChange={(newRating) => setTempRating(newRating)}
+                                    onContentChange={(text) => setTempReviewText(text)}
                                     onDelete={deleteUserRating}
                                     showDeleteButton={userRating > 0}
                                     maxContentLength={0}
                                     placeholder="Write your review here... (optional)"
                                 />
-                            )
+                                
+                                {/* Submit Button */}
+                                {(tempRating > 0 || tempReviewText.trim()) && (
+                                    <div className="text-end mt-2">
+                                        <Button 
+                                            variant="primary" 
+                                            onClick={handleSubmitReview}
+                                            disabled={tempRating === 0}
+                                        >
+                                            Submit Review
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {/* All Reviews */}

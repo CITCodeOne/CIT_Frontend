@@ -1,4 +1,4 @@
-# 📋 ListManager Component - Reusable List Management
+# ListManager Component - Reusable List Management
 
 ## Overview
 

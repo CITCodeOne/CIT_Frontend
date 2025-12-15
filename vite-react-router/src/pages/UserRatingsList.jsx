@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
-import List from "../components/List";
+import RowComp from "../components/RowList";
 import ListManager from "../components/ListManager";
 import Rating from "../components/Rating";
 import placeholderImage from "../pics/Image-not-found.png";
@@ -103,7 +103,8 @@ export default function UserRatingsList() {
             {ratedTitles.length === 0 ? (
                 <p className="text-muted">This user has not rated any titles yet.</p>
             ) : (
-                <List
+                <RowComp
+                    variant="list"
                     items={ratedTitles}
                     renderItem={(item) => (
                         <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">

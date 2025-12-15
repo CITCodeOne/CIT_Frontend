@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Spinner, Alert, Card, Badge } from 'react-bootstrap';
+import { Container, Card, Badge, Spinner } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import RowComp from '../components/RowComp';
+import RowComp from '../components/RowList';
 import MediaCard from '../components/MediaCard';
+import makeCarousel from '../components/MakeCarousel';
 import ListManager from '../components/ListManager';
+import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
+import useAuthStatus from '../hooks/useAuthStatus';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 
@@ -33,13 +37,14 @@ import '../style/CTitlePage.css';
 
 function Individual() {
     const { individualId } = useParams();
-    
-    // Dummy auth (replace with real auth later)
-    const userId = '55';
-    const isLoggedIn = true;
+    const { isSignedIn, userId } = useAuthStatus();
 
     // Modal state for "Add to List"
     const [showListModal, setShowListModal] = useState(false);
+
+    // TMDB images state
+    const [tmdbImages, setTmdbImages] = useState([]);
+    const [loadingImages, setLoadingImages] = useState(true);
 
     // Use custom hook for all data fetching and state management
     const {
@@ -50,7 +55,60 @@ function Individual() {
         loadingKnownFor,
         isBookmarked,
         toggleBookmark
-    } = useIndividualData(individualId, userId, isLoggedIn);
+    } = useIndividualData(individualId, userId, isSignedIn);
+
+    // Fetch TMDB images for this individual
+    useEffect(() => {
+        const fetchTmdbImages = async () => {
+            if (!individual?.name) {
+                setLoadingImages(false);
+                return;
+            }
+
+            try {
+                setLoadingImages(true);
+                
+                console.log('Searching TMDB for:', individual.name);
+                
+                // First, search for the person by name
+                const searchResults = await mdb.tmdb.searchPerson(individual.name);
+                console.log('TMDB search results:', searchResults);
+                
+                if (searchResults?.results?.length > 0) {
+                    // Get the first matching person (most likely match)
+                    const personId = searchResults.results[0].id;
+                    console.log('Getting TMDB person details for ID:', personId);
+                    
+                    // Fetch full person details with images
+                    const personDetails = await mdb.tmdb.getPerson(personId);
+                    console.log('TMDB person details:', personDetails);
+                    
+                    if (personDetails?.images?.profiles) {
+                        // Get up to 10 profile images
+                        const imageUrls = personDetails.images.profiles
+                            .slice(0, 10)
+                            .map(img => `https://image.tmdb.org/t/p/w500${img.file_path}`);
+                        
+                        console.log('TMDB image URLs:', imageUrls);
+                        setTmdbImages(imageUrls);
+                    } else {
+                        console.log('No profiles found in TMDB data');
+                    }
+                } else {
+                    console.log('No search results found for:', individual.name);
+                }
+            } catch (err) {
+                console.error('Error fetching TMDB images:', err);
+                setTmdbImages([]);
+            } finally {
+                setLoadingImages(false);
+            }
+        };
+
+        if (individual) {
+            fetchTmdbImages();
+        }
+    }, [individual]);
 
     // Handle opening the list modal
     const handleAddToList = () => {
@@ -59,11 +117,7 @@ function Individual() {
 
     // Handle success when added to list
     const handleListSuccess = (result) => {
-        if (result.action === 'created') {
-            alert(`Created list "${result.listName}" and added ${result.itemName}!`);
-        } else {
-            alert(`Added ${result.itemName} to "${result.listName}"!`);
-        }
+        console.log(`Successfully added ${result.itemName} to list "${result.listName}"`);
     };
 
     // Handle error when adding to list
@@ -71,26 +125,9 @@ function Individual() {
         console.error('List operation failed:', error);
     };
 
-    if (loading) return (
-        <Container className="d-flex justify-content-center align-items-center loading-container">
-            <Spinner animation="border" />
-        </Container>
-    );
-
-    if (error) return (
-        <Container className="mt-5">
-            <Alert variant="danger">
-                <Alert.Heading>Error</Alert.Heading>
-                <p>{error}</p>
-            </Alert>
-        </Container>
-    );
-
-    if (!individual) return (
-        <Container className="mt-5">
-            <Alert variant="warning">No individual found</Alert>
-        </Container>
-    );
+    if (loading) return <LoadingState />;
+    if (error) return <ErrorState error={error} />;
+    if (!individual) return <NotFoundState message="No individual found" />;
 
     // Prepare job badges (if we have profession data)
     const badges = [];
@@ -121,29 +158,6 @@ function Individual() {
         });
     }
 
-    // Biography/Description section (placeholder - would need to be added to API)
-    // Adding a placeholder section that can be filled when API provides this data
-    sections.push({
-        title: 'Biography',
-        content: (
-            <p className="text-muted">
-                Biography information is currently not available from the API.
-            </p>
-        )
-    });
-
-    // Group titles by profession (if we had profession data in the response)
-    // For now, we'll show all titles in a single "Known For" section
-    const groupedTitles = knownForTitles.reduce((acc, title) => {
-        // If we had profession data: const profession = title.profession || 'Actor';
-        const profession = 'Actor'; // Default for now
-        if (!acc[profession]) {
-            acc[profession] = [];
-        }
-        acc[profession].push(title);
-        return acc;
-    }, {});
-
     return (
         <>
             <MainDisplay
@@ -152,6 +166,11 @@ function Individual() {
                 subtitle={null}
                 badges={badges}
                 sections={sections}
+                bookmark={isSignedIn ? {
+                    itemId: individualId,
+                    isBookmarked: isBookmarked,
+                    onToggle: toggleBookmark
+                } : null}
                 customAction={{
                     label: 'Add to List',
                     variant: 'primary',
@@ -159,31 +178,43 @@ function Individual() {
                     onClick: handleAddToList
                 }}
             >
-            {/* Awards Section - Placeholder */}
-            <Container className="mt-4">
-                <Card className="shadow-sm">
-                    <Card.Body>
-                        <h4 className="mb-4">Awards & Nominations</h4>
-                        <p className="text-muted">
-                            Awards information is currently not available from the API.
-                        </p>
-                    </Card.Body>
-                </Card>
-            </Container>
-
-            {/* Photo Gallery Section - Placeholder */}
+            {/* Photo Gallery Section - TMDB Images Carousel */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Photos</h4>
-                        <p className="text-muted">
-                            Photo gallery is currently not available from the API.
-                        </p>
+                        {loadingImages ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : tmdbImages.length === 0 ? (
+                            <p className="text-muted">No photos available.</p>
+                        ) : (
+                            makeCarousel({
+                                items: tmdbImages.map((imageUrl, index) => (
+                                    <div key={index} className="text-center">
+                                        <img
+                                            src={imageUrl}
+                                            alt={`${individual.name} - Photo ${index + 1}`}
+                                            style={{
+                                                width: '100%',
+                                                height: '400px',
+                                                objectFit: 'cover',
+                                                borderRadius: '8px'
+                                            }}
+                                        />
+                                    </div>
+                                )),
+                                itemsPerSlide: 4,
+                                controls: true,
+                                indicators: false
+                            })
+                        )}
                     </Card.Body>
                 </Card>
             </Container>
 
-            {/* Known For Section - Grouped by Profession */}
+            {/* Known For Section - Movies Carousel */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -195,37 +226,22 @@ function Individual() {
                         ) : knownForTitles.length === 0 ? (
                             <p className="text-muted">No known titles available.</p>
                         ) : (
-                            <>
-                                {Object.entries(groupedTitles).map(([profession, titles]) => (
-                                    <div key={profession} className="mb-4">
-                                        <h5 className="mb-3">
-                                            <Badge bg="secondary">{profession}</Badge>
-                                        </h5>
-                                        <RowComp
-                                            variant="grid"
-                                            items={titles}
-                                            renderItem={(title) => (
-                                                <MediaCard
-                                                    key={title.id}
-                                                    id={title.id}
-                                                    type="title"
-                                                    image={title.image}
-                                                    title={title.name}
-                                                    subtitle={title.startYear ? `(${title.startYear})` : null}
-                                                    size="large"
-                                                    actions={[
-                                                        {
-                                                            label: 'View',
-                                                            variant: 'outline-primary',
-                                                            onClick: (id) => window.location.href = `/title/${id}`
-                                                        }
-                                                    ]}
-                                                />
-                                            )}
-                                        />
-                                    </div>
-                                ))}
-                            </>
+                            makeCarousel({
+                                items: knownForTitles.map((title) => (
+                                    <MediaCard
+                                        key={title.id}
+                                        id={title.id}
+                                        type="title"
+                                        image={title.image || placeholderImage}
+                                        title={title.name}
+                                        subtitle={title.startYear ? `(${title.startYear})` : null}
+                                        size="medium"
+                                    />
+                                )),
+                                itemsPerSlide: 4,
+                                controls: true,
+                                indicators: false
+                            })
                         )}
                     </Card.Body>
                 </Card>
