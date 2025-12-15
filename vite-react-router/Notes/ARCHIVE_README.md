@@ -42,6 +42,10 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -75,9 +79,14 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
    - Fixed import: Changed from `apiv2` to `mdb`
    - Updated all API calls to use `mdb.apiv2.*` structure
    - Removed bookmark-related functionality
+=======
+   - Uses `mdb.apiv2.individuals.getById()` and `getTitles()`
+   - Removed bookmark-related functionality (not needed for individuals)
+>>>>>>> Stashed changes
 =======
    - Uses `mdb.apiv2.individuals.getById()` and `getTitles()`
    - Removed bookmark-related functionality (not needed for individuals)
@@ -130,9 +139,12 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #### React Router Fix
 7. **src/App.jsx**
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -156,6 +168,9 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -177,7 +192,11 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 8. **Notes/NotesForIndividualPage.txt**
+=======
+9. **Notes/NotesForIndividualPage.txt**
+>>>>>>> Stashed changes
 =======
 9. **Notes/NotesForIndividualPage.txt**
 >>>>>>> Stashed changes
@@ -206,6 +225,7 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 9. **Notes/ListManagerComp.txt**
    - Added UserBookmarksList and UserRatingsList examples
    - Updated usage documentation
@@ -215,6 +235,8 @@ All documentation reflects the current codebase after major refactoring that red
 
 
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -237,6 +259,9 @@ All documentation reflects the current codebase after major refactoring that red
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
