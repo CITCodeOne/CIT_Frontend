@@ -10,6 +10,7 @@ import { LoadingState, ErrorState, NotFoundState } from '../components/PageState
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 
@@ -61,29 +62,70 @@ function Title() {
     const [tempReviewText, setTempReviewText] = useState('');
     const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', or null
 
-    // Similar titles state
-    const [similarTitles, setSimilarTitles] = useState([]);
-    const [loadingSimilar, setLoadingSimilar] = useState(true);
+    // TMDB Integration states
+    const [tmdbPoster, setTmdbPoster] = useState(null);
+    const [castPhotos, setCastPhotos] = useState({});
+    const [tmdbSimilarTitles, setTmdbSimilarTitles] = useState([]);
+    const [loadingSimilar, setLoadingSimilar] = useState(false);
 
-    // Fetch similar titles
+    // Fetch TMDB poster
     useEffect(() => {
-        const fetchSimilarTitles = async () => {
-            try {
-                setLoadingSimilar(true);
-                const similar = await mdb.apiv2.titles.getSimilar(titleId);
-                setSimilarTitles(similar || []);
-            } catch (err) {
-                console.error('Error fetching similar titles:', err);
-                setSimilarTitles([]);
-            } finally {
-                setLoadingSimilar(false);
+        const fetchPoster = async () => {
+            if (title?.name && title?.mediaType) {
+                try {
+                    const posterUrl = await tmdb.getTitlePoster(
+                        title.name, 
+                        title.mediaType, 
+                        title.startYear
+                    );
+                    if (posterUrl) setTmdbPoster(posterUrl);
+                } catch (err) {
+                    console.error('Error fetching TMDB poster:', err);
+                }
             }
         };
+        fetchPoster();
+    }, [title]);
 
-        if (titleId) {
-            fetchSimilarTitles();
-        }
-    }, [titleId]);
+    // Fetch TMDB cast photos (parallel)
+    useEffect(() => {
+        const fetchCastPhotos = async () => {
+            if (cast && cast.length > 0) {
+                try {
+                    const actorNames = cast.map(actor => actor.name);
+                    const photos = await tmdb.getMultiplePersonPhotos(actorNames);
+                    setCastPhotos(photos);
+                } catch (err) {
+                    console.error('Error fetching cast photos:', err);
+                }
+            }
+        };
+        fetchCastPhotos();
+    }, [cast]);
+
+    // Fetch TMDB similar titles
+    useEffect(() => {
+        const fetchSimilarTitles = async () => {
+            if (title?.name && title?.mediaType) {
+                try {
+                    setLoadingSimilar(true);
+                    const similar = await tmdb.getSimilarTitles(
+                        title.name,
+                        title.mediaType,
+                        title.startYear,
+                        20
+                    );
+                    setTmdbSimilarTitles(similar || []);
+                } catch (err) {
+                    console.error('Error fetching similar titles:', err);
+                    setTmdbSimilarTitles([]);
+                } finally {
+                    setLoadingSimilar(false);
+                }
+            }
+        };
+        fetchSimilarTitles();
+    }, [title]);
 
     // Handle submitting rating and review
     const handleSubmitReview = async () => {
@@ -105,6 +147,16 @@ function Title() {
     if (loading) return <LoadingState />;
     if (error) return <ErrorState error={error} />;
     if (!title) return <NotFoundState message="No title found" />;
+
+    // Create custom title with year styling
+    const customTitle = (
+        <div>
+            {title.name || 'No Title'}{' '}
+            {title.startYear && (
+                <span className="title-year-text">({title.startYear})</span>
+            )}
+        </div>
+    );
 
     // Prepare badges (mediaType, runtime)
     const badges = [];
@@ -136,9 +188,9 @@ function Title() {
 
     return (
         <MainDisplay
-            image={title.poster || placeholderImage}
-            title={title.name || 'No Title'}
-            subtitle={title.startYear ? `(${title.startYear})` : null}
+            image={tmdbPoster || title.poster || placeholderImage}
+            title={customTitle}
+            subtitle={null}
             rating={title.rating}
             badges={badges}
             sections={sections}
@@ -165,18 +217,12 @@ function Title() {
                                     <Col key={actor.id} xs={6} sm={4} md={3} lg={3} className="text-center">
                                         <div 
                                             onClick={() => window.location.href = `/individual/${actor.id}`}
-                                            style={{ cursor: 'pointer' }}
+                                            className="top-cast-container"
                                         >
                                             <img
-                                                src={actor.profilePath || placeholderImage}
+                                                src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
                                                 alt={actor.name}
-                                                className="rounded-circle mb-3"
-                                                style={{
-                                                    width: '150px',
-                                                    height: '150px',
-                                                    objectFit: 'cover',
-                                                    border: '3px solid #e0e0e0'
-                                                }}
+                                                className="rounded-circle mb-3 top-cast-image"
                                             />
                                             <h6 className="mb-1">{actor.name}</h6>
                                             <p className="text-muted small mb-0">{actor.character}</p>
@@ -201,60 +247,54 @@ function Title() {
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
-                            <RowComp
-                                variant="grid"
-                                items={cast}
-                                renderItem={(actor) => (
-                                    <MediaCard
-                                        key={actor.id}
-                                        id={actor.id}
-                                        type="person"
-                                        image={actor.profilePath}
-                                        title={actor.name}
-                                        subtitle={actor.character}
-                                        size="large"
-                                    />
-                                )}
-                            />
+                            <div>
+                                {cast.map((actor) => (
+                                    <div 
+                                        key={actor.id} 
+                                        className="d-flex align-items-center p-3 mb-2 border rounded bg-white"
+                                        style={{ cursor: 'pointer' }}
+                                        onClick={() => window.location.href = `/individual/${actor.id}`}
+                                    >
+                                        <img
+                                            src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
+                                            alt={actor.name}
+                                            className="cast-thumbnail me-3"
+                                            style={{ width: '50px', height: '75px', objectFit: 'cover', borderRadius: '4px' }}
+                                        />
+                                        <div>
+                                            <h6 className="mb-0">{actor.name}</h6>
+                                            <p className="text-muted small mb-0">{actor.character}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </Card.Body>
                 </Card>
             </Container>
 
-            {/* Similar Movies Section with Carousel */}
+            {/* Similar Titles Section with TMDB */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
-                        <h4 className="mb-4">Similar Movies</h4>
+                        <h4 className="mb-4">Similar Titles</h4>
                         {loadingSimilar ? (
                             <div className="text-center py-4">
                                 <Spinner animation="border" size="sm" />
                             </div>
-                        ) : similarTitles.length === 0 ? (
+                        ) : tmdbSimilarTitles.length === 0 ? (
                             <p className="text-muted">No similar titles available.</p>
                         ) : (
-                            <>
-                                {console.log('Similar titles for carousel:', similarTitles)}
-                                {makeCarousel({
-                                    items: similarTitles.map((similar) => {
-                                        console.log('Mapping similar title:', similar);
-                                        return (
-                                            <MediaCard
-                                                key={similar.id}
-                                                id={similar.id}
-                                                type="title"
-                                                image={similar.image || similar.poster || placeholderImage}
-                                                title={similar.name}
-                                                subtitle={similar.startYear ? `(${similar.startYear})` : null}
-                                                size="large"
-                                            />
-                                        );
-                                    }),
-                                    itemsPerSlide: 4,
-                                    controls: true,
-                                    indicators: false
-                                })}
-                            </>
+                            <div>
+                                {makeCarousel(
+                                    tmdbSimilarTitles.map(similar => ({
+                                        ...similar,
+                                        title: similar.name,
+                                        subtitle: similar.startYear ? `(${similar.startYear})` : null
+                                    })),
+                                    'title'
+                                )}
+                            </div>
                         )}
                     </Card.Body>
                 </Card>
@@ -334,8 +374,10 @@ function Title() {
                         ) : reviews.length === 0 ? (
                             <p className="text-muted">No reviews available yet.</p>
                         ) : (
-                            <>
-                                {reviews.map((review) => (
+                            <RowComp
+                                variant="list"
+                                items={reviews}
+                                renderItem={(review) => (
                                     <UserCard
                                         key={review.id}
                                         userId={review.userId}
@@ -347,8 +389,8 @@ function Title() {
                                         showRating={true}
                                         maxContentLength={250}
                                     />
-                                ))}
-                            </>
+                                )}
+                            />
                         )}
                     </Card.Body>
                 </Card>

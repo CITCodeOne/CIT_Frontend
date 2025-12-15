@@ -12,6 +12,7 @@ import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
+import '../style/CIndividualPage.css';
 
 /**
  * Individual Page Component
@@ -196,12 +197,7 @@ function Individual() {
                                         <img
                                             src={imageUrl}
                                             alt={`${individual.name} - Photo ${index + 1}`}
-                                            style={{
-                                                width: '100%',
-                                                height: '400px',
-                                                objectFit: 'cover',
-                                                borderRadius: '8px'
-                                            }}
+                                            className="individual-carousel-image"
                                         />
                                     </div>
                                 )),

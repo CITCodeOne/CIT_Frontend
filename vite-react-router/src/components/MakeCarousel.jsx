@@ -4,9 +4,9 @@ import PreviewCards from "./PreviewCards";
 
 const DEFAULT_FOCUS_KEY = "title";
 const DEFAULT_CARD_COUNT = 3;
-const TARGET_CARD_WIDTH = 280; 
-const CARD_GAP = 24;
-const CONTROL_RESERVED_SPACE = 400; 
+const TARGET_CARD_WIDTH = 220; 
+const CARD_GAP = 16;
+const CONTROL_RESERVED_SPACE = 200; 
 const FALLBACK_MESSAGE = "No items were given to make the carousel.";
 
 const chunkItems = (items, size) => {

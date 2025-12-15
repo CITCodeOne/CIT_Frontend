@@ -101,3 +101,31 @@
 .loading-container {
     min-height: 400px;
 }
+
+/* Title-specific styles */
+
+/* Year text styling */
+.title-year-text {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+/* Top Cast section */
+.top-cast-container {
+    cursor: pointer;
+}
+
+.top-cast-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 3px solid #e0e0e0;
+}
+
+/* Cast list thumbnail */
+.cast-thumbnail {
+    width: 50px;
+    height: 75px;
+    object-fit: cover;
+    border-radius: 4px;
+}

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
 
-const truncateText = (text, max = 240) => {
+const truncateText = (text, max = 500) => {
   if (!text) return "";
   const str = String(text);
   if (str.length <= max) return str;
