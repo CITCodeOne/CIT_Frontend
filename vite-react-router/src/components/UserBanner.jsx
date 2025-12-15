@@ -16,11 +16,15 @@ export default function UserBanner({
   onShareClick,
 }) {
   const normalizedImage = (() => {
-    if (!profile_image) return null;
+    if (!profile_image || profile_image.trim() === "") return defaultAvatar;
     try {
-      return normalizeDataUrl(profile_image) || profile_image;
+      const normalized = normalizeDataUrl(profile_image);
+      if (normalized && (normalized.includes("not-found") || normalized.includes("error") || normalized.includes("Image-not-found"))) {
+        return defaultAvatar;
+      }
+      return normalized || defaultAvatar;
     } catch (err) {
-      return null;
+      return defaultAvatar;
     }
   })();
   const formattedDate = createdAt
@@ -28,7 +32,7 @@ export default function UserBanner({
     : ""; // Prettify the join date.
 
   const canClickAvatar = isOwnProfile && isEditMode; // Owner can click avatar when editing.
-  const imgSrc = normalizedImage || defaultAvatar; // Always fallback to default avatar image.
+  const imgSrc = normalizedImage;
 
   return (
     <section className="container my-4">
