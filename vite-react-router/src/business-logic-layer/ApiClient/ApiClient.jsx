@@ -15,6 +15,7 @@ import fetchSimplified from '../helper-function/FetchSimplified';
 import { MapTitle, MapIndividual } from '../ItemMapper';
 import { normalizeKey, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES } from '../KeyAliases';
 import { User } from '../DataClasses';
+import tmdb from './ApiClientTMDB';
 
 /**
  * Internal helper function that wraps fetchSimplified to target the v2 API segment.
@@ -583,6 +584,7 @@ Object.freeze(apiv2.user);
  */
 const mdb = Object.freeze({
 	apiv2: Object.freeze(apiv2),
+	tmdb: Object.freeze(tmdb),
 });
 
 export default mdb;
