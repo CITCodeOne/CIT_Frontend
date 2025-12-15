@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import placeholderImage from '../pics/Image-not-found.png';
 
 /**
@@ -23,70 +15,10 @@ import placeholderImage from '../pics/Image-not-found.png';
  */
 export default function useIndividualData(individualId, userId = null, isLoggedIn = false) {
     // Main individual data state
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-
-/**
- * Custom hook for fetching and managing individual (person) data
- * 
- * Centralizes all data fetching logic for the Individual page:
- * - Basic individual information (name, birth/death year, image, rating)
- * - Known for titles (movies/shows the person worked on)
- * 
- * @param {string} individualId - The ID of the individual to fetch
- * @param {string} userId - The current user's ID (for future bookmark/list features)
- * @param {boolean} isLoggedIn - Whether the user is logged in
- * @returns {Object} All state and handlers needed for the Individual page
- */
-function useIndividualData(individualId, userId, isLoggedIn) {
-    // Individual basic data state
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     const [individual, setIndividual] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     // Known-for titles state
     const [knownForTitles, setKnownForTitles] = useState([]);
     const [loadingKnownFor, setLoadingKnownFor] = useState(true);
@@ -107,71 +39,11 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             } catch (err) {
                 setError(err.message || 'Failed to load individual');
                 setIndividual(null);
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-    // Known for titles state
-    const [knownForTitles, setKnownForTitles] = useState([]);
-    const [loadingKnownFor, setLoadingKnownFor] = useState(true);
-
-    // Fetch individual basic data
-    useEffect(() => {
-        const fetchIndividual = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await mdb.apiv2.individuals.getById(individualId);
-                setIndividual(data);
-            } catch (err) {
-                console.error('Error fetching individual:', err);
-                setError(err.message || 'Failed to load individual data');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             } finally {
                 setLoading(false);
             }
         };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         fetchIndividualData();
     }, [individualId]);
 
@@ -188,79 +60,20 @@ function useIndividualData(individualId, userId, isLoggedIn) {
                 const formattedTitles = Array.isArray(titlesData) ? titlesData.map(title => ({
                     id: title.id,
                     name: title.name || title.title || 'Unknown',
-                    poster: title.poster || title.posterPath || placeholderImage,
-                    year: title.releaseYear || title.year || null,
+                    image: title.image || title.poster || title.posterPath || placeholderImage,
+                    startYear: title.startYear || title.releaseYear || title.year || null,
                     profession: title.profession || title.category || null
                 })) : [];
                 
                 setKnownForTitles(formattedTitles);
             } catch (err) {
                 console.error('Failed to load known-for titles:', err);
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-        if (individualId) {
-            fetchIndividual();
-        }
-    }, [individualId]);
-
-    // Fetch known for titles
-    useEffect(() => {
-        const fetchKnownForTitles = async () => {
-            try {
-                setLoadingKnownFor(true);
-                const titles = await mdb.apiv2.individuals.getTitles(individualId);
-                setKnownForTitles(Array.isArray(titles) ? titles : []);
-            } catch (err) {
-                console.error('Error fetching known for titles:', err);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                 setKnownForTitles([]);
             } finally {
                 setLoadingKnownFor(false);
             }
         };
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         fetchKnownFor();
     }, [individualId]);
 
@@ -321,55 +134,3 @@ function useIndividualData(individualId, userId, isLoggedIn) {
         toggleBookmark
     };
 }
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-        if (individualId) {
-            fetchKnownForTitles();
-        }
-    }, [individualId]);
-
-    return {
-        individual,
-        loading,
-        error,
-        knownForTitles,
-        loadingKnownFor
-    };
-}
-
-export default useIndividualData;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
