@@ -14,6 +14,62 @@
     border-radius: 8px;
 }
 
+/* Known For Section - Movie Cards */
+.known-for-card {
+    cursor: pointer;
+    position: relative;
+}
+
+.known-for-poster-container {
+    position: relative;
+    padding-top: 150%;
+    overflow: hidden;
+}
+
+.known-for-poster {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.known-for-bookmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.known-for-bookmark.bookmarked {
+    background: rgba(0, 123, 255, 0.8);
+}
+
+.known-for-bookmark-icon {
+    color: white;
+    font-size: 20px;
+}
+
+/* Filmography List Items */
+.filmography-list-item {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.filmography-list-item:hover {
+    background-color: #f8f9fa !important;
+}
+
 /* Filmography thumbnail images */
 .filmography-thumbnail {
     width: 50px;

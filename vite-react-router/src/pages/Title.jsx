@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Card, Badge, Spinner, Button, Alert, Row, Col } from 'react-bootstrap';
+import { Container, Card, Badge, Spinner, Button, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import RowComp from '../components/RowList';
-import MediaCard from '../components/MediaCard';
 import UserCard from '../components/UserCard';
+import ToggleButton from '../components/ToggleButton';
 import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useTitleData from '../hooks/useTitleData';
@@ -15,30 +14,13 @@ import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 
 /**
- * Title Page Component
- * 
- * Displays detailed information about a specific title including cast, similar titles, and reviews.
- * 
- * API Endpoints Used:
- * ✅ titles.getById(id) - Fetches main title data
- * ✅ titles.getIndividuals(id) - Fetches cast/crew data
- * ✅ titles.getRatings(id) - Fetches reviews/ratings
- * ✅ user.getBookmark(userId, titleId) - Checks bookmark status
- * ✅ user.addBookmark(userId, titleId) - Adds bookmark
- * ✅ user.removeBookmark(userId, titleId) - Removes bookmark
- * ✅ user.getRating(userId, titleId) - Fetches user's rating
- * ✅ user.addRating(userId, titleId, rating) - Adds new rating
- * ✅ user.updateRating(userId, titleId, rating) - Updates existing rating
- * 
- * Dummy Data (no endpoints available):
- * ❌ Similar Titles - using hardcoded dummy data
+ * Title Page - Display movie/show details with cast, reviews, and similar titles
  */
 
 function Title() {
     const { titleId } = useParams();
     const { isSignedIn, userId } = useAuthStatus();
 
-    // Use custom hook for all data fetching and state management
     const {
         title,
         loading,
@@ -57,16 +39,16 @@ function Title() {
         deleteUserRating
     } = useTitleData(titleId, userId, isSignedIn);
 
-    // Local state for temporary rating and review text
+    // Local state
     const [tempRating, setTempRating] = useState(0);
     const [tempReviewText, setTempReviewText] = useState('');
-    const [submitStatus, setSubmitStatus] = useState(null); // 'success', 'error', or null
-
-    // TMDB Integration states
+    const [submitStatus, setSubmitStatus] = useState(null);
     const [tmdbPoster, setTmdbPoster] = useState(null);
     const [castPhotos, setCastPhotos] = useState({});
     const [tmdbSimilarTitles, setTmdbSimilarTitles] = useState([]);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
+    const [similarBookmarks, setSimilarBookmarks] = useState({});
+    const [similarPosters, setSimilarPosters] = useState({});
 
     // Fetch TMDB poster
     useEffect(() => {
@@ -87,7 +69,7 @@ function Title() {
         fetchPoster();
     }, [title]);
 
-    // Fetch TMDB cast photos (parallel)
+    // Fetch TMDB cast photos
     useEffect(() => {
         const fetchCastPhotos = async () => {
             if (cast && cast.length > 0) {
@@ -103,31 +85,146 @@ function Title() {
         fetchCastPhotos();
     }, [cast]);
 
-    // Fetch TMDB similar titles
+    // Fetch similar titles (backend API with TMDB fallback)
     useEffect(() => {
         const fetchSimilarTitles = async () => {
-            if (title?.name && title?.mediaType) {
-                try {
-                    setLoadingSimilar(true);
-                    const similar = await tmdb.getSimilarTitles(
-                        title.name,
-                        title.mediaType,
-                        title.startYear,
-                        20
-                    );
-                    setTmdbSimilarTitles(similar || []);
-                } catch (err) {
-                    console.error('Error fetching similar titles:', err);
-                    setTmdbSimilarTitles([]);
-                } finally {
-                    setLoadingSimilar(false);
+            if (!titleId) return;
+            
+            try {
+                setLoadingSimilar(true);
+                const backendSimilar = await mdb.apiv2.titles.getSimilar(titleId);
+                
+                if (backendSimilar && backendSimilar.length > 0) {
+                    setTmdbSimilarTitles(backendSimilar.slice(0, 20));
+                } else {
+                    if (title?.name && title?.mediaType) {
+                        const tmdbSimilar = await tmdb.getSimilarTitles(
+                            title.name,
+                            title.mediaType,
+                            title.startYear,
+                            20
+                        );
+                        setTmdbSimilarTitles(tmdbSimilar || []);
+                    }
                 }
+            } catch (err) {
+                console.error('Error fetching similar titles:', err);
+                if (title?.name && title?.mediaType) {
+                    try {
+                        const tmdbSimilar = await tmdb.getSimilarTitles(
+                            title.name,
+                            title.mediaType,
+                            title.startYear,
+                            20
+                        );
+                        setTmdbSimilarTitles(tmdbSimilar || []);
+                    } catch (tmdbErr) {
+                        console.error('TMDB fallback failed:', tmdbErr);
+                        setTmdbSimilarTitles([]);
+                    }
+                }
+            } finally {
+                setLoadingSimilar(false);
             }
         };
+        
         fetchSimilarTitles();
-    }, [title]);
+    }, [titleId, title]);
 
-    // Handle submitting rating and review
+    // Fetch TMDB posters for similar titles
+    useEffect(() => {
+        const fetchSimilarPosters = async () => {
+            if (tmdbSimilarTitles.length === 0) {
+                setSimilarPosters({});
+                return;
+            }
+
+            try {
+                const posterPromises = tmdbSimilarTitles.map(async (similar) => {
+                    try {
+                        // If the similar title already has a poster from TMDB API, use it
+                        if (similar.poster) {
+                            return { id: similar.id, poster: similar.poster };
+                        }
+                        
+                        // Otherwise, fetch it from TMDB
+                        const posterUrl = await tmdb.getTitlePoster(
+                            similar.name,
+                            similar.mediaType || 'movie',
+                            similar.startYear
+                        );
+                        return { id: similar.id, poster: posterUrl };
+                    } catch (err) {
+                        console.error(`Error fetching poster for ${similar.name}:`, err);
+                        return { id: similar.id, poster: null };
+                    }
+                });
+
+                const posterResults = await Promise.all(posterPromises);
+                const posterMap = {};
+                posterResults.forEach(({ id, poster }) => {
+                    if (poster) posterMap[id] = poster;
+                });
+                setSimilarPosters(posterMap);
+            } catch (err) {
+                console.error('Error fetching similar title posters:', err);
+            }
+        };
+
+        fetchSimilarPosters();
+    }, [tmdbSimilarTitles]);
+
+    // Check bookmark status for similar titles
+    useEffect(() => {
+        const checkSimilarBookmarks = async () => {
+            if (!isSignedIn || !userId || tmdbSimilarTitles.length === 0) {
+                setSimilarBookmarks({});
+                return;
+            }
+
+            try {
+                const bookmarkChecks = await Promise.all(
+                    tmdbSimilarTitles.map(async (similar) => {
+                        try {
+                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.id);
+                            return { id: similar.id, isBookmarked };
+                        } catch (err) {
+                            return { id: similar.id, isBookmarked: false };
+                        }
+                    })
+                );
+
+                const bookmarkMap = {};
+                bookmarkChecks.forEach(({ id, isBookmarked }) => {
+                    bookmarkMap[id] = isBookmarked;
+                });
+                setSimilarBookmarks(bookmarkMap);
+            } catch (err) {
+                console.error('Error checking similar title bookmarks:', err);
+            }
+        };
+
+        checkSimilarBookmarks();
+    }, [isSignedIn, userId, tmdbSimilarTitles]);
+
+    const handleSimilarTitleBookmark = async (similarTitleId, newState) => {
+        if (!isSignedIn || !userId) {
+            alert('Please sign in to bookmark titles');
+            return;
+        }
+
+        try {
+            if (newState) {
+                await mdb.apiv2.user.addBookmark(userId, similarTitleId);
+            } else {
+                await mdb.apiv2.user.removeBookmark(userId, similarTitleId);
+            }
+            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState }));
+        } catch (err) {
+            console.error('Error toggling similar title bookmark:', err);
+        }
+    };
+
     const handleSubmitReview = async () => {
         if (tempRating === 0) {
             alert('Please select a rating before submitting');
@@ -137,7 +234,7 @@ function Title() {
         try {
             await updateUserRating(tempRating, tempReviewText);
             setSubmitStatus('success');
-            setTimeout(() => setSubmitStatus(null), 3000); // Clear success message after 3 seconds
+            setTimeout(() => setSubmitStatus(null), 3000);
         } catch (err) {
             setSubmitStatus('error');
             setTimeout(() => setSubmitStatus(null), 3000);
@@ -148,7 +245,6 @@ function Title() {
     if (error) return <ErrorState error={error} />;
     if (!title) return <NotFoundState message="No title found" />;
 
-    // Create custom title with year styling
     const customTitle = (
         <div>
             {title.name || 'No Title'}{' '}
@@ -158,7 +254,6 @@ function Title() {
         </div>
     );
 
-    // Prepare badges (mediaType, runtime)
     const badges = [];
     if (title.mediaType) {
         badges.push({ text: title.mediaType, variant: 'primary' });
@@ -167,7 +262,6 @@ function Title() {
         badges.push({ text: `${title.runtime} min`, variant: 'secondary' });
     }
 
-    // Prepare sections (Genres, Overview)
     const sections = [];
     if (title.genres?.length > 0) {
         sections.push({
@@ -200,7 +294,7 @@ function Title() {
                 onToggle: toggleBookmark
             }}
         >
-            {/* Top Cast Section - Show only 4 */}
+            {/* Top Cast */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -235,7 +329,7 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Full Cast Section */}
+            {/* Full Cast */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -251,15 +345,13 @@ function Title() {
                                 {cast.map((actor) => (
                                     <div 
                                         key={actor.id} 
-                                        className="d-flex align-items-center p-3 mb-2 border rounded bg-white"
-                                        style={{ cursor: 'pointer' }}
+                                        className="d-flex align-items-center p-3 mb-2 border rounded bg-white cast-list-item"
                                         onClick={() => window.location.href = `/individual/${actor.id}`}
                                     >
                                         <img
                                             src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
                                             alt={actor.name}
                                             className="cast-thumbnail me-3"
-                                            style={{ width: '50px', height: '75px', objectFit: 'cover', borderRadius: '4px' }}
                                         />
                                         <div>
                                             <h6 className="mb-0">{actor.name}</h6>
@@ -273,7 +365,7 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Similar Titles Section with TMDB */}
+            {/* Similar Titles */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -290,9 +382,40 @@ function Title() {
                                     tmdbSimilarTitles.map(similar => ({
                                         ...similar,
                                         title: similar.name,
-                                        subtitle: similar.startYear ? `(${similar.startYear})` : null
+                                        subtitle: similar.startYear ? `(${similar.startYear})` : null,
+                                        isBookmarked: similarBookmarks[similar.id] || false,
+                                        onBookmark: handleSimilarTitleBookmark
                                     })),
-                                    'title'
+                                    'title',
+                                    ({ item }) => (
+                                        <div className="similar-title-card">
+                                            <div 
+                                                className="similar-poster-container"
+                                                onClick={() => window.location.href = `/title/${item.id}`}
+                                            >
+                                                <img
+                                                    src={similarPosters[item.id] || item.poster || placeholderImage}
+                                                    alt={item.name}
+                                                    className="similar-poster-image"
+                                                />
+                                                <div className="similar-title-overlay">
+                                                    <ToggleButton
+                                                        itemId={item.id}
+                                                        isActive={item.isBookmarked}
+                                                        onToggle={item.onBookmark}
+                                                        activeLabel="Remove bookmark"
+                                                        inactiveLabel="Add bookmark"
+                                                        className="similar-bookmark-btn"
+                                                    >
+                                                        {item.isBookmarked ? '★' : '☆'}
+                                                    </ToggleButton>
+                                                </div>
+                                            </div>
+                                            <div className="similar-title-info text-center mt-2">
+                                                <h6 className="mb-0 similar-title-name">{item.name}</h6>
+                                            </div>
+                                        </div>
+                                    )
                                 )}
                             </div>
                         )}
@@ -300,13 +423,12 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Reviews Section */}
+            {/* Reviews */}
             <Container className="mt-4 mb-4" id="reviews-section">
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Reviews</h4>
                         
-                        {/* User Rating Box - Always show, but prompt login if not signed in */}
                         {!isSignedIn ? (
                             <Card className="mb-4 bg-light">
                                 <Card.Body className="text-center py-4">
@@ -325,14 +447,18 @@ function Title() {
                         ) : (
                             <>
                                 {submitStatus === 'success' && (
-                                    <Alert variant="success" className="mb-3">
-                                        ✓ Your review has been submitted successfully!
-                                    </Alert>
+                                    <Card className="mb-3 border-success">
+                                        <Card.Body className="text-success">
+                                            ✓ Your review has been submitted successfully!
+                                        </Card.Body>
+                                    </Card>
                                 )}
                                 {submitStatus === 'error' && (
-                                    <Alert variant="danger" className="mb-3">
-                                        ✗ Failed to submit review. Please try again.
-                                    </Alert>
+                                    <Card className="mb-3 border-danger">
+                                        <Card.Body className="text-danger">
+                                            ✗ Failed to submit review. Please try again.
+                                        </Card.Body>
+                                    </Card>
                                 )}
                                 
                                 <UserCard
@@ -351,7 +477,6 @@ function Title() {
                                     placeholder="Write your review here... (optional)"
                                 />
                                 
-                                {/* Submit Button */}
                                 {(tempRating > 0 || tempReviewText.trim()) && (
                                     <div className="text-end mt-2">
                                         <Button 
@@ -366,7 +491,6 @@ function Title() {
                             </>
                         )}
 
-                        {/* All Reviews */}
                         {loadingReviews ? (
                             <div className="text-center py-4">
                                 <Spinner animation="border" size="sm" />
@@ -374,10 +498,8 @@ function Title() {
                         ) : reviews.length === 0 ? (
                             <p className="text-muted">No reviews available yet.</p>
                         ) : (
-                            <RowComp
-                                variant="list"
-                                items={reviews}
-                                renderItem={(review) => (
+                            <div>
+                                {reviews.map((review) => (
                                     <UserCard
                                         key={review.id}
                                         userId={review.userId}
@@ -389,8 +511,8 @@ function Title() {
                                         showRating={true}
                                         maxContentLength={250}
                                     />
-                                )}
-                            />
+                                ))}
+                            </div>
                         )}
                     </Card.Body>
                 </Card>

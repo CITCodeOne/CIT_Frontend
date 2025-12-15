@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Card, Badge, Spinner } from 'react-bootstrap';
+import { Container, Card, Spinner, Carousel, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import RowComp from '../components/RowList';
-import MediaCard from '../components/MediaCard';
-import makeCarousel from '../components/MakeCarousel';
 import ListManager from '../components/ListManager';
+import ToggleButton from '../components/ToggleButton';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
 import '../style/CTitlePage.css';
 import '../style/CIndividualPage.css';
@@ -17,35 +16,20 @@ import '../style/CIndividualPage.css';
 /**
  * Individual Page Component
  * 
- * Displays detailed information about a specific person (actor, director, producer, etc.)
- * 
- * Features:
- * - Full name with job badges
- * - Profile picture with bookmark functionality
- * - Biography/Description
- * - Birth and death years
- * - Known for titles (grouped by profession)
- * - Awards section (placeholder for future implementation)
- * - Photo gallery (placeholder for future implementation)
- * 
- * API Endpoints Used:
- * individuals.getById(id) - Fetches main individual data
- * individuals.getTitles(id) - Fetches titles the person is known for
- * user.getBookmark(userId, individualId) - Checks bookmark status
- * user.addBookmark(userId, individualId) - Adds bookmark
- * user.removeBookmark(userId, individualId) - Removes bookmark
+ * Displays detailed information about a person (actor, director, etc.)
+ * including biography, photos, known titles, and filmography.
  */
 
 function Individual() {
     const { individualId } = useParams();
     const { isSignedIn, userId } = useAuthStatus();
 
-    // Modal state for "Add to List"
+    // State management
     const [showListModal, setShowListModal] = useState(false);
-
-    // TMDB images state
     const [tmdbImages, setTmdbImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
+    const [tmdbProfilePicture, setTmdbProfilePicture] = useState(null);
+    const [titleBookmarks, setTitleBookmarks] = useState({});
 
     // Use custom hook for all data fetching and state management
     const {
@@ -58,7 +42,25 @@ function Individual() {
         toggleBookmark
     } = useIndividualData(individualId, userId, isSignedIn);
 
-    // Fetch TMDB images for this individual
+    // Fetch TMDB profile picture
+    useEffect(() => {
+        const fetchTmdbProfilePicture = async () => {
+            if (!individual?.name) return;
+
+            try {
+                const photoUrl = await tmdb.getPersonPhoto(individual.name);
+                if (photoUrl) {
+                    setTmdbProfilePicture(photoUrl);
+                }
+            } catch (err) {
+                console.error('Error fetching TMDB profile picture:', err);
+            }
+        };
+
+        fetchTmdbProfilePicture();
+    }, [individual]);
+
+    // Fetch TMDB photo gallery
     useEffect(() => {
         const fetchTmdbImages = async () => {
             if (!individual?.name) {
@@ -69,34 +71,19 @@ function Individual() {
             try {
                 setLoadingImages(true);
                 
-                console.log('Searching TMDB for:', individual.name);
-                
-                // First, search for the person by name
                 const searchResults = await mdb.tmdb.searchPerson(individual.name);
-                console.log('TMDB search results:', searchResults);
                 
                 if (searchResults?.results?.length > 0) {
-                    // Get the first matching person (most likely match)
                     const personId = searchResults.results[0].id;
-                    console.log('Getting TMDB person details for ID:', personId);
-                    
-                    // Fetch full person details with images
                     const personDetails = await mdb.tmdb.getPerson(personId);
-                    console.log('TMDB person details:', personDetails);
                     
                     if (personDetails?.images?.profiles) {
-                        // Get up to 10 profile images
                         const imageUrls = personDetails.images.profiles
                             .slice(0, 10)
                             .map(img => `https://image.tmdb.org/t/p/w500${img.file_path}`);
                         
-                        console.log('TMDB image URLs:', imageUrls);
                         setTmdbImages(imageUrls);
-                    } else {
-                        console.log('No profiles found in TMDB data');
                     }
-                } else {
-                    console.log('No search results found for:', individual.name);
                 }
             } catch (err) {
                 console.error('Error fetching TMDB images:', err);
@@ -111,17 +98,72 @@ function Individual() {
         }
     }, [individual]);
 
-    // Handle opening the list modal
+    // Check bookmark status for Known For titles
+    useEffect(() => {
+        const checkTitleBookmarks = async () => {
+            if (!isSignedIn || !userId || knownForTitles.length === 0) {
+                setTitleBookmarks({});
+                return;
+            }
+
+            try {
+                const bookmarkChecks = await Promise.all(
+                    knownForTitles.map(async (title) => {
+                        try {
+                            const bookmark = await mdb.apiv2.user.getBookmark(userId, title.id);
+                            return { id: title.id, isBookmarked: !!bookmark };
+                        } catch (err) {
+                            console.error(`Failed to check bookmark for title ${title.id}:`, err);
+                            return { id: title.id, isBookmarked: false };
+                        }
+                    })
+                );
+
+                const bookmarkMap = {};
+                bookmarkChecks.forEach(({ id, isBookmarked }) => {
+                    bookmarkMap[id] = isBookmarked;
+                });
+                setTitleBookmarks(bookmarkMap);
+            } catch (err) {
+                console.error('Failed to check title bookmarks:', err);
+            }
+        };
+
+        checkTitleBookmarks();
+    }, [knownForTitles, userId, isSignedIn]);
+
+    // Toggle bookmark for a title
+    const toggleTitleBookmark = async (titleId, titleName) => {
+        if (!isSignedIn || !userId) {
+            alert('Please log in to bookmark titles');
+            return;
+        }
+
+        try {
+            const isCurrentlyBookmarked = titleBookmarks[titleId];
+            
+            if (isCurrentlyBookmarked) {
+                await mdb.apiv2.user.removeBookmark(userId, titleId);
+                setTitleBookmarks(prev => ({ ...prev, [titleId]: false }));
+            } else {
+                await mdb.apiv2.user.addBookmark(userId, titleId);
+                setTitleBookmarks(prev => ({ ...prev, [titleId]: true }));
+            }
+        } catch (err) {
+            console.error('Failed to toggle title bookmark:', err);
+            alert('Failed to update bookmark. Please try again.');
+        }
+    };
+
+    // List modal handlers
     const handleAddToList = () => {
         setShowListModal(true);
     };
 
-    // Handle success when added to list
     const handleListSuccess = (result) => {
         console.log(`Successfully added ${result.itemName} to list "${result.listName}"`);
     };
 
-    // Handle error when adding to list
     const handleListError = (error) => {
         console.error('List operation failed:', error);
     };
@@ -130,40 +172,42 @@ function Individual() {
     if (error) return <ErrorState error={error} />;
     if (!individual) return <NotFoundState message="No individual found" />;
 
-    // Prepare job badges (if we have profession data)
+    // Prepare name with birth/death years
+    const customName = (
+        <div>
+            {individual.name || 'Unknown'}{' '}
+            {individual.birthYear && individual.birthYear !== 'n/a' && (
+                <span className="individual-year-text">
+                    ({individual.birthYear}
+                    {individual.deathYear && individual.deathYear !== 'n/a' 
+                        ? ` - ${individual.deathYear}` 
+                        : ' - Present'})
+                </span>
+            )}
+        </div>
+    );
+
+    // Prepare badges
     const badges = [];
-    // Note: The Individual class doesn't have profession field by default
-    // This would need to be added to the API response or derived from knownFor data
-    // For now, we'll show a generic "Actor" badge if knownFor data exists
     if (knownForTitles.length > 0) {
         badges.push({ text: 'Actor', variant: 'primary' });
     }
 
-    // Prepare sections for MainDisplay
+    // Prepare biography section
     const sections = [];
 
-    // Birth - Death years section
-    if (individual.birthYear || individual.deathYear) {
-        const birthYear = individual.birthYear !== 'n/a' ? individual.birthYear : '?';
-        const deathYear = individual.deathYear !== 'n/a' ? individual.deathYear : 'Present';
+    if (individual.bio || individual.description) {
         sections.push({
-            title: 'Lifespan',
-            content: (
-                <p className="text-muted">
-                    <strong>Born:</strong> {birthYear}
-                    {individual.deathYear && individual.deathYear !== 'n/a' && (
-                        <> • <strong>Died:</strong> {deathYear}</>
-                    )}
-                </p>
-            )
+            title: 'Biography',
+            content: <p className="text-muted">{individual.bio || individual.description}</p>
         });
     }
 
     return (
         <>
             <MainDisplay
-                image={individual.image || placeholderImage}
-                title={individual.name || 'Unknown'}
+                image={tmdbProfilePicture || individual.image || placeholderImage}
+                title={customName}
                 subtitle={null}
                 badges={badges}
                 sections={sections}
@@ -179,7 +223,7 @@ function Individual() {
                     onClick: handleAddToList
                 }}
             >
-            {/* Photo Gallery Section - TMDB Images Carousel */}
+            {/* Photo Gallery */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -191,26 +235,60 @@ function Individual() {
                         ) : tmdbImages.length === 0 ? (
                             <p className="text-muted">No photos available.</p>
                         ) : (
-                            makeCarousel({
-                                items: tmdbImages.map((imageUrl, index) => (
-                                    <div key={index} className="text-center">
-                                        <img
-                                            src={imageUrl}
-                                            alt={`${individual.name} - Photo ${index + 1}`}
-                                            className="individual-carousel-image"
-                                        />
-                                    </div>
-                                )),
-                                itemsPerSlide: 4,
-                                controls: true,
-                                indicators: false
-                            })
+                            <div className="position-relative">
+                                <style>{`
+                                    .photo-carousel .carousel-control-prev-icon,
+                                    .photo-carousel .carousel-control-next-icon {
+                                        background-color: #d8d8d8;
+                                        border-radius: 25%;
+                                        padding: 20px;
+                                    }
+                                    .photo-carousel .carousel-control-prev,
+                                    .photo-carousel .carousel-control-next {
+                                        opacity: 0.8;
+                                    }
+                                    .photo-carousel .carousel-control-prev:hover,
+                                    .photo-carousel .carousel-control-next:hover {
+                                        opacity: 1;
+                                    }
+                                `}</style>
+                                <Carousel interval={null} controls={true} indicators={false} className="photo-carousel">
+                                    {(() => {
+                                        const slides = [];
+                                        for (let i = 0; i < tmdbImages.length; i += 3) {
+                                            slides.push(tmdbImages.slice(i, i + 3));
+                                        }
+                                        return slides.map((slideImages, slideIndex) => (
+                                            <Carousel.Item key={slideIndex}>
+                                                <div className="d-flex justify-content-center gap-3 py-4">
+                                                    {slideImages.map((imageUrl, imgIndex) => (
+                                                        <div key={imgIndex}>
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={`Photo ${slideIndex * 3 + imgIndex + 1}`}
+                                                                className="individual-carousel-image"
+                                                                style={{ 
+                                                                    width: '220px',
+                                                                    height: '330px',
+                                                                    objectFit: 'cover',
+                                                                    borderRadius: '8px',
+                                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </Carousel.Item>
+                                        ));
+                                    })()}
+                                </Carousel>
+                            </div>
                         )}
                     </Card.Body>
                 </Card>
             </Container>
 
-            {/* Known For Section - Movies Carousel */}
+            {/* Known For - Top 4 Titles */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -222,29 +300,94 @@ function Individual() {
                         ) : knownForTitles.length === 0 ? (
                             <p className="text-muted">No known titles available.</p>
                         ) : (
-                            makeCarousel({
-                                items: knownForTitles.map((title) => (
-                                    <MediaCard
-                                        key={title.id}
-                                        id={title.id}
-                                        type="title"
-                                        image={title.image || placeholderImage}
-                                        title={title.name}
-                                        subtitle={title.startYear ? `(${title.startYear})` : null}
-                                        size="medium"
-                                    />
-                                )),
-                                itemsPerSlide: 4,
-                                controls: true,
-                                indicators: false
-                            })
+                            <Row className="g-4 justify-content-center">
+                                {knownForTitles.slice(0, 4).map((title) => (
+                                    <Col key={title.id} xs={6} sm={6} md={3}>
+                                        <Card className="h-100 shadow-sm known-for-card">
+                                            <div 
+                                                className="known-for-poster-container"
+                                                onClick={() => window.location.href = `/title/${title.id}`}
+                                            >
+                                                <img
+                                                    src={title.image || title.poster || placeholderImage}
+                                                    alt={title.name}
+                                                    className="known-for-poster"
+                                                />
+                                                
+                                                {/* Bookmark button */}
+                                                <ToggleButton
+                                                    itemId={title.id}
+                                                    isActive={titleBookmarks[title.id]}
+                                                    onToggle={(id, newState) => {
+                                                        if (!isSignedIn) {
+                                                            alert('Please log in to bookmark titles');
+                                                            return;
+                                                        }
+                                                        toggleTitleBookmark(id, title.name);
+                                                    }}
+                                                    activeLabel="Remove bookmark"
+                                                    inactiveLabel="Add bookmark"
+                                                    className={`known-for-bookmark ${titleBookmarks[title.id] ? 'bookmarked' : ''}`}
+                                                >
+                                                    <span className="known-for-bookmark-icon">
+                                                        {titleBookmarks[title.id] ? '✓' : '+'}
+                                                    </span>
+                                                </ToggleButton>
+                                            </div>
+                                            <Card.Body className="text-center py-2">
+                                                <small className="text-muted">
+                                                    {title.name}
+                                                </small>
+                                            </Card.Body>
+                                        </Card>
+                                    </Col>
+                                ))}
+                            </Row>
+                        )}
+                    </Card.Body>
+                </Card>
+            </Container>
+
+            {/* Filmography - Full List */}
+            <Container className="mt-4">
+                <Card className="shadow-sm">
+                    <Card.Body>
+                        <h4 className="mb-4">Filmography</h4>
+                        {loadingKnownFor ? (
+                            <div className="text-center py-4">
+                                <Spinner animation="border" size="sm" />
+                            </div>
+                        ) : knownForTitles.length === 0 ? (
+                            <p className="text-muted">No filmography available.</p>
+                        ) : (
+                            <div>
+                                {knownForTitles.map((title) => (
+                                    <div 
+                                        key={title.id} 
+                                        className="d-flex align-items-center p-3 mb-2 border rounded bg-white filmography-list-item"
+                                        onClick={() => window.location.href = `/title/${title.id}`}
+                                    >
+                                        <img
+                                            src={title.image || title.poster || placeholderImage}
+                                            alt={title.name}
+                                            className="filmography-thumbnail me-3"
+                                        />
+                                        <div>
+                                            <h6 className="mb-0">{title.name}</h6>
+                                            <p className="text-muted small mb-0">
+                                                {title.startYear && title.startYear !== 'n/a' ? title.startYear : 'Year unknown'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </Card.Body>
                 </Card>
             </Container>
         </MainDisplay>
 
-        {/* Add to List Modal */}
+        {/* List Manager Modal */}
         <ListManager
             show={showListModal}
             onHide={() => setShowListModal(false)}

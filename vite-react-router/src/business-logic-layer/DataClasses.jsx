@@ -81,6 +81,8 @@ export class Individual {
         Object.assign(this, {
             birthYear: "n/a",
             deathYear: "n/a",
+            bio: "n/a",
+            description: "n/a",
             knownFor: ["n/a"],
             rating: "n/a"
         }, options);

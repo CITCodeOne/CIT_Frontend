@@ -84,16 +84,19 @@ export const getPersonPhoto = async (name) => {
 
 /**
  * Fetch photos for multiple people in parallel
+ * @param {Array<string>} names - Array of person names
+ * @param {number} limit - Maximum number of photos to fetch
+ * @returns {Object} Object keyed by person name with photo URLs as values
  */
-export const getMultiplePersonPhotos = async (people, limit = 20) => {
-    const photoPromises = people.slice(0, limit).map(async (person) => {
-        const photoUrl = await getPersonPhoto(person.name);
-        return photoUrl ? { id: person.id, photoUrl } : null;
+export const getMultiplePersonPhotos = async (names, limit = 20) => {
+    const photoPromises = names.slice(0, limit).map(async (name) => {
+        const photoUrl = await getPersonPhoto(name);
+        return photoUrl ? { name, photoUrl } : null;
     });
     
     const results = await Promise.all(photoPromises);
     return Object.fromEntries(
-        results.filter(r => r).map(r => [r.id, r.photoUrl])
+        results.filter(r => r).map(r => [r.name, r.photoUrl])
     );
 };
 
