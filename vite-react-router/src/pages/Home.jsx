@@ -110,25 +110,20 @@ function Home() {
     };
   }, [featuredTitle]);
 
-  // Fetch individuals list via ApiClient and filter by name rating
+  // Fetch individuals list via ApiClient - popular individuals
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        // GET /api/v2/individuals?page=1&pageSize=10
-        const list = await mdb.apiv2.individuals.list({ page: 1, pageSize: 10 });
+        // GET /api/v2/individuals/popular?page=1&pageSize=10
+        const list = await mdb.apiv2.individuals.popular({ page: 1, pageSize: 10 });
         if (cancelled) return;
 
-        const sorted = (list || [])
-          .slice()
-          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-          .slice(0, 10);
-
-        setIndividuals(sorted);
+        setIndividuals(list || []);
       } catch (err) {
         if (cancelled) return;
-        console.error('Failed to load individuals', err);
+        console.error('Failed to load popular individuals', err);
         setIndividuals([]);
       }
     })();

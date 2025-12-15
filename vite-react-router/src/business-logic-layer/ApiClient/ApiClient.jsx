@@ -288,6 +288,22 @@ const apiv2 = {
 			...options,
 		}).then(mapIndividuals),
 
+		// GET: /individuals/popular?page=1&pageSize=20
+		/**
+		 * Retrieves a paginated list of the most popular individuals ordered by NameRating.
+		 * Filters out individuals where NameRating is null.
+		 *
+		 * @param {Object} params - Pagination parameters
+		 * @param {number} params.page - Page number (default: 1)
+		 * @param {number} params.pageSize - Number of items per page (default: 20)
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of mapped individual objects
+		 */
+		popular: ({ page = 1, pageSize = 20 } = {}, options) => callV2('individuals/popular', {
+			queryParams: { page, pageSize },
+			...options,
+		}).then(mapIndividuals),
+
 		// GET: /individuals/{id}
 		/**
 		 * Retrieves a single individual by their ID.
@@ -308,6 +324,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of title objects associated with the individual
 		 */
+
 		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options).then(mapTitles),
 		// GET: /individuals/{id}/popular-actors
 		/**
@@ -318,6 +335,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of popular actor objects (IndividualFullDTO)
 		 */
+
 		getPopularActors: (id, options) => callV2(`individuals/${id}/popular-actors`, options).then(mapIndividuals),
 		// GET: /individuals/co-actors?name={name}
 		/**
