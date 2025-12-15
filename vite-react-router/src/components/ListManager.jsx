@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert } from 'react-bootstrap';
 
@@ -36,6 +37,8 @@ function ListManager({
 
     // Load user lists when modal opens
 =======
+=======
+>>>>>>> Stashed changes
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 
@@ -72,6 +75,9 @@ function ListManager({
     const [isCreatingNew, setIsCreatingNew] = useState(false);
 
     // Fetch user's lists when modal opens
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     useEffect(() => {
         if (show && userId) {
@@ -79,6 +85,7 @@ function ListManager({
         }
     }, [show, userId]);
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     // Fetch user's lists from API
     const fetchUserLists = async () => {
@@ -128,6 +135,8 @@ function ListManager({
                 
                 console.log(`Creating new list "${newListName}" and adding ${itemType} ${itemId}`);
 =======
+=======
+>>>>>>> Stashed changes
     // Reset state when modal closes
     useEffect(() => {
         if (!show) {
@@ -189,6 +198,9 @@ function ListManager({
             if (isCreatingNew) {
                 console.log('Creating new list:', newListName);
                 console.log('Adding item:', { itemId, itemName, itemType });
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                 
                 if (onSuccess) {
@@ -199,6 +211,7 @@ function ListManager({
                     });
                 }
             } else {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                 // Add to existing list
                 const list = userLists.find(l => l.id === selectedList);
@@ -212,12 +225,21 @@ function ListManager({
                 console.log('Adding to existing list:', selectedList?.name);
                 console.log('Adding item:', { itemId, itemName, itemType });
 >>>>>>> Stashed changes
+=======
+                const selectedList = lists.find(l => l.id === selectedListId);
+                console.log('Adding to existing list:', selectedList?.name);
+                console.log('Adding item:', { itemId, itemName, itemType });
+>>>>>>> Stashed changes
                 
                 if (onSuccess) {
                     onSuccess({
                         action: 'added',
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                         listName: list?.name || 'Unknown List',
+=======
+                        listName: selectedList?.name || 'Unknown List',
+>>>>>>> Stashed changes
 =======
                         listName: selectedList?.name || 'Unknown List',
 >>>>>>> Stashed changes
@@ -227,16 +249,22 @@ function ListManager({
             }
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             // Reset and close
             handleClose();
         } catch (err) {
             console.error('Error adding to list:', err);
             setError('Failed to add to list. Please try again.');
 =======
+=======
+>>>>>>> Stashed changes
             onHide();
         } catch (err) {
             console.error('Error adding to list:', err);
             setError('Failed to add item to list');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             if (onError) onError(err);
         } finally {
@@ -244,6 +272,7 @@ function ListManager({
         }
     };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     // Reset state and close modal
     const handleClose = () => {
@@ -269,6 +298,8 @@ function ListManager({
             </Modal.Header>
 
 =======
+=======
+>>>>>>> Stashed changes
     const getPlaceholder = () => {
         if (itemType === 'individual') {
             return 'e.g., Favorite Actors, Directors to Watch';
@@ -281,6 +312,9 @@ function ListManager({
             <Modal.Header closeButton>
                 <Modal.Title>Add to List</Modal.Title>
             </Modal.Header>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             <Modal.Body>
                 {error && (
@@ -289,6 +323,7 @@ function ListManager({
                     </Alert>
                 )}
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                 <Form>
                     <Form.Group className="mb-3">
@@ -358,6 +393,8 @@ function ListManager({
                         <>
                             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
 =======
+=======
+>>>>>>> Stashed changes
                 <p className="text-muted mb-3">
                     Add <strong>{itemName}</strong> to a list
                 </p>
@@ -418,6 +455,9 @@ function ListManager({
                     {loading ? (
                         <>
                             <Spinner animation="border" size="sm" className="me-2" />
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                             Adding...
                         </>

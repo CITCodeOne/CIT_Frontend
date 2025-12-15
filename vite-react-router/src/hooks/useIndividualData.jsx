@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import placeholderImage from '../pics/Image-not-found.png';
 
 /**
@@ -17,6 +18,8 @@ import placeholderImage from '../pics/Image-not-found.png';
 export default function useIndividualData(individualId, userId = null, isLoggedIn = false) {
     // Main individual data state
 =======
+=======
+>>>>>>> Stashed changes
 
 /**
  * Custom hook for fetching and managing individual (person) data
@@ -32,11 +35,15 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
  */
 function useIndividualData(individualId, userId, isLoggedIn) {
     // Individual basic data state
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     const [individual, setIndividual] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     // Known-for titles state
     const [knownForTitles, setKnownForTitles] = useState([]);
@@ -59,6 +66,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
                 setError(err.message || 'Failed to load individual');
                 setIndividual(null);
 =======
+=======
+>>>>>>> Stashed changes
     // Known for titles state
     const [knownForTitles, setKnownForTitles] = useState([]);
     const [loadingKnownFor, setLoadingKnownFor] = useState(true);
@@ -74,12 +83,16 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             } catch (err) {
                 console.error('Error fetching individual:', err);
                 setError(err.message || 'Failed to load individual data');
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             } finally {
                 setLoading(false);
             }
         };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         fetchIndividualData();
     }, [individualId]);
@@ -106,6 +119,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             } catch (err) {
                 console.error('Failed to load known-for titles:', err);
 =======
+=======
+>>>>>>> Stashed changes
         if (individualId) {
             fetchIndividual();
         }
@@ -120,6 +135,9 @@ function useIndividualData(individualId, userId, isLoggedIn) {
                 setKnownForTitles(Array.isArray(titles) ? titles : []);
             } catch (err) {
                 console.error('Error fetching known for titles:', err);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                 setKnownForTitles([]);
             } finally {
@@ -127,6 +145,7 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             }
         };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
         fetchKnownFor();
     }, [individualId]);
@@ -189,6 +208,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
     };
 }
 =======
+=======
+>>>>>>> Stashed changes
         if (individualId) {
             fetchKnownForTitles();
         }
@@ -204,4 +225,7 @@ function useIndividualData(individualId, userId, isLoggedIn) {
 }
 
 export default useIndividualData;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
