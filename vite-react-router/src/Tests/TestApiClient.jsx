@@ -23,6 +23,7 @@ export default function TestApiClient() {
     const [demoUser, setDemoUser] = useState(null);
     const [titleId, setTitleId] = useState('tt10257794');
     const [individualId, setIndividualId] = useState('nm0000158');
+    const [pageId, setPageId] = useState('');
     const [tmdbQuery, setTmdbQuery] = useState('');
     const [tmdbPersonId, setTmdbPersonId] = useState('');
 
@@ -83,6 +84,10 @@ export default function TestApiClient() {
                     <input value={individualId} onChange={(e) => setIndividualId(e.target.value)} style={{ width: '100%' }} />
                 </label>
                 <label>
+                    Page ID:
+                    <input value={pageId} onChange={(e) => setPageId(e.target.value)} style={{ width: '100%' }} />
+                </label>
+                <label>
                     User ID:
                     <input value={userId} onChange={(e) => setUserId(e.target.value)} style={{ width: '100%' }} />
                 </label>
@@ -115,6 +120,14 @@ export default function TestApiClient() {
             <section>
                 <h3>Health</h3>
                 <button onClick={() => runCall('health.status', () => mdb.apiv2.health.status())}>Health Status</button>
+            </section>
+
+            {/* Page */}
+            <section>
+                <h3>Page</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={() => runCall('page.getById.noauth', () => mdb.apiv2.page.getById(pageId))}>Get page by id (no auth)</button>
+                </div>
             </section>
 
             {/* Titles */}
@@ -159,6 +172,10 @@ export default function TestApiClient() {
                         <button onClick={() => runCall('user.addRating', () => mdb.apiv2.user.addRating(userId, titleId, 5, { authToken: token }))}>Add rating (5)</button>
                         <button onClick={() => runCall('user.updateRating', () => mdb.apiv2.user.updateRating(userId, titleId, 4, { authToken: token }))}>Update rating (4)</button>
                         <button onClick={() => runCall('user.removeRating', () => mdb.apiv2.user.removeRating(userId, titleId, { authToken: token }))}>Remove rating</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button onClick={() => runCall('user.getVisits', () => mdb.apiv2.user.getVisits(userId))}>Get visits</button>
+                        <button onClick={() => runCall('user.addVisit', () => mdb.apiv2.user.addVisit(userId, pageId, { authToken: token }))}>Add visit</button>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         {/*<button onClick={() => runCall('user.getProfileImage', () => mdb.apiv2.user.getProfileImage(userId, { authToken: token }))}>Profile image</button>*/}

@@ -369,6 +369,21 @@ const apiv2 = {
 	 * Authentication endpoints for user login and registration.
 	 * Handles user account creation and session establishment.
 	 */
+	
+	/**
+	 * Page endpoints for retrieving page resources.
+	 */
+	page: {
+		// GET: /page/{pageId}
+		/**
+		 * Retrieves a page by id (raw DTO).
+		 *
+		 * @param {string|number} pageId - The id of the page
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object|null>} Page DTO or null
+		 */
+		getById: (pageId, options) => callV2(`pages/${pageId}`, options),
+	},
 	auth: {
 		// POST: /auth/signup
 		/**
@@ -421,6 +436,34 @@ const apiv2 = {
 		 * @returns {Promise<User|null>} Mapped User instance or null if not found
 		 */
 		get: (userId, options) => callV2(`users/${userId}`, options).then(mapUser),
+
+		// VISITS
+		// GET: /users/{userId}/visits
+		/**
+		 * Retrieves pages a user has visited.
+		 * Returns an array of visits (raw DTOs) or empty array.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {Object} options - Additional fetch options (auth optional)
+		 * @returns {Promise<Array>} Array of visit DTOs
+		 */
+		getVisits: (userId, options) => callV2(`users/${userId}/visits`, options),
+
+		// POST: /users/{userId}/visits
+		/**
+		 * Records a new visited page for a user.
+		 * Expects Authorization header with JWT containing uid claim.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {string|number} pageId - The identifier of the page visited
+		 * @param {Object} options - Additional fetch options (must include authToken)
+		 * @returns {Promise<Object>} Created visit object and message (raw response)
+		 */
+		addVisit: (userId, pageId, options) => callV2(`users/${userId}/visits`, {
+			method: 'POST',
+			body: { pageId },
+			...options,
+		}),
 
 		// BOOKMARKS
 		// GET: /users/{userId}/bookmarks
@@ -587,6 +630,7 @@ const apiv2 = {
 Object.freeze(apiv2.health);
 Object.freeze(apiv2.titles);
 Object.freeze(apiv2.individuals);
+Object.freeze(apiv2.page);
 Object.freeze(apiv2.auth);
 Object.freeze(apiv2.user);
 
