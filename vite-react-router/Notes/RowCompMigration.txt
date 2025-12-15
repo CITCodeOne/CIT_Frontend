@@ -1,0 +1,169 @@
+# RowComp Migration Checklist
+
+## Overview
+This checklist tracks the migration from `ListComp` and `GridListComp` to the new unified `RowComp` component.
+
+**Created:** December 14, 2025  
+**Status:** In Progress ⏳
+
+---
+
+## ✅ Completed
+
+- [x] Created `RowComp.jsx` component
+- [x] Created `RowComp.css` stylesheet  
+- [x] Created `RowCompGuide.txt` documentation
+- [x] Added three variants: grid, list, carousel
+- [x] Implemented responsive column props
+- [x] Added dark mode support
+- [x] Added accessibility features
+- [x] Added empty state handling
+
+---
+
+## ⏳ Files to Migrate
+
+### Priority 1: Broken Imports (URGENT)
+
+- [ ] **Individual.jsx**
+  - Location: `/src/pages/Individual.jsx`
+  - Issue: Imports non-existent `List` component (line 5)
+  - Change: `import List from '../components/List'` → `import RowComp from '../components/RowComp'`
+  - Usage: Line 215 - Replace `<List variant="grid" .../>` with `<RowComp variant="grid" .../>`
+  - Impact: **CRITICAL** - Page won't work without this fix
+
+### Priority 2: Active Usage
+
+- [ ] **Title.jsx**
+  - Location: `/src/pages/Title.jsx`
+  - Current: Uses `GridListComp` (line 5, 153, 177)
+  - Changes needed:
+    ```jsx
+    // Line 5: Update import
+    import RowComp from '../components/RowComp';
+    
+    // Line 153: Cast section
+    <RowComp
+      items={cast}
+      renderItem={(actor) => <MediaCard {...actor} />}
+      variant="grid"
+      colProps={{ xs: 12, sm: 6, md: 4, lg: 3 }}
+    />
+    
+    // Line 177: Similar titles section
+    <RowComp
+      items={dummySimilarTitles}
+      renderItem={(similarTitle) => <MediaCard {...similarTitle} />}
+      variant="grid"
+      colProps={{ xs: 12, sm: 6, md: 4 }}
+    />
+    ```
+
+### Priority 3: Check for Other Usages
+
+- [ ] Search entire codebase for `GridListComp` imports
+- [ ] Search entire codebase for `ListComp` or `SimpleList` imports
+- [ ] Search for any direct `<GridListComp>` or `<ListComp>` usage
+
+---
+
+## 🧪 Testing Plan
+
+After migration:
+
+- [ ] Test Individual.jsx loads without errors
+- [ ] Test Individual.jsx "Known For" section displays correctly
+- [ ] Test Title.jsx cast section displays in grid
+- [ ] Test Title.jsx similar titles section displays in grid
+- [ ] Test responsive behavior (xs, sm, md, lg breakpoints)
+- [ ] Test empty state displays correctly
+- [ ] Test carousel variant with horizontal scrolling
+- [ ] Test list variant with separators
+- [ ] Test dark mode styling
+
+---
+
+## 🗑️ Cleanup (After Migration)
+
+Only proceed after all files are migrated and tested:
+
+- [ ] Mark `GridListComp.jsx` as deprecated (add @deprecated comment)
+- [ ] Mark `ListComp.jsx` as deprecated (add @deprecated comment)
+- [ ] Update `ListComponentsGuide.txt` to reference RowComp
+- [ ] Consider moving old components to `/components/deprecated/` folder
+- [ ] (Optional) Delete old components after 1-2 sprints
+
+---
+
+## 📝 Notes
+
+### Design Decisions:
+
+1. **Why keep old components temporarily?**
+   - Allows gradual migration
+   - Reduces risk of breaking changes
+   - Gives time to find all usages
+
+2. **Why three variants instead of separate components?**
+   - Single source of truth
+   - Consistent API
+   - Easier to maintain
+   - React Bootstrap best practices
+
+3. **Column props default:**
+   - `{ xs: 12, sm: 6, md: 4, lg: 3 }` = 4 columns on large screens
+   - Mobile-first approach (full width on mobile)
+
+### Common Issues:
+
+- **Issue:** "Items not wrapping"
+  - **Fix:** Check `wrap={true}` prop (default)
+
+- **Issue:** "Carousel not scrolling"
+  - **Fix:** Ensure parent has width constraint
+
+- **Issue:** "Grid items different heights"
+  - **Fix:** CSS stretches items by default, check MediaCard CSS
+
+---
+
+## 🎯 Success Criteria
+
+Migration is complete when:
+
+1. ✅ All pages use RowComp (no GridListComp/ListComp imports)
+2. ✅ No console errors related to missing components
+3. ✅ All grid layouts render correctly across screen sizes
+4. ✅ List and carousel variants work as expected
+5. ✅ Empty states display properly
+6. ✅ No visual regressions (compare screenshots before/after)
+
+---
+
+## 🚀 Quick Command Reference
+
+### Find all GridListComp usages:
+```bash
+grep -r "GridListComp" src/
+```
+
+### Find all ListComp/SimpleList usages:
+```bash
+grep -r "ListComp\|SimpleList" src/
+```
+
+### Find all List imports (might catch broken imports):
+```bash
+grep -r "import.*List.*from" src/
+```
+
+### Check for errors after migration:
+```bash
+npm run dev
+# Check browser console for errors
+```
+
+---
+
+**Last Updated:** December 14, 2025  
+**Migration Lead:** GitHub Copilot

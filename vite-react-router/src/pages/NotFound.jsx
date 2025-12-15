@@ -1,4 +1,3 @@
-import React from 'react';
 import flamingoImage from '../pics/404notfound.png';
 import figlet from 'figlet';
 import standard from 'figlet/importable-fonts/Standard.js';

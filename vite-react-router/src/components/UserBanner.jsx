@@ -1,4 +1,3 @@
-import React from "react";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import { normalizeDataUrl } from "./GetOrSetProfilePicture";
 

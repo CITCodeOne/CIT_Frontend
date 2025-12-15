@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, Outlet } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../style/Cstyle.css';
@@ -51,20 +51,7 @@ export default function NavbarLayout() {
                                                                         <NavDropdown
                                                                                 title={
                                                                                         <div className="d-flex align-items-center">
-                                                                                                <span
-                                                                                                        style={{
-                                                                                                                display: 'inline-block',
-                                                                                                                width: 40,
-                                                                                                                height: 40,
-                                                                                                                borderRadius: '50%',
-                                                                                                                background: '#ccc',
-                                                                                                                textAlign: 'center',
-                                                                                                                lineHeight: '40px',
-                                                                                                                fontWeight: 'bold',
-                                                                                                                color: '#fff',
-                                                                                                                fontSize: 20
-                                                                                                        }}
-                                                                                                >
+                                                                                                <span className="profile-avatar">
                                                                                                         {profileInitial}
                                                                                                 </span>
                                                                                                 {username && (
@@ -82,11 +69,9 @@ export default function NavbarLayout() {
                                                                                 <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                                                                         </NavDropdown>
                                                                 ) : (
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                                <Button variant="primary" onClick={() => setShowSignIn(true)}>
-                                                                                        Sign in
-                                                                                </Button>
-                                                                        </div>
+                                                                        <Button variant="primary" onClick={() => setShowSignIn(true)}>
+                                                                                Sign in
+                                                                        </Button>
                                                                 )}
                                                         </div>
                                                 </div>

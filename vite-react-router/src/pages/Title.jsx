@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Spinner, Alert, Card, Badge } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import GridListComp from '../components/GridListComp';
+import RowComp from '../components/RowComp';
 import MediaCard from '../components/MediaCard';
 import UserCard from '../components/UserCard';
 import useTitleData from '../hooks/useTitleData';
@@ -150,7 +150,8 @@ function Title() {
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
-                            <GridListComp
+                            <RowComp
+                                variant="grid"
                                 items={cast}
                                 renderItem={(actor) => (
                                     <MediaCard
@@ -174,7 +175,8 @@ function Title() {
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Similar Titles</h4>
-                        <GridListComp
+                        <RowComp
+                            variant="grid"
                             items={dummySimilarTitles}
                             renderItem={(similarTitle) => (
                                 <MediaCard

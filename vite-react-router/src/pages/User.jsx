@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
 import Rating from "../components/Rating";

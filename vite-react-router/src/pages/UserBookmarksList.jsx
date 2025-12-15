@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import MakeList from "../components/ListComp";
+import List from "../components/List";
+import ListManager from "../components/ListManager";
 import placeholderImage from "../pics/Image-not-found.png";
 
 export default function UserBookmarksList() {
@@ -10,6 +11,10 @@ export default function UserBookmarksList() {
     const loggedInUserId = "55";
     const isOwnProfile = userId === loggedInUserId;
     const isLoggedIn = isOwnProfile;
+
+    // ListManager state
+    const [showListModal, setShowListModal] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
 
     // dummy bookmarks list
     const [bookmarkedPages, setBookmarkedPages] = useState([
@@ -63,6 +68,28 @@ export default function UserBookmarksList() {
         setTimeout(() => setMessage(""), 1500);
     };
 
+    // Handle opening the list modal
+    const handleAddToList = (item) => {
+        setSelectedItem(item);
+        setShowListModal(true);
+    };
+
+    // Handle success when added to list
+    const handleListSuccess = (result) => {
+        if (result.action === 'created') {
+            setMessage(`Created list "${result.listName}" and added ${result.itemName}!`);
+        } else {
+            setMessage(`Added ${result.itemName} to "${result.listName}"!`);
+        }
+        setTimeout(() => setMessage(""), 2000);
+    };
+
+    // Handle error when adding to list
+    const handleListError = (error) => {
+        setMessage(`Error: ${error}`);
+        setTimeout(() => setMessage(""), 2000);
+    };
+
     // returns a list of all the user's bookmarks
     return (
         <main className="container py-4">
@@ -71,8 +98,8 @@ export default function UserBookmarksList() {
             {bookmarkedPages.length === 0 ? (
                 <p className="text-muted">This user has not bookmarked any titles yet.</p>
             ) : (
-                <MakeList
-                    itemArray={bookmarkedPages}
+                <List
+                    items={bookmarkedPages}
                     renderItem={(item) => (
                         <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">
 
@@ -98,7 +125,18 @@ export default function UserBookmarksList() {
 
                             {/* Delete button */}
                             {isLoggedIn && (
-                                <div className="p-3 ms-auto">
+                                <div className="p-3 ms-auto d-flex gap-2">
+                                    <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-primary"
+                                        onClick={() => handleAddToList({
+                                            id: `tt${item.pageId}`,
+                                            name: item.title,
+                                            type: 'title'
+                                        })}
+                                    >
+                                        📋 Add to List
+                                    </button>
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
@@ -112,6 +150,21 @@ export default function UserBookmarksList() {
                     )}
                 />
             )}
+
+            {/* ListManager Modal */}
+            {selectedItem && (
+                <ListManager
+                    show={showListModal}
+                    onHide={() => setShowListModal(false)}
+                    itemType={selectedItem.type}
+                    itemId={selectedItem.id}
+                    itemName={selectedItem.name}
+                    userId={loggedInUserId}
+                    onSuccess={handleListSuccess}
+                    onError={handleListError}
+                />
+            )}
+
             {/* message popup */}
             {message && (
                 <div

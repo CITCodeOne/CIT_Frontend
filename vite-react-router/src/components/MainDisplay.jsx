@@ -1,4 +1,3 @@
-import React from 'react';
 import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import Rating from './Rating';
 import BookmarkButton from './BookmarkButton';
@@ -56,26 +55,15 @@ function MainDisplay({
                             {rating !== undefined && rating !== null ? (
                                 <div className="text-end">
                                     <div className="d-flex align-items-center gap-2 mb-2">
-                                        <span style={{ 
-                                            color: '#f5c518', 
-                                            fontSize: '2rem',
-                                            lineHeight: '1'
-                                        }}>★</span>
+                                        <span className="rating-star">★</span>
                                         <div>
                                             <div className="d-flex align-items-baseline gap-1">
-                                                <strong style={{ fontSize: '1.5rem' }}>
+                                                <strong className="rating-value">
                                                     {rating > 0 ? rating.toFixed(1) : 'N/A'}
                                                 </strong>
                                                 {rating > 0 && <span className="text-muted">/10</span>}
                                             </div>
-                                            <div style={{ 
-                                                fontSize: '0.75rem', 
-                                                color: '#6c757d',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '0.5px'
-                                            }}>
-                                                Rating
-                                            </div>
+                                            <div className="rating-label">Rating</div>
                                         </div>
                                     </div>
                                     <Button 
@@ -83,9 +71,7 @@ function MainDisplay({
                                         size="sm"
                                         onClick={() => {
                                             const reviewsSection = document.getElementById('reviews-section');
-                                            if (reviewsSection) {
-                                                reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            }
+                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                         }}
                                     >
                                         Rate
@@ -98,9 +84,7 @@ function MainDisplay({
                                         size="sm"
                                         onClick={() => {
                                             const reviewsSection = document.getElementById('reviews-section');
-                                            if (reviewsSection) {
-                                                reviewsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            }
+                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                         }}
                                     >
                                         ★ Rate
@@ -116,44 +100,18 @@ function MainDisplay({
                                     <img
                                         src={image}
                                         alt={title || 'Image'}
-                                        className="img-fluid rounded"
-                                        style={{ 
-                                            maxWidth: '100%', 
-                                            height: '500px',
-                                            objectFit: 'cover'
-                                        }}
+                                        className="img-fluid rounded poster-image"
                                     />
                                     
-                                    {/* Bookmark Button (top left corner with dark semi-transparent background) */}
+                                    {/* Bookmark Button */}
                                     {bookmark && (
-                                        <div style={{ position: 'absolute', top: '0', left: '0' }}>
+                                        <div className="bookmark-overlay">
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     bookmark.onToggle();
                                                 }}
-                                                style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    borderRadius: '0 0 8px 0',
-                                                    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                                                    border: 'none',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    cursor: 'pointer',
-                                                    fontSize: '2rem',
-                                                    fontWeight: '300',
-                                                    color: 'white',
-                                                    transition: 'all 0.2s',
-                                                    lineHeight: '1'
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-                                                }}
+                                                className="bookmark-btn"
                                                 aria-label={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
                                                 title={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
                                             >

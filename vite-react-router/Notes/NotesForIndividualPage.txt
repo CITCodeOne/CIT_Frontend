@@ -1,0 +1,327 @@
+## Individual Page - Implementation Notes
+
+### Overview:
+- Created Individual page (src/pages/Individual.jsx) for displaying actor/person details
+- Uses custom hook architecture with useIndividualData hook
+- Reuses MainDisplay component for consistent layout with Title page
+- Route: /individual/:individualId
+- Backend: https://localhost:5001 | Frontend: http://localhost:5173
+
+### Page Sections:
+1. **Header** (MainDisplay): Profile picture + name, job badges, lifespan (born-died), biography, "Add to List" button
+2. **Awards & Nominations**: Placeholder section (API endpoint not available yet)
+3. **Photo Gallery**: Placeholder section (API endpoint not available yet)
+4. **Known For**: GridListComp with MediaCard components showing titles grouped by profession (Actor, Director, Producer, etc.)
+
+### Key Features:
+- **"Add to List" Button**: Replaced rating/rate button with custom action to add individual to user lists
+- **ListManager Component**: Reusable modal for managing lists (create new list or add to existing)
+- **No Bookmark**: Bookmark functionality removed (only used on Title pages for movies/shows)
+- **Profession Badges**: Shows "Actor" badge by default (awaiting profession data from API)
+- **Known For Grouping**: Framework ready to group titles by profession when API provides data
+
+### API Integration (src/business-logic-layer/ApiClient/ApiClient.jsx):
+
+**Working Endpoints:**
+- mdb.apiv2.individuals.getById(id) - Main individual data (name, birth/death year, image, rating)
+- mdb.apiv2.individuals.getTitles(id) - Titles person is known for (movies/shows they appeared in)
+
+**Missing/Placeholder Data:**
+- Biography/description field (showing placeholder text)
+- Awards/nominations endpoint
+- Photo gallery endpoint (multiple images)
+- Profession data for accurate job badges
+- Character/role information in Known For titles
+
+**Key Data Mapping:**
+- individual.name → Title in MainDisplay
+- individual.image → Profile picture
+- individual.birthYear/deathYear → Lifespan section
+- individual.rating → Not displayed (replaced with "Add to List" button)
+- knownForTitles[] → MediaCard grid in Known For section
+
+### Key Files:
+- **src/pages/Individual.jsx** (245 lines) - Main page component
+- **src/hooks/useIndividualData.jsx** (120 lines) - Custom hook for data fetching
+- **src/components/MainDisplay.jsx** - Reusable header layout (enhanced with customAction prop)
+- **src/components/ListManager.jsx** (220 lines) - Reusable list management modal
+- **src/components/MediaCard.jsx** - Reusable card for titles
+- **src/components/GridListComp.jsx** - Grid/list layout wrapper
+- **src/business-logic-layer/ApiClient/ApiClient.jsx** - API client
+- **src/style/CTitlePage.css** - Page styling (shared with Title page)
+- **src/routes/AppRoutes.jsx** - Route configuration
+
+### Architecture:
+
+**Individual.jsx Structure:**
+- Uses useIndividualData hook (returns 8 values)
+- Local state for ListManager modal (showListModal)
+- Conditional rendering: loading → error → no individual → success
+- Prepares badges and sections arrays before rendering
+- MainDisplay with customAction prop for "Add to List" button
+- Three Container sections (Awards, Photos, Known For)
+- ListManager component for list operations
+
+**useIndividualData Hook:**
+- 6 state variables: individual, loading, error, knownForTitles, loadingKnownFor
+- 2 useEffect hooks (individual basic data, known for titles)
+- All data fetching and API calls centralized in hook
+- Returns all state to Individual component
+- Note: Bookmark-related states removed (isBookmarked, loadingBookmark, toggleBookmark)
+
+**ListManager Component:**
+- Reusable modal for adding items to user lists
+- Supports both individuals and titles (itemType prop)
+- Features: Select existing list, create new list, form validation
+- Loading states and error handling
+- Success/error callbacks to parent component
+- Currently uses dummy list data (ready for API integration)
+
+### MainDisplay Enhancement:
+**Added customAction prop** to support flexible action buttons:
+```jsx
+customAction={{
+    label: 'Add to List',
+    variant: 'primary',
+    icon: '📋',
+    onClick: handleAddToList
+}}
+```
+
+**Priority Order:**
+1. If customAction provided → Shows custom button
+2. Else if rating provided → Shows rating display + "Rate" button
+3. Else → Shows "★ Rate" button
+
+This makes MainDisplay more versatile for different page types!
+
+### Quick Start:
+Backend: `cd CIT_Backend/BackendSolution && dotnet run --project WebServiceLayer`
+Frontend: `cd CIT_Frontend/vite-react-router && npm run dev`
+Test URL: http://localhost:5173/individual/nm0000129 (Tom Cruise)
+Test URL: http://localhost:5173/individual/nm0000158 (Tom Hanks)
+
+### Current Limitations & Placeholders:
+1. **Biography** - No backend field for biography/description text
+2. **Awards** - No backend endpoint for awards/nominations
+3. **Photo Gallery** - No backend endpoint for multiple profile images
+4. **Profession Data** - No profession field in individual response (defaulting to "Actor")
+5. **Character Names** - Known For titles don't include character/role information
+6. **User Lists** - ListManager uses dummy data (needs API integration)
+7. **Authentication** - Using dummy userId='55', isLoggedIn=true (needs real auth)
+
+### API Enhancements Needed:
+
+**1. Add Profession Data to Individual Response:**
+```javascript
+{
+  "id": "nm0000129",
+  "name": "Tom Cruise",
+  "professions": ["actor", "producer"],  // ADD THIS
+  "birthYear": 1962,
+  "deathYear": null,
+  // ... other fields
+}
+```
+
+**2. Enhanced Known For Endpoint with Profession:**
+```javascript
+// GET /api/v2/individuals/{id}/titles should return:
+{
+  "titleId": "tt0111161",
+  "name": "The Shawshank Redemption",
+  "profession": "actor",          // ADD THIS
+  "character": "Andy Dufresne",   // ADD THIS
+  "startYear": 1994,
+  // ... other fields
+}
+```
+
+**3. Biography/Description Field:**
+```javascript
+{
+  "id": "nm0000129",
+  "name": "Tom Cruise",
+  "biography": "Thomas Cruise Mapother IV is an American actor...",  // ADD THIS
+  // ... other fields
+}
+```
+
+**4. Awards Endpoint:**
+```javascript
+// GET /api/v2/individuals/{id}/awards
+[
+  {
+    "awardName": "Academy Award",
+    "category": "Best Actor",
+    "result": "Nominated",
+    "year": 1997,
+    "titleName": "Jerry Maguire"
+  }
+]
+```
+
+**5. Photo Gallery Endpoint:**
+```javascript
+// GET /api/v2/individuals/{id}/photos
+[
+  {
+    "photoUrl": "https://...",
+    "caption": "At the Oscars 2023",
+    "date": "2023-03-12"
+  }
+]
+```
+
+**6. User Lists Endpoints:**
+```javascript
+// GET /api/v2/users/{userId}/lists
+[
+  {
+    "id": "list-1",
+    "name": "Favorite Actors",
+    "itemCount": 12,
+    "createdAt": "2025-01-15"
+  }
+]
+
+// POST /api/v2/users/{userId}/lists
+// Body: { "name": "My Directors" }
+
+// POST /api/v2/users/{userId}/lists/{listId}/individuals
+// Body: { "individualId": "nm0000129" }
+```
+
+### Component Reusability:
+
+**ListManager Component** can be used anywhere:
+```jsx
+// In Individual page
+<ListManager
+  itemType="individual"
+  itemId="nm0000129"
+  itemName="Tom Cruise"
+/>
+
+// In Title page (future use)
+<ListManager
+  itemType="title"
+  itemId="tt0111161"
+  itemName="The Shawshank Redemption"
+/>
+
+// In Search results (future use)
+<ListManager
+  itemType={item.type}
+  itemId={item.id}
+  itemName={item.name}
+/>
+```
+
+### Working Features:
+- Individual display with profile picture, name, lifespan
+- Bookmark functionality (add/remove)
+- Known For section with title cards
+- "Add to List" button with modal
+- ListManager for creating/selecting lists
+- Loading and error states for all sections
+- Responsive Bootstrap layout
+- Known For titles display (ready for profession grouping)
+- Placeholder sections for future features
+
+### Differences from Title Page:
+1. **Action Button**: "Add to List" instead of "Rate" (more appropriate for people vs movies)
+2. **Lifespan Section**: Birth/death years instead of release date
+3. **Biography**: Text description instead of plot summary
+4. **Known For**: Titles the person worked on instead of cast/crew
+5. **No Reviews**: People aren't rated/reviewed like titles
+6. **Awards Section**: Person's awards instead of title's awards
+7. **Photo Gallery**: Multiple photos of the person
+
+### Code Quality Improvements:
+- **Before ListManager**: ~90 lines of modal code in Individual.jsx
+- **After ListManager**: ~15 lines using reusable component
+- **Result**: 75 fewer lines, cleaner code, better maintainability
+
+### Layout Structure:
+```
+┌─────────────────────────────────────────────────┐
+│ MainDisplay Component                           │
+│ ┌──────────┐  ┌───────────────────────────────┐ │
+│ │  Image   │  │  Name                         │ │
+│ │          │  │  Job Badges                   │ │
+│ │          │  │  Lifespan (Born - Died)       │ │
+│ │          │  │  Biography                    │ │
+│ │          │  │  [Add to List Button] →       │ │
+│ └──────────┘  └───────────────────────────────┘ │
+└─────────────────────────────────────────────────┘
+                         ↓
+              Opens ListManager Modal
+              ┌──────────────────────┐
+              │ Add to List          │
+              │ ┌──────────────────┐ │
+              │ │ Select List...   │ │
+              │ ├──────────────────┤ │
+              │ │ Favorite Actors  │ │
+              │ │ Directors        │ │
+              │ │ + Create New     │ │
+              │ └──────────────────┘ │
+              │ [Cancel] [Add]       │
+              └──────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│ Awards & Nominations (Placeholder)              │
+│ "Awards information currently not available"    │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│ Photo Gallery (Placeholder)                     │
+│ "Photo gallery currently not available"         │
+└─────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────┐
+│ Known For                                       │
+│ ┌─────────────────────────────────────────────┐│
+│ │ [Actor Badge]                               ││
+│ │ ┌─────┐ ┌─────┐ ┌─────┐                    ││
+│ │ │Title│ │Title│ │Title│ ...                ││
+│ │ └─────┘ └─────┘ └─────┘                    ││
+│ └─────────────────────────────────────────────┘│
+│ ┌─────────────────────────────────────────────┐│
+│ │ [Producer Badge]                            ││
+│ │ ┌─────┐ ┌─────┐                            ││
+│ │ │Title│ │Title│ ...                        ││
+│ │ └─────┘ └─────┘                            ││
+│ └─────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────┘
+```
+
+### Testing Checklist:
+- [x] Page loads for valid individual ID
+- [x] Shows loading spinner while fetching data
+- [x] Displays error message for invalid ID
+- [x] Name and lifespan display correctly
+- [x] Profile picture shows (or placeholder)
+- [x] Bookmark button toggles state
+- [x] "Add to List" button opens modal
+- [x] ListManager shows user's lists
+- [x] Can select existing list
+- [x] Can create new list
+- [x] Form validation works
+- [x] Known For section shows titles
+- [x] Title cards link to title pages
+- [x] Placeholder sections display
+- [x] Responsive layout works
+- [x] Navigation from/to other pages works
+
+### Next Steps for Full Feature Completion:
+1. Connect ListManager to real backend API
+2. Implement user lists endpoints on backend
+3. Add biography field to Individual model
+4. Create awards endpoint
+5. Create photo gallery endpoint
+6. Add profession data to individual response
+7. Enhance Known For endpoint with profession/character data
+8. Replace dummy auth with real authentication
+9. Add "Already in list" indicators
+10. Consider adding quick-add favorites button

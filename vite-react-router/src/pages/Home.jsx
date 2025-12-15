@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import placeholderImage from '../pics/Image-not-found.png';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 
