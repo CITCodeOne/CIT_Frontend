@@ -82,8 +82,8 @@ function Home() {
 
     (async () => {
       try {
-        // GET /api/v2/titles?page=1&pageSize=10
-        const list = await mdb.apiv2.titles.list({ page: 1, pageSize: 10 });
+        // GET /api/v2/titles/top/movie?page=1&pageSize=10
+        const list = await mdb.apiv2.titles.top('movie', { page: 1, pageSize: 10 });
         if (cancelled) return;
 
         const arr = Array.isArray(list) ? list : [];
@@ -94,7 +94,7 @@ function Home() {
             featuredTitle ? String(t.id) !== String(featuredTitle.id) : true
           )
           .slice()
-          // sort by rating (MapTitle already mapped "rating")
+          // sort by rating (should already be sorted, but ensure)
           .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
         setTopRatedTitles(top);
@@ -211,13 +211,6 @@ function Home() {
         <h3 style={{ margin: '0 0 12px 0' }}>Most popular celebrities</h3>
         {makeCarousel(individuals, '<Contribution Type>')}
       </div>
-
-      <SignInOffcanvas
-        show={showAuth}
-        onClose={() => setShowAuth(false)}
-        onSignIn={() => setShowAuth(false)}
-        onSignUp={() => setShowAuth(false)}
-      />
     </div>
   );
 }

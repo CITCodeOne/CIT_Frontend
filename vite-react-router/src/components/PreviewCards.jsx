@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import fallbackImageAsset from '../pics/Image-not-found.png';
+
 const resolveTitle = (item) => item?.title || item?.name || "Untitled";
 
 const resolveSubtitle = (item) => {
@@ -16,7 +19,19 @@ const resolveSubtitle = (item) => {
 const resolveDescription = (item) =>
   item?.description || item?.blurb || item?.bio || item?.plot || "Add more metadata to this entry.";
 
-const resolveImage = (item) => item?.image || null;
+const resolveImage = (item) => {
+  const raw = item?.image;
+  if (!raw) return null;
+
+  // Some API responses embed a dev-time path like "/src/pics/Image-not-found.png"; treat as missing
+  if (typeof raw === "string" && raw.includes("/src/pics/Image-not-found.png")) {
+    return null;
+  }
+
+  return raw;
+};
+
+const fallbackImage = fallbackImageAsset;
 
 const resolveYear = (item) => {
   if (item.year || item.startYear) return item.year || item.startYear;
@@ -33,6 +48,16 @@ export default function PreviewCards({ item = {}, focusKey }) {
   const description = resolveDescription(item);
   const image = resolveImage(item);
   const year = resolveYear(item);
+
+  const [imageSrc, setImageSrc] = useState(image || fallbackImage);
+
+  useEffect(() => {
+    setImageSrc(image || fallbackImage);
+  }, [image]);
+
+  const handleImageError = () => {
+    if (imageSrc !== fallbackImage) setImageSrc(fallbackImage);
+  };
 
   // Check type to determine either mediaType or contributionType
   let typeLine = null;
@@ -66,9 +91,13 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
   return (
     <div className="card h-100 shadow-sm border-0">
-      {image && (
-        <img src={image} className="card-img-top" alt={title} style={{ height: '200px', objectFit: 'cover' }} />
-      )}
+      <img
+        src={imageSrc}
+        className="card-img-top"
+        alt={title}
+        style={{ height: '200px', objectFit: 'cover' }}
+        onError={handleImageError}
+      />
       <div className="card-body">
         <p className="text-uppercase text-muted small mb-2">{focusKey}</p>
 
