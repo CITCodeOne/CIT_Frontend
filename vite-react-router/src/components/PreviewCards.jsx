@@ -12,15 +12,15 @@ const resolveSubtitle = (item) => {
     return item.subtitle || "";
   }
 
-  // For items without type, assume Title and use mediaType or similar
-  return item.subtitle || item.mediaType || "";
+  // For items without type, assume Title and return subtitle or empty
+  return item.subtitle || "";
 };
 
 const resolveDescription = (item) =>
   item?.description || item?.blurb || item?.bio || item?.plot || "Add more metadata to this entry.";
 
 const resolveImage = (item) => {
-  const raw = item?.image;
+  const raw = item?.image || item?.poster;
   if (!raw) return null;
 
   // Some API responses embed a dev-time path like "/src/pics/Image-not-found.png"; treat as missing
@@ -34,12 +34,15 @@ const resolveImage = (item) => {
 const fallbackImage = fallbackImageAsset;
 
 const resolveYear = (item) => {
-  if (item.year || item.startYear) return item.year || item.startYear;
+  if (item.year && item.year !== "n/a") return item.year;
+  if (item.startYear && item.startYear !== "n/a") return item.startYear;
   if (item.releaseDate && item.releaseDate !== "n/a") {
     const date = new Date(item.releaseDate);
-    return date.getFullYear();
+    if (!isNaN(date.getTime())) {
+      return date.getFullYear();
+    }
   }
-  return null;
+  return "n/a";
 };
 
 export default function PreviewCards({ item = {}, focusKey }) {
@@ -48,6 +51,8 @@ export default function PreviewCards({ item = {}, focusKey }) {
   const description = resolveDescription(item);
   const image = resolveImage(item);
   const year = resolveYear(item);
+
+  const displayFocusKey = item.type === "Contributor" ? "CONTRIBUTOR" : item.mediaType?.toUpperCase() || "TITLE";
 
   const [imageSrc, setImageSrc] = useState(image || fallbackImage);
 
@@ -90,7 +95,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }
 
   return (
-    <div className="card h-100 shadow-sm border-0">
+    <div className="card h-100 shadow-sm border-0" style={{ minHeight: '475px' }}>
       <img
         src={imageSrc}
         className="card-img-top"
@@ -98,8 +103,8 @@ export default function PreviewCards({ item = {}, focusKey }) {
         style={{ height: '200px', objectFit: 'cover' }}
         onError={handleImageError}
       />
-      <div className="card-body">
-        <p className="text-uppercase text-muted small mb-2">{focusKey}</p>
+      <div className="card-body ">
+        <p className="text-uppercase text-muted small mb-2">{displayFocusKey}</p>
 
         <h5 className="card-title mb-1">{title}</h5>
         <p className="card-subtitle text-muted mb-1">{subtitle}</p>

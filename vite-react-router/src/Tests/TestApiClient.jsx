@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import tmdb from '../business-logic-layer/ApiClient/ApiClientTMDB';
 import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/extractJwtData';
 import UserBanner from '../components/UserBanner';
@@ -23,6 +24,8 @@ export default function TestApiClient() {
     const [demoUser, setDemoUser] = useState(null);
     const [titleId, setTitleId] = useState('tt10257794');
     const [individualId, setIndividualId] = useState('nm0000158');
+    const [tmdbQuery, setTmdbQuery] = useState('');
+    const [tmdbPersonId, setTmdbPersonId] = useState('');
 
     // Keep token in sync with localStorage default when the page mounts.
     useEffect(() => {
@@ -96,6 +99,19 @@ export default function TestApiClient() {
                 </div>
             </div>
 
+            {/* TMDB inputs */}
+            <div style={{ display: 'grid', gap: '0.5rem', maxWidth: 520 }}>
+                <h4>TMDB proxy</h4>
+                <label>
+                    Person query (search):
+                    <input value={tmdbQuery} onChange={(e) => setTmdbQuery(e.target.value)} style={{ width: '100%' }} placeholder="e.g. Tom Cruise" />
+                </label>
+                <label>
+                    TMDB person id (leave empty to test blank):
+                    <input value={tmdbPersonId} onChange={(e) => setTmdbPersonId(e.target.value)} style={{ width: '100%' }} placeholder="e.g. 500" />
+                </label>
+            </div>
+
             {/* Health */}
             <section>
                 <h3>Health</h3>
@@ -136,6 +152,18 @@ export default function TestApiClient() {
                     {/* Example of using mapping to render a UserBanner */}
                     <button onClick={runUserBannerDemo}>Example of using mapping (UserBanner)</button>
                 </div>
+            </section>
+
+            {/* TMDB proxy */}
+            <section>
+                <h3>TMDB</h3>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <button onClick={() => runCall('tmdb.searchPerson', () => tmdb.searchPerson(tmdbQuery))}>Search person</button>
+                    <button onClick={() => runCall('tmdb.getPerson', () => tmdb.getPerson(tmdbPersonId))}>Get person (append)</button>
+                </div>
+                <p style={{ marginTop: '0.25rem', color: '#555' }}>
+                    Person ID defaults empty so you can paste TMDB ids (their ids differ from our own). Append list uses proxy default.
+                </p>
             </section>
 
             {/* Auth */}

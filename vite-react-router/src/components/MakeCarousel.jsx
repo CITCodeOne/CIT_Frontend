@@ -99,7 +99,12 @@ const CarouselRenderer = ({ items, focusKey, cardComponent }) => {
 
 	return (
 		<div ref={containerRef} style={{ width: "100%" }}>
-			<Carousel interval={null} controls={slides.length > 1} indicators={slides.length > 1}>
+			<style>{`
+				.make-carousel .carousel-indicators { bottom: -40px; }
+				.make-carousel .carousel-control-prev-icon, .make-carousel .carousel-control-next-icon { background-color: #d8d8d8ff; border-radius: 25%; margin:8px; }
+				.make-carousel .carousel-indicators button { background-color: #6c757d; }
+			`}</style>
+			<Carousel interval={null} controls={slides.length > 1} indicators={slides.length > 1} className="make-carousel">
 				{slides.map((slide, slideIndex) => (
 					<Carousel.Item key={`slide-${slideIndex}`}>
 						<div className="d-flex justify-content-center gap-3 flex-wrap py-4">
