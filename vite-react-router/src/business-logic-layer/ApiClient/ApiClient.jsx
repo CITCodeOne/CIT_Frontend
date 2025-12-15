@@ -245,7 +245,26 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of similar title objects with genre overlap information
 		 */
 		getSimilar: (id, options) => callV2(`titles/${id}/similar`, options).then(mapTitles),
+		// GET: /titles/top/{mediaType}?page=1&pageSize=20
+		/**
+		 * Retrieves top rated titles by media type.
+		 * Returns paginated list of top rated movies or TV series.
+		 *
+		 * @param {string} mediaType - The media type ('movie' or 'tvSeries')
+		 * @param {Object} params - Pagination parameters
+		 * @param {number} params.page - Page number (default: 1)
+		 * @param {number} params.pageSize - Number of items per page (default: 20)
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of mapped title objects
+		 */
+		top: (mediaType, { page = 1, pageSize = 20 } = {}, options) => callV2(`titles/top/${mediaType}`, {
+			queryParams: { page, pageSize },
+			...options,
+		}).then(mapTitles),
+
 	},
+
+
 
 	/**
 	 * Endpoints for managing individual resources (actors, directors, etc.).
@@ -538,7 +557,7 @@ const apiv2 = {
 			body: { imageBase64 },
 			...options,
 		}),
-	},
+	}
 
 
 };
