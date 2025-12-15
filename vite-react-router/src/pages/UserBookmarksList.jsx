@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import MakeList from "../components/ListComp";
+import { formatPlotPre } from "../components/utils/PlotPreFormatter";
 import girl from "../pics/girl.jpg";
 import lion from "../pics/lion.jpg";
 import mike from "../pics/mike.jpg";
@@ -44,13 +45,6 @@ export default function UserBookmarksList() {
             plotPre: "When a dark force threate",
         },
     ]);
-
-    // helper to format plot preview strings with "..."
-    const formatPlotPre = (s) => {
-        if (!s) return "";
-        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
-        return s.trim() + "...";
-    };
 
     // local bookmark deletion handler
     const [message, setMessage] = useState("");
