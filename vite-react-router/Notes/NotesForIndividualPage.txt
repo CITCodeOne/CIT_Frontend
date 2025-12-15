@@ -1,99 +1,111 @@
 ## Individual Page - Implementation Notes
+### Last Updated: December 15, 2025
 
 ### Overview:
 - Created Individual page (src/pages/Individual.jsx) for displaying actor/person details
 - Uses custom hook architecture with useIndividualData hook
 - Reuses MainDisplay component for consistent layout with Title page
+- **TMDB Integration**: Uses TMDB API for profile pictures and photo galleries
 - Route: /individual/:individualId
 - Backend: https://localhost:5001 | Frontend: http://localhost:5173
 
 ### Page Sections:
-1. **Header** (MainDisplay): Profile picture + name, job badges, lifespan (born-died), biography, "Add to List" button
-2. **Awards & Nominations**: Placeholder section (API endpoint not available yet)
-3. **Photo Gallery**: Placeholder section (API endpoint not available yet)
-4. **Known For**: GridListComp with MediaCard components showing titles grouped by profession (Actor, Director, Producer, etc.)
+1. **Header** (MainDisplay): Profile picture (TMDB) + name, job badges, lifespan (born-died), biography
+2. **Photo Gallery**: TMDB carousel with 12 photos (grouped into slides of 3)
+3. **Known For**: Grid with poster cards showing titles (with bookmark buttons)
+4. **Filmography**: Simple list matching Title cast design (clickable rows with thumbnails)
 
 ### Key Features:
-- **"Add to List" Button**: Replaced rating/rate button with custom action to add individual to user lists
-- **ListManager Component**: Reusable modal for managing lists (create new list or add to existing)
-- **No Bookmark**: Bookmark functionality removed (only used on Title pages for movies/shows)
+- **TMDB Profile Pictures**: Fetches high-quality profile photos when backend doesn't provide
+- **TMDB Photo Gallery**: 12 photos in carousel format from TMDB
+- **Bookmark Functionality**: Can bookmark titles in Known For section (uses ToggleButton)
+- **Filmography List**: Simple clickable rows with thumbnails (matches Title page cast design)
+- **Birth/Death Years**: Shows "1956 - Present" for living people, "1956 - 2023" for deceased
+- **No Bookmark for Individuals**: Only titles can be bookmarked
 - **Profession Badges**: Shows "Actor" badge by default (awaiting profession data from API)
-- **Known For Grouping**: Framework ready to group titles by profession when API provides data
 
 ### API Integration (src/business-logic-layer/ApiClient/ApiClient.jsx):
 
 **Working Endpoints:**
-- mdb.apiv2.individuals.getById(id) - Main individual data (name, birth/death year, image, rating)
-- mdb.apiv2.individuals.getTitles(id) - Titles person is known for (movies/shows they appeared in)
+- mdb.apiv2.individuals.getById(id) - Main individual data (name, birth/death year, rating)
+- mdb.apiv2.individuals.getTitles(id) - Titles person is known for (filmography)
+- mdb.apiv2.user.getBookmark(userId, titleId) - Check if title is bookmarked
+- mdb.apiv2.user.addBookmark(userId, titleId) - Add title bookmark
+- mdb.apiv2.user.removeBookmark(userId, titleId) - Remove title bookmark
 
-**Missing/Placeholder Data:**
-- Biography/description field (showing placeholder text)
-- Awards/nominations endpoint
-- Photo gallery endpoint (multiple images)
-- Profession data for accurate job badges
-- Character/role information in Known For titles
+**TMDB Integration (src/business-logic-layer/TmdbIntegration.jsx):**
+- tmdb.getPersonPhoto(name) - Single profile picture for header
+- tmdb.getPersonPhotos(name, 12) - Multiple photos for gallery carousel
+
+**Missing Backend Data:**
+- ❌ Profile pictures (image field not in response) → Using TMDB
+- ❌ Biography/description field (added to DataClass but backend doesn't return it)
+- ❌ Photo gallery endpoint (multiple images) → Using TMDB
+- ❌ Profession data for accurate job badges
+- ❌ Character/role information in Known For titles
 
 **Key Data Mapping:**
 - individual.name → Title in MainDisplay
-- individual.image → Profile picture
-- individual.birthYear/deathYear → Lifespan section
-- individual.rating → Not displayed (replaced with "Add to List" button)
-- knownForTitles[] → MediaCard grid in Known For section
+- tmdbProfilePicture || DefaultProfilePicture.jpg → Profile picture
+- individual.birthYear/deathYear → Lifespan section (formatted as "1956 - Present")
+- individual.bio/description → Biography section (shows placeholder if missing)
+- knownForTitles[] → Poster cards with bookmark buttons in Known For section
+- filmography[] → Simple list with thumbnails (like Title cast section)
 
 ### Key Files:
-- **src/pages/Individual.jsx** (245 lines) - Main page component
-- **src/hooks/useIndividualData.jsx** (120 lines) - Custom hook for data fetching
-- **src/components/MainDisplay.jsx** - Reusable header layout (enhanced with customAction prop)
-- **src/components/ListManager.jsx** (220 lines) - Reusable list management modal
-- **src/components/MediaCard.jsx** - Reusable card for titles
-- **src/components/GridListComp.jsx** - Grid/list layout wrapper
-- **src/business-logic-layer/ApiClient/ApiClient.jsx** - API client
-- **src/style/CTitlePage.css** - Page styling (shared with Title page)
+- **src/pages/Individual.jsx** - Main page component
+- **src/hooks/useIndividualData.jsx** - Custom hook for data fetching
+- **src/components/MainDisplay.jsx** - Reusable header layout
+- **src/components/ToggleButton.jsx** - Reusable bookmark button
+- **src/components/MakeCarousel.jsx** - Carousel component for photos
+- **src/business-logic-layer/ApiClient/ApiClient.jsx** - Backend API client
+- **src/business-logic-layer/TmdbIntegration.jsx** - TMDB API integration
+- **src/business-logic-layer/DataClasses.jsx** - Data class definitions (updated with bio/description)
+- **src/style/CIndividualPage.css** - Page styling
 - **src/routes/AppRoutes.jsx** - Route configuration
 
 ### Architecture:
 
 **Individual.jsx Structure:**
-- Uses useIndividualData hook (returns 8 values)
-- Local state for ListManager modal (showListModal)
+- Uses useIndividualData hook (returns individual, loading, error, knownForTitles, loadingKnownFor)
+- Local state for TMDB photos, bookmark status, and filmography
+- useEffect hooks for TMDB profile picture, photo gallery, and bookmark checks
 - Conditional rendering: loading → error → no individual → success
 - Prepares badges and sections arrays before rendering
-- MainDisplay with customAction prop for "Add to List" button
-- Three Container sections (Awards, Photos, Known For)
-- ListManager component for list operations
+- MainDisplay with biography section
+- Three Container sections (Photo Gallery, Known For, Filmography)
+- No ListManager needed (removed in favor of simpler design)
 
 **useIndividualData Hook:**
-- 6 state variables: individual, loading, error, knownForTitles, loadingKnownFor
-- 2 useEffect hooks (individual basic data, known for titles)
-- All data fetching and API calls centralized in hook
+- State: individual, loading, error, knownForTitles, loadingKnownFor
+- 2 useEffect hooks (individual basic data, known for titles/filmography)
+- All backend data fetching centralized in hook
 - Returns all state to Individual component
-- Note: Bookmark-related states removed (isBookmarked, loadingBookmark, toggleBookmark)
+- Note: No bookmark for individuals (only titles can be bookmarked)
 
-**ListManager Component:**
-- Reusable modal for adding items to user lists
-- Supports both individuals and titles (itemType prop)
-- Features: Select existing list, create new list, form validation
-- Loading states and error handling
-- Success/error callbacks to parent component
-- Currently uses dummy list data (ready for API integration)
+**TMDB Integration in Individual.jsx:**
+1. **Profile Picture** (useEffect):
+   - Runs when individual data loads
+   - Calls tmdb.getPersonPhoto(individual.name)
+   - Sets tmdbProfilePicture state
+   - Fallback to DefaultProfilePicture.jpg if TMDB fails
 
-### MainDisplay Enhancement:
-**Added customAction prop** to support flexible action buttons:
-```jsx
-customAction={{
-    label: 'Add to List',
-    variant: 'primary',
-    icon: '📋',
-    onClick: handleAddToList
-}}
-```
+2. **Photo Gallery** (useEffect):
+   - Runs when individual data loads
+   - Calls tmdb.getPersonPhotos(individual.name, 12)
+   - Groups photos into slides of 3 for carousel
+   - Shows placeholder if no photos available
 
-**Priority Order:**
-1. If customAction provided → Shows custom button
-2. Else if rating provided → Shows rating display + "Rate" button
-3. Else → Shows "★ Rate" button
+3. **Title Bookmarks** (useEffect):
+   - Checks bookmark status for all Known For titles
+   - Parallel fetch using Promise.all()
+   - Stores results in titleBookmarks state object
 
-This makes MainDisplay more versatile for different page types!
+**Bookmark Functionality:**
+- Uses ToggleButton component for each Known For title
+- handleTitleBookmark() function toggles bookmark state
+- Calls mdb.apiv2.user.addBookmark() or removeBookmark()
+- Updates titleBookmarks state immediately for responsive UI
 
 ### Quick Start:
 Backend: `cd CIT_Backend/BackendSolution && dotnet run --project WebServiceLayer`
@@ -101,227 +113,95 @@ Frontend: `cd CIT_Frontend/vite-react-router && npm run dev`
 Test URL: http://localhost:5173/individual/nm0000129 (Tom Cruise)
 Test URL: http://localhost:5173/individual/nm0000158 (Tom Hanks)
 
-### Current Limitations & Placeholders:
-1. **Biography** - No backend field for biography/description text
-2. **Awards** - No backend endpoint for awards/nominations
-3. **Photo Gallery** - No backend endpoint for multiple profile images
-4. **Profession Data** - No profession field in individual response (defaulting to "Actor")
-5. **Character Names** - Known For titles don't include character/role information
-6. **User Lists** - ListManager uses dummy data (needs API integration)
-7. **Authentication** - Using dummy userId='55', isLoggedIn=true (needs real auth)
+### Current State & TMDB Temporary Implementation:
+**What Works:**
+- ✅ Profile pictures (TMDB fallback)
+- ✅ Photo gallery (TMDB 12 photos in carousel)
+- ✅ Birth/death year display ("1956 - Present" format)
+- ✅ Known For titles with bookmark functionality
+- ✅ Filmography simple list with thumbnails
+- ✅ Biography section (shows placeholder if backend doesn't provide)
+
+**What's Missing from Backend:**
+- ❌ Profile picture URLs (using TMDB)
+- ❌ Biography text (DataClass ready, backend doesn't return)
+- ❌ Photo gallery endpoint (using TMDB)
+- ❌ Profession data (defaulting to "Actor")
+- ❌ Character/role names in filmography
+
+**See TMDB_Integration.txt for full details** on temporary TMDB usage and migration path.
 
 ### API Enhancements Needed:
+For detailed backend endpoint requirements and TMDB fallback implementation, see **TMDB_Integration.txt**.
 
-**1. Add Profession Data to Individual Response:**
-```javascript
-{
-  "id": "nm0000129",
-  "name": "Tom Cruise",
-  "professions": ["actor", "producer"],  // ADD THIS
-  "birthYear": 1962,
-  "deathYear": null,
-  // ... other fields
-}
-```
+**Priority Items:**
+1. Add `image` URL field to individual response
+2. Add `biography`/`description` text field
+3. Add profession array (["actor", "producer"])
+4. Add character/role to filmography titles
+5. Consider photo gallery endpoint
+6. Consider awards/nominations endpoint
 
-**2. Enhanced Known For Endpoint with Profession:**
-```javascript
-// GET /api/v2/individuals/{id}/titles should return:
-{
-  "titleId": "tt0111161",
-  "name": "The Shawshank Redemption",
-  "profession": "actor",          // ADD THIS
-  "character": "Andy Dufresne",   // ADD THIS
-  "startYear": 1994,
-  // ... other fields
-}
-```
-
-**3. Biography/Description Field:**
-```javascript
-{
-  "id": "nm0000129",
-  "name": "Tom Cruise",
-  "biography": "Thomas Cruise Mapother IV is an American actor...",  // ADD THIS
-  // ... other fields
-}
-```
-
-**4. Awards Endpoint:**
-```javascript
-// GET /api/v2/individuals/{id}/awards
-[
-  {
-    "awardName": "Academy Award",
-    "category": "Best Actor",
-    "result": "Nominated",
-    "year": 1997,
-    "titleName": "Jerry Maguire"
-  }
-]
-```
-
-**5. Photo Gallery Endpoint:**
-```javascript
-// GET /api/v2/individuals/{id}/photos
-[
-  {
-    "photoUrl": "https://...",
-    "caption": "At the Oscars 2023",
-    "date": "2023-03-12"
-  }
-]
-```
-
-**6. User Lists Endpoints:**
-```javascript
-// GET /api/v2/users/{userId}/lists
-[
-  {
-    "id": "list-1",
-    "name": "Favorite Actors",
-    "itemCount": 12,
-    "createdAt": "2025-01-15"
-  }
-]
-
-// POST /api/v2/users/{userId}/lists
-// Body: { "name": "My Directors" }
-
-// POST /api/v2/users/{userId}/lists/{listId}/individuals
-// Body: { "individualId": "nm0000129" }
-```
-
-### Component Reusability:
-
-**ListManager Component** can be used anywhere:
-```jsx
-// In Individual page
-<ListManager
-  itemType="individual"
-  itemId="nm0000129"
-  itemName="Tom Cruise"
-/>
-
-// In Title page (future use)
-<ListManager
-  itemType="title"
-  itemId="tt0111161"
-  itemName="The Shawshank Redemption"
-/>
-
-// In Search results (future use)
-<ListManager
-  itemType={item.type}
-  itemId={item.id}
-  itemName={item.name}
-/>
-```
 
 ### Working Features:
-- Individual display with profile picture, name, lifespan
-- Bookmark functionality (add/remove)
-- Known For section with title cards
-- "Add to List" button with modal
-- ListManager for creating/selecting lists
+- Individual display with TMDB profile picture, name, lifespan ("1956 - Present" format)
+- Biography section (shows placeholder if backend doesn't provide)
+- TMDB photo gallery with 12 photos in carousel (3 per slide)
+- Known For section with poster cards and bookmark buttons
+- Filmography simple list with thumbnails (matching Title cast design)
+- Bookmark functionality for titles (ToggleButton component)
 - Loading and error states for all sections
 - Responsive Bootstrap layout
-- Known For titles display (ready for profession grouping)
-- Placeholder sections for future features
+- Clickable filmography rows with hover effects
 
 ### Differences from Title Page:
-1. **Action Button**: "Add to List" instead of "Rate" (more appropriate for people vs movies)
-2. **Lifespan Section**: Birth/death years instead of release date
-3. **Biography**: Text description instead of plot summary
-4. **Known For**: Titles the person worked on instead of cast/crew
-5. **No Reviews**: People aren't rated/reviewed like titles
-6. **Awards Section**: Person's awards instead of title's awards
-7. **Photo Gallery**: Multiple photos of the person
+1. **Profile Pictures**: TMDB integration for profile photos
+2. **Photo Gallery**: TMDB carousel with 12 photos
+3. **Lifespan Section**: Birth/death years (e.g., "1956 - Present") instead of release date
+4. **Biography**: Person description instead of plot summary
+5. **Known For**: Titles the person worked on (with bookmarks) instead of cast/crew
+6. **Filmography**: Simple list matching Title cast design instead of carousel
+7. **No Reviews**: People aren't rated/reviewed like titles
+8. **No Individual Bookmark**: Only titles within Known For can be bookmarked
 
 ### Code Quality Improvements:
-- **Before ListManager**: ~90 lines of modal code in Individual.jsx
-- **After ListManager**: ~15 lines using reusable component
-- **Result**: 75 fewer lines, cleaner code, better maintainability
+- Clean, optimized comments following "only comment what isn't obvious" principle
+- Removed verbose comments and debug console.logs
+- Integrated reusable ToggleButton component
+- Filmography redesigned to match Title cast section for consistency
+- TMDB integration properly abstracted in TmdbIntegration.jsx
 
-### Layout Structure:
+### Page Layout:
 ```
-┌─────────────────────────────────────────────────┐
-│ MainDisplay Component                           │
-│ ┌──────────┐  ┌───────────────────────────────┐ │
-│ │  Image   │  │  Name                         │ │
-│ │          │  │  Job Badges                   │ │
-│ │          │  │  Lifespan (Born - Died)       │ │
-│ │          │  │  Biography                    │ │
-│ │          │  │  [Add to List Button] →       │ │
-│ └──────────┘  └───────────────────────────────┘ │
-└─────────────────────────────────────────────────┘
-                         ↓
-              Opens ListManager Modal
-              ┌──────────────────────┐
-              │ Add to List          │
-              │ ┌──────────────────┐ │
-              │ │ Select List...   │ │
-              │ ├──────────────────┤ │
-              │ │ Favorite Actors  │ │
-              │ │ Directors        │ │
-              │ │ + Create New     │ │
-              │ └──────────────────┘ │
-              │ [Cancel] [Add]       │
-              └──────────────────────┘
-
-┌─────────────────────────────────────────────────┐
-│ Awards & Nominations (Placeholder)              │
-│ "Awards information currently not available"    │
-└─────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────┐
-│ Photo Gallery (Placeholder)                     │
-│ "Photo gallery currently not available"         │
-└─────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────┐
-│ Known For                                       │
-│ ┌─────────────────────────────────────────────┐│
-│ │ [Actor Badge]                               ││
-│ │ ┌─────┐ ┌─────┐ ┌─────┐                    ││
-│ │ │Title│ │Title│ │Title│ ...                ││
-│ │ └─────┘ └─────┘ └─────┘                    ││
-│ └─────────────────────────────────────────────┘│
-│ ┌─────────────────────────────────────────────┐│
-│ │ [Producer Badge]                            ││
-│ │ ┌─────┐ ┌─────┐                            ││
-│ │ │Title│ │Title│ ...                        ││
-│ │ └─────┘ └─────┘                            ││
-│ └─────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────┘
+MainDisplay Header: Profile picture | Name, Badges, Lifespan, Biography
+Photo Gallery: TMDB carousel (12 photos, 3 per slide)
+Known For: Grid of poster cards with bookmark buttons
+Filmography: Simple list with thumbnails (matching Title cast design)
 ```
+
 
 ### Testing Checklist:
 - [x] Page loads for valid individual ID
 - [x] Shows loading spinner while fetching data
 - [x] Displays error message for invalid ID
-- [x] Name and lifespan display correctly
-- [x] Profile picture shows (or placeholder)
-- [x] Bookmark button toggles state
-- [x] "Add to List" button opens modal
-- [x] ListManager shows user's lists
-- [x] Can select existing list
-- [x] Can create new list
-- [x] Form validation works
-- [x] Known For section shows titles
-- [x] Title cards link to title pages
-- [x] Placeholder sections display
-- [x] Responsive layout works
+- [x] Name and lifespan display correctly ("1956 - Present" format)
+- [x] TMDB profile picture shows (or fallback to DefaultProfilePicture.jpg)
+- [x] Biography section displays (or shows placeholder)
+- [x] TMDB photo gallery shows 12 photos in carousel
+- [x] Known For section shows title cards with posters
+- [x] Bookmark buttons work on Known For titles
+- [x] Filmography displays as simple list with thumbnails
+- [x] Filmography rows are clickable with hover effect
+- [x] Title cards/rows link to title pages correctly
+- [x] Responsive layout works on all screen sizes
 - [x] Navigation from/to other pages works
 
-### Next Steps for Full Feature Completion:
-1. Connect ListManager to real backend API
-2. Implement user lists endpoints on backend
-3. Add biography field to Individual model
-4. Create awards endpoint
-5. Create photo gallery endpoint
-6. Add profession data to individual response
-7. Enhance Known For endpoint with profession/character data
-8. Replace dummy auth with real authentication
-9. Add "Already in list" indicators
-10. Consider adding quick-add favorites button
+### Next Steps for Backend Improvements:
+1. Add `image` field to individual response (profile picture URL)
+2. Add `biography`/`description` field to individual response
+3. Create photo gallery endpoint: `GET /v2/individuals/{id}/photos`
+4. Add profession data to individual response (["actor", "producer"])
+5. Add character/role information to filmography endpoint
+6. Consider awards endpoint: `GET /v2/individuals/{id}/awards`
+
+**See TMDB_Integration.txt** for detailed backend endpoint requirements and migration path.

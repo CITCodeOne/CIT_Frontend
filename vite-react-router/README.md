@@ -48,5 +48,3 @@ kill -9 <PID>
 ### API Calls Failing
 **Cause:** CORS or backend not configured  
 **Fix:** Ensure backend allows requests from `http://localhost:5173`
-
-See `STARTUP_GUIDE.md` for detailed documentation.
