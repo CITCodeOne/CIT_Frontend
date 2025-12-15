@@ -117,7 +117,8 @@ function AppRoutes() {
       <Route element={<Navbar />} >
         // Home page
         <Route path="/" element={<Home />} />
-
+        //pages
+        <Route path="/page/:pageId" element={<Page/>} />
         // User related pages
         <Route path="/user/:userId" element={<User />} />
         <Route path="/user/:userId/bookmarks" element={<Bookmarks />} />
