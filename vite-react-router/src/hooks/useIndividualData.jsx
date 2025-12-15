@@ -3,6 +3,7 @@ import mdb from '../business-logic-layer/ApiClient/ApiClient';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import placeholderImage from '../pics/Image-not-found.png';
 
 /**
@@ -19,6 +20,8 @@ import placeholderImage from '../pics/Image-not-found.png';
 export default function useIndividualData(individualId, userId = null, isLoggedIn = false) {
     // Main individual data state
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -40,6 +43,9 @@ function useIndividualData(individualId, userId, isLoggedIn) {
     // Individual basic data state
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -49,6 +55,7 @@ function useIndividualData(individualId, userId, isLoggedIn) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -77,6 +84,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
     // Known for titles state
     const [knownForTitles, setKnownForTitles] = useState([]);
     const [loadingKnownFor, setLoadingKnownFor] = useState(true);
@@ -94,6 +103,9 @@ function useIndividualData(individualId, userId, isLoggedIn) {
                 setError(err.message || 'Failed to load individual data');
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -104,6 +116,7 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             }
         };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -136,6 +149,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
         if (individualId) {
             fetchIndividual();
         }
@@ -152,6 +167,9 @@ function useIndividualData(individualId, userId, isLoggedIn) {
                 console.error('Error fetching known for titles:', err);
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -163,6 +181,7 @@ function useIndividualData(individualId, userId, isLoggedIn) {
             }
         };
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -231,6 +250,8 @@ function useIndividualData(individualId, userId, isLoggedIn) {
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
         if (individualId) {
             fetchKnownForTitles();
         }
@@ -248,6 +269,9 @@ function useIndividualData(individualId, userId, isLoggedIn) {
 export default useIndividualData;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
