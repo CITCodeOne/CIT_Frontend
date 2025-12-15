@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
-import tmdb from '../business-logic-layer/ApiClient/ApiClientTMDB';
 import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/extractJwtData';
 import UserBanner from '../components/UserBanner';
@@ -174,8 +173,8 @@ export default function TestApiClient() {
             <section>
                 <h3>TMDB</h3>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button onClick={() => runCall('tmdb.searchPerson', () => tmdb.searchPerson(tmdbQuery))}>Search person</button>
-                    <button onClick={() => runCall('tmdb.getPerson', () => tmdb.getPerson(tmdbPersonId))}>Get person (append)</button>
+                    <button onClick={() => runCall('tmdb.searchPerson', () => mdb.tmdb.searchPerson(tmdbQuery))}>Search person</button>
+                    <button onClick={() => runCall('tmdb.getPerson', () => mdb.tmdb.getPerson(tmdbPersonId))}>Get person (append)</button>
                 </div>
                 <p style={{ marginTop: '0.25rem', color: '#555' }}>
                     Person ID defaults empty so you can paste TMDB ids (their ids differ from our own). Append list uses proxy default.
