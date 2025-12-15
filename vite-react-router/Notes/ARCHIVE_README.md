@@ -36,6 +36,10 @@ This folder contains development notes and documentation for the project's compo
 All documentation reflects the current codebase after major refactoring that reduced Title.jsx from 512 to 241 lines through the introduction of the useTitleData custom hook and reusable MediaCard/UserCard components.
 
 ### December 14, 2025
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 #### Individual Page Creation
 1. **src/pages/Individual.jsx**
    - Created comprehensive Individual page for actors/directors/producers
@@ -45,9 +49,14 @@ All documentation reflects the current codebase after major refactoring that red
 
 2. **src/hooks/useIndividualData.jsx**
    - Created custom hook for individual data fetching
+<<<<<<< Updated upstream
    - Fixed import: Changed from `apiv2` to `mdb`
    - Updated all API calls to use `mdb.apiv2.*` structure
    - Removed bookmark-related functionality
+=======
+   - Uses `mdb.apiv2.individuals.getById()` and `getTitles()`
+   - Removed bookmark-related functionality (not needed for individuals)
+>>>>>>> Stashed changes
 
 3. **src/components/MainDisplay.jsx**
    - Added `customAction` prop for flexible action buttons
@@ -70,17 +79,33 @@ All documentation reflects the current codebase after major refactoring that red
    - Compact "📋" icon button to save space
    - Reuses existing message toast system
 
+<<<<<<< Updated upstream
 #### React Router Fix
 7. **src/App.jsx**
+=======
+#### Component Improvements
+7. **src/components/Rating.jsx**
+   - Fixed zero-star rating issue
+   - Click same star twice to reset rating to 0
+   - Uses ternary operator: `rating === value ? 0 : value`
+
+#### React Router Fix
+8. **src/App.jsx**
+>>>>>>> Stashed changes
    - Added React Router v7 future flags
    - Fixed path switching issues with Vite
 
 #### Documentation Updates
+<<<<<<< Updated upstream
 8. **Notes/NotesForIndividualPage.txt**
+=======
+9. **Notes/NotesForIndividualPage.txt**
+>>>>>>> Stashed changes
    - Created comprehensive documentation matching style of other notes
    - Updated to reflect no bookmark functionality
    - Documented API endpoints, architecture, and current limitations
 
+<<<<<<< Updated upstream
 9. **Notes/ListManagerComp.txt**
    - Added UserBookmarksList and UserRatingsList examples
    - Updated usage documentation
@@ -89,4 +114,13 @@ All documentation reflects the current codebase after major refactoring that red
     - Updated to reflect all changes made on Dec 14, 2025
 
 
+=======
+10. **Notes/ListManagerComp.txt**
+    - Added UserBookmarksList and UserRatingsList examples
+    - Updated usage documentation
+
+11. **Notes/ARCHIVE_README.md**
+    - Updated to reflect all changes made on Dec 14, 2025
+
+>>>>>>> Stashed changes
 Last Updated: December 14, 2025

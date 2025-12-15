@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Badge } from 'react-bootstrap';
+import { convertToStars, convertFromStars } from '../utils/ratingUtils';
 
 /**
  * Rating Component (React Bootstrap Version)

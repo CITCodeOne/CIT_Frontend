@@ -1,8 +1,16 @@
+<<<<<<< Updated upstream
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Container, Spinner, Alert, Badge } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
 import RowComp from '../components/RowComp';
+=======
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { Container, Spinner, Alert, Card, Badge, Row, Col } from 'react-bootstrap';
+import MainDisplay from '../components/MainDisplay';
+import List from '../components/List';
+>>>>>>> Stashed changes
 import MediaCard from '../components/MediaCard';
 import ListManager from '../components/ListManager';
 import useIndividualData from '../hooks/useIndividualData';
