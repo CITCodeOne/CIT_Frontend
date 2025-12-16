@@ -18,7 +18,7 @@ import '../style/CTitlePage.css';
  */
 
 function Title() {
-    const { titleId } = useParams();
+    const { pageId, titleId } = useParams();
     const { isSignedIn, userId } = useAuthStatus();
 
     const {
@@ -37,7 +37,7 @@ function Title() {
         loadingUserRating,
         updateUserRating,
         deleteUserRating
-    } = useTitleData(titleId, userId, isSignedIn);
+    } = useTitleData(titleId, userId, isSignedIn, pageId); //Parsed page id from URL as required by api.client bookmark calls on main title
 
     // Local state
     const [tempRating, setTempRating] = useState(0);

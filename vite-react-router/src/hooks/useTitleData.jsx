@@ -13,7 +13,7 @@ import placeholderImage from '../pics/Image-not-found.png';
  * @param {boolean} isLoggedIn - Whether a user is currently logged in
  * @returns {object} Complete title data and interaction functions
  */
-export default function useTitleData(titleId, userId = null, isLoggedIn = false) {
+export default function useTitleData(titleId, userId = null, isLoggedIn = false, pageId) {
     // Main title data state
     const [title, setTitle] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
             }
 
             try {
-                const bookmark = await mdb.apiv2.user.getBookmark(userId, titleId); // FIX: should be pageId
+                const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId); // FIX: should be pageId
                 setIsBookmarked(!!bookmark);
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);
@@ -171,10 +171,10 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
 
         try {
             if (isBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, titleId);
+                await mdb.apiv2.user.removeBookmark(userId, pageId);
                 setIsBookmarked(false);
             } else {
-                await mdb.apiv2.user.addBookmark(userId, titleId);
+                await mdb.apiv2.user.addBookmark(userId, pageId);
                 setIsBookmarked(true);
             }
         } catch (err) {
@@ -195,10 +195,10 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
 
             if (userRating === 0) {
                 // Add new rating
-                await mdb.apiv2.user.addRating(userId, titleId, newRating, review);
+                await mdb.apiv2.user.addRating(userId, titleId, newRating);
             } else {
                 // Update existing rating
-                await mdb.apiv2.user.updateRating(userId, titleId, newRating, review);
+                await mdb.apiv2.user.updateRating(userId, titleId, newRating);
             }
             setUserRating(newRating);
             setUserReview(reviewText);
