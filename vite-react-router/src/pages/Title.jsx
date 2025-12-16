@@ -56,8 +56,8 @@ function Title() {
             if (title?.name && title?.mediaType) {
                 try {
                     const posterUrl = await tmdb.getTitlePoster(
-                        title.name, 
-                        title.mediaType, 
+                        title.name,
+                        title.mediaType,
                         title.startYear
                     );
                     if (posterUrl) setTmdbPoster(posterUrl);
@@ -89,11 +89,11 @@ function Title() {
     useEffect(() => {
         const fetchSimilarTitles = async () => {
             if (!titleId) return;
-            
+
             try {
                 setLoadingSimilar(true);
                 const backendSimilar = await mdb.apiv2.titles.getSimilar(titleId);
-                
+
                 if (backendSimilar && backendSimilar.length > 0) {
                     setTmdbSimilarTitles(backendSimilar.slice(0, 20));
                 } else {
@@ -127,7 +127,7 @@ function Title() {
                 setLoadingSimilar(false);
             }
         };
-        
+
         fetchSimilarTitles();
     }, [titleId, title]);
 
@@ -146,7 +146,7 @@ function Title() {
                         if (similar.poster) {
                             return { id: similar.id, poster: similar.poster };
                         }
-                        
+
                         // Otherwise, fetch it from TMDB
                         const posterUrl = await tmdb.getTitlePoster(
                             similar.name,
@@ -309,7 +309,7 @@ function Title() {
                             <Row className="g-4 justify-content-center">
                                 {cast.slice(0, 4).map((actor) => (
                                     <Col key={actor.id} xs={6} sm={4} md={3} lg={3} className="text-center">
-                                        <div 
+                                        <div
                                             onClick={() => window.location.href = `/individual/${actor.id}`}
                                             className="top-cast-container"
                                         >
@@ -343,8 +343,8 @@ function Title() {
                         ) : (
                             <div>
                                 {cast.map((actor) => (
-                                    <div 
-                                        key={actor.id} 
+                                    <div
+                                        key={actor.id}
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white cast-list-item"
                                         onClick={() => window.location.href = `/individual/${actor.id}`}
                                     >
@@ -389,7 +389,7 @@ function Title() {
                                     'title',
                                     ({ item }) => (
                                         <div className="similar-title-card">
-                                            <div 
+                                            <div
                                                 className="similar-poster-container"
                                                 onClick={() => window.location.href = `/title/${item.id}`}
                                             >
@@ -428,7 +428,7 @@ function Title() {
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Reviews</h4>
-                        
+
                         {!isSignedIn ? (
                             <Card className="mb-4 bg-light">
                                 <Card.Body className="text-center py-4">
@@ -460,7 +460,7 @@ function Title() {
                                         </Card.Body>
                                     </Card>
                                 )}
-                                
+
                                 <UserCard
                                     userId={userId}
                                     username="You"
@@ -476,11 +476,11 @@ function Title() {
                                     maxContentLength={0}
                                     placeholder="Write your review here... (optional)"
                                 />
-                                
+
                                 {(tempRating > 0 || tempReviewText.trim()) && (
                                     <div className="text-end mt-2">
-                                        <Button 
-                                            variant="primary" 
+                                        <Button
+                                            variant="primary"
                                             onClick={handleSubmitReview}
                                             disabled={tempRating === 0}
                                         >
