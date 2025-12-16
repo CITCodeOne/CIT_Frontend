@@ -59,6 +59,7 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
                 // Map to format expected by MediaCard component
                 const formattedTitles = Array.isArray(titlesData) ? titlesData.map(title => ({
                     id: title.id,
+                    pageId: title.pageId,
                     name: title.name || title.title || 'Unknown',
                     image: title.image || title.poster || title.posterPath || placeholderImage,
                     startYear: title.startYear || title.releaseYear || title.year || null,
@@ -86,7 +87,7 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
             }
             
             try {
-                const bookmark = await mdb.apiv2.user.getBookmark(userId, individualId);
+                const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId);
                 setIsBookmarked(!!bookmark);
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);

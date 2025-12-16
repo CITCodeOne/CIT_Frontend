@@ -68,6 +68,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 // Map to format expected by MediaCard component
                 const formattedCast = Array.isArray(castData) ? castData.map(person => ({
                     id: person.id,
+                    pageId: person.pageId,
                     name: person.name || 'Unknown',
                     character: person.character || null,
                     profilePath: person.profilePath || placeholderImage

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Spinner, Carousel, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
 import ListManager from '../components/ListManager';
@@ -21,7 +21,8 @@ import '../style/CIndividualPage.css';
  */
 
 function Individual() {
-    const { individualId } = useParams();
+    const { individualId, pageId } = useParams();
+    const navigate = useNavigate();
     const { isSignedIn, userId } = useAuthStatus();
 
     // State management
@@ -153,6 +154,15 @@ function Individual() {
             console.error('Failed to toggle title bookmark:', err);
             alert('Failed to update bookmark. Please try again.');
         }
+    };
+
+    const navigateToTitle = (title) => {
+        const targetPageId = title.pageId && title.pageId !== 'n/a' ? title.pageId : null;
+        const targetTitleId = title.id && title.id !== 'n/a' ? title.id : null;
+
+        if (!targetPageId || !targetTitleId) return;
+
+        navigate(`/page/${targetPageId}/title/${targetTitleId}`, { replace: true });
     };
 
     // List modal handlers
@@ -306,7 +316,7 @@ function Individual() {
                                         <Card className="h-100 shadow-sm known-for-card">
                                             <div 
                                                 className="known-for-poster-container"
-                                                onClick={() => window.location.href = `/title/${title.id}`}
+                                                onClick={() => navigateToTitle(title)}
                                             >
                                                 <img
                                                     src={title.image || title.poster || placeholderImage}
@@ -365,7 +375,7 @@ function Individual() {
                                     <div 
                                         key={title.id} 
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white filmography-list-item"
-                                        onClick={() => window.location.href = `/title/${title.id}`}
+                                        onClick={() => navigateToTitle(title)}
                                     >
                                         <img
                                             src={title.image || title.poster || placeholderImage}

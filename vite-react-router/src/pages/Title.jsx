@@ -19,7 +19,7 @@ import '../style/CTitlePage.css';
  */
 
 function Title() {
-    const { pageId, titleId } = useParams();
+    const { pageId, titleId, } = useParams();
     const navigate = useNavigate();
     const { isSignedIn, userId } = useAuthStatus();
 
@@ -207,6 +207,15 @@ function Title() {
         }
     };
 
+    const navigateToIndividual = (person) => {
+        const targetPageId = person?.pageId && person.pageId !== 'n/a' ? person.pageId : null;
+        const targetIndividualId = person?.id && person.id !== 'n/a' ? person.id : null;
+
+        if (!targetPageId || !targetIndividualId) return;
+
+        navigate(`/page/${targetPageId}/individual/${targetIndividualId}`, { replace: true });
+    };
+
     const handleSubmitReview = async () => {
         if (tempRating === 0) {
             alert('Please select a rating before submitting');
@@ -292,7 +301,7 @@ function Title() {
                                 {cast.slice(0, 4).map((actor) => (
                                     <Col key={actor.pageId} xs={6} sm={4} md={3} lg={3} className="text-center">
                                         <div
-                                            onClick={() => navigate(`/individual/${actor.pageId}`, { replace: true })}
+                                            onClick={() => navigateToIndividual(actor)}
                                             className="top-cast-container"
                                         >
                                             <img
@@ -328,7 +337,7 @@ function Title() {
                                     <div
                                         key={actor.pageId}
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white cast-list-item"
-                                        onClick={() => navigate(`/individual/${actor.pageId}`, { replace: true })}
+                                        onClick={() => navigateToIndividual(actor)}
                                     >
                                         <img
                                             src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
@@ -374,7 +383,7 @@ function Title() {
                                             
                                             <div
                                                 className="similar-poster-container"
-                                                onClick={() => navigate(`page/${item.pageId}`, { replace: true })}
+                                                onClick={() => navigate(`/page/${item.pageId}`, { replace: true })}
                                             >
                                                 <img
                                                     src={similarPosters[item.pageId] || item.poster || placeholderImage}
