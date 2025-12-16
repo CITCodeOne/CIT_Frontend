@@ -353,7 +353,7 @@ export default function User() {
                 )}
             </section>
 
-            {/* share profile-message popup */}
+            {/* message popup */}
             {shareMessage && (
                 <div
                     className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-3 rounded-3 shadow"
