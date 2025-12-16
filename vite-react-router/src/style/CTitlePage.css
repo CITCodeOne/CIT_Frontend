@@ -3,6 +3,7 @@
 /* Background for entire page */
 .title-page-background {
     background-color: #f8f9fa;
+    border-radius: 8px;
 }
 
 /* Circular profile images for cast and reviews */

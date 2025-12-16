@@ -31,6 +31,22 @@ const tmdbApi = {
 	},
 
 	/**
+	 * Search TMDB for movie posters via proxy.
+	 * @param {string} query - Movie title to search for.
+	 * @param {object} options - fetchSimplified options (authToken, signal, etc.).
+	 * @returns {Promise<Array<{title: string, posterUrl: string}>>}
+	 */
+	getMoviePosters: (query, options = {}) => {
+		if (!query || !query.trim()) {
+			return Promise.resolve([]);
+		}
+		return callTMDB("movie/posters", {
+			queryParams: { query },
+			...options
+		});
+	},
+
+	/**
 	 * Get person details via TMDB proxy
 	 * @param {string|number} id - TMDB person id
 	 * @param {object} queryParams - Optional params (append overrides default)
@@ -90,6 +106,8 @@ const tmdbApi = {
 			...options
 		});
 	}
+
+	
 };
 
 export default tmdbApi;

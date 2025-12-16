@@ -29,6 +29,7 @@ function ToggleButton({
     type = 'button'
 }) {
     const handleClick = (e) => {
+        e.preventDefault();
         e.stopPropagation(); // Prevent event bubbling
         
         if (disabled || !onToggle) return;

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import Rating from './Rating';
 import BookmarkButton from './BookmarkButton';
+import notFoundImage from '../pics/Image-not-found.png';
 
 /**
  * MainDisplay Component - Versatile layout for detail pages
@@ -32,7 +33,7 @@ function MainDisplay({
     children
 }) {
     // Prefer explicitly provided props but fall back to item fields when present
-    const resolvedImage = image ?? item?.image ?? item?.poster ?? item?.posterUrl;
+    const resolvedImage = image ?? item?.image ?? item?.poster ?? item?.posterUrl ?? notFoundImage;
     const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title';
     const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null;
 
@@ -128,6 +129,7 @@ function MainDisplay({
                                         src={resolvedImage}
                                         alt={resolvedTitle || 'Image'}
                                         className="img-fluid rounded poster-image"
+                                        onError={(e) => { e.target.src = notFoundImage; }}
                                     />
 
                                     {/* Bookmark Button */}

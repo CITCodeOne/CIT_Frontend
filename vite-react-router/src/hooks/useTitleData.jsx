@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import { getStoredToken } from '../components/ExtractJwtData';
 import placeholderImage from '../pics/Image-not-found.png';
 
 /**
@@ -128,7 +129,8 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
             }
 
             try {
-                const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId); // FIX: should be pageId
+                const token = getStoredToken();
+                const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId, { authToken: token }); // FIX: should be pageId
                 setIsBookmarked(!!bookmark);
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);
@@ -150,7 +152,8 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
 
             try {
                 setLoadingUserRating(true);
-                const rating = await mdb.apiv2.user.getRating(userId, titleId);
+                const token = getStoredToken();
+                const rating = await mdb.apiv2.user.getRating(userId, titleId, { authToken: token });
                 setUserRating(rating?.rating || 0);
             } catch (err) {
                 console.error('Failed to fetch user rating:', err);
@@ -171,11 +174,12 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         }
 
         try {
+            const token = getStoredToken();
             if (isBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, pageId);
+                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
                 setIsBookmarked(false);
             } else {
-                await mdb.apiv2.user.addBookmark(userId, pageId);
+                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
                 setIsBookmarked(true);
             }
         } catch (err) {
@@ -192,14 +196,15 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         }
 
         try {
+            const token = getStoredToken();
             const review = reviewText && reviewText.trim() ? reviewText.trim() : null;
 
             if (userRating === 0) {
                 // Add new rating
-                await mdb.apiv2.user.addRating(userId, titleId, newRating);
+                await mdb.apiv2.user.addRating(userId, titleId, newRating, { authToken: token });
             } else {
                 // Update existing rating
-                await mdb.apiv2.user.updateRating(userId, titleId, newRating);
+                await mdb.apiv2.user.updateRating(userId, titleId, newRating, { authToken: token });
             }
             setUserRating(newRating);
             setUserReview(reviewText);
@@ -221,7 +226,8 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         }
 
         try {
-            await mdb.apiv2.user.removeRating(userId, titleId);
+            const token = getStoredToken();
+            await mdb.apiv2.user.removeRating(userId, titleId, { authToken: token });
             setUserRating(0);
         } catch (err) {
             console.error('Failed to delete rating:', err);

@@ -7,6 +7,7 @@ import ToggleButton from '../components/ToggleButton';
 import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import SignInOffcanvas from '../components/SignInOffcanvas';
+import { getStoredToken } from '../components/ExtractJwtData';
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
@@ -165,10 +166,11 @@ function Title() {
             }
 
             try {
+                const token = getStoredToken();
                 const bookmarkChecks = await Promise.all(
                     mdbSimilarTitles.map(async (similar) => {
                         try {
-                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.pageId);
+                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.pageId, { authToken: token });
                             return { id: similar.pageId, isBookmarked };
                         } catch (err) {
                             return { id: similar.pageId, isBookmarked: false };
@@ -196,12 +198,13 @@ function Title() {
         }
 
         try {
+            const token = getStoredToken();
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, similarTitleId.pageId);
+                await mdb.apiv2.user.addBookmark(userId, similarTitleId, { authToken: token });
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, similarTitleId.pageId);
+                await mdb.apiv2.user.removeBookmark(userId, similarTitleId, { authToken: token });
             }
-            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId.pageId]: newState }));
+            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState }));
         } catch (err) {
             console.error('Error toggling similar title bookmark:', err);
         }
@@ -213,7 +216,7 @@ function Title() {
 
         if (!targetPageId || !targetIndividualId) return;
 
-        navigate(`/page/${targetPageId}/individual/${targetIndividualId}`, { replace: true });
+        navigate(`/page/${targetPageId}/individual/${targetIndividualId}`);
     };
 
     const handleSubmitReview = async () => {
@@ -273,7 +276,7 @@ function Title() {
 
     return (
         <MainDisplay
-            image={tmdbPoster || title.poster || placeholderImage}
+            image={tmdbPoster || title.image || placeholderImage}
             title={customTitle}
             subtitle={null}
             rating={title.rating}
@@ -374,7 +377,7 @@ function Title() {
                                         ...similar,
                                         title: similar.name,
                                         subtitle: similar.startYear ? `(${similar.startYear})` : null,
-                                        isBookmarked: similarBookmarks[similar.id] || false,
+                                        isBookmarked: similarBookmarks[similar.pageId] || false,
                                         onBookmark: handleSimilarTitleBookmark
                                     })),
                                     'title',
@@ -383,10 +386,10 @@ function Title() {
                                             
                                             <div
                                                 className="similar-poster-container"
-                                                onClick={() => navigate(`/page/${item.pageId}`, { replace: true })}
+                                                onClick={() => navigate(`/page/${item.pageId}`)}
                                             >
                                                 <img
-                                                    src={similarPosters[item.pageId] || item.poster || placeholderImage}
+                                                    src={similarPosters[item.pageId] || item.image || placeholderImage}
                                                     alt={item.name}
                                                     className="similar-poster-image"
                                                 />
