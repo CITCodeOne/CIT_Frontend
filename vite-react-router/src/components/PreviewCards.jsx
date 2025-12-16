@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
 
@@ -78,6 +79,7 @@ const resolveYear = (item) => {
 };
 
 export default function PreviewCards({ item = {}, focusKey }) {
+  console.log('PreviewCards item:', item);
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);
 
@@ -172,26 +174,28 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }
 
   return (
-    <div className="card h-100 shadow-sm border-0" style={{ minHeight: '475px' }}>
-      <img
-        src={imageSrc}
-        className="card-img-top"
-        alt={title}
-        style={{ height: '200px', objectFit: 'cover' }}
-        onError={handleImageError}
-      />
-      <div className="card-body ">
-        <p className="text-uppercase text-muted small mb-2">{displayFocusKey}</p>
+    <Link to={`/page/${item.pageId}`} className="text-decoration-none">
+      <div className="card h-100 shadow-sm border-0" style={{ minHeight: '475px' }}>
+        <img
+          src={imageSrc}
+          className="card-img-top"
+          alt={title}
+          style={{ height: '200px', objectFit: 'cover' }}
+          onError={handleImageError}
+        />
+        <div className="card-body ">
+          <p className="text-uppercase text-muted small mb-2">{displayFocusKey}</p>
 
-        <h5 className="card-title mb-1">{title}{(!item.mediaType && !item.media_type && extraData?.popularity) ? ` (${extraData.popularity})` : ''}</h5>
-        <p className="card-subtitle text-muted mb-1">{subtitle}</p>
+          <h5 className="card-title mb-1">{title}{(!item.mediaType && !item.media_type && extraData?.popularity) ? ` (${extraData.popularity})` : ''}</h5>
+          <p className="card-subtitle text-muted mb-1">{subtitle}</p>
 
-        {typeLine && <div className="mb-2">{typeLine}</div>}
+          {typeLine && <div className="mb-2">{typeLine}</div>}
 
-        <p className="card-text small mb-0" style={{ whiteSpace: 'pre-line' }}>
-          {description}
-        </p>
+          <p className="card-text small mb-0" style={{ whiteSpace: 'pre-line' }}>
+            {description}
+          </p>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }

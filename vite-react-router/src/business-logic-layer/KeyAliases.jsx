@@ -44,6 +44,8 @@ export const TITLE_KEY_ALIASES = {
     titleid: "id",
     votecount: "numVotes",
     primaryname: "name",
+    pageid: "pageId",
+    pagelink: "pageId",
 };
 
 export const INDIVIDUAL_KEY_ALIASES = {
@@ -54,6 +56,8 @@ export const INDIVIDUAL_KEY_ALIASES = {
     birthyear: "birthYear",
     deathyear: "deathYear",
     knownfor: "knownFor",
+    pageid: "pageId",
+    pagelink: "pageId",
 };
 
 /**
@@ -96,6 +100,7 @@ export const RATING_KEY_ALIASES = {
 export const BOOKMARK_KEY_ALIASES = {
     userid: "userId",
     pageid: "pageId",
+    pagelink: "pageId",
     titleid: "titleId",
     tconst: "titleId",
     individualid: "individualId",
