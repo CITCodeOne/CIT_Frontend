@@ -16,7 +16,7 @@ export default function NavbarLayout() {
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
         return (
                 <div className="min-vh-100 d-flex flex-column">
-                        <Navbar expand="lg" className="bg-body-tertiary">
+                        <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow">
                                 <Container fluid className='NavbarCstyle'>
                                         <Navbar.Brand as={Link} to="/" className='Clogo'>CIT-MDB</Navbar.Brand>
                                         <Navbar.Toggle aria-controls="navbarScroll" />

@@ -4,6 +4,12 @@
     padding-right: 15%;
 }
 
+.CNavbar-shadow {
+    border-bottom: lightgray;
+    border-bottom-width: thin;
+    border-bottom-style: solid;
+}
+
 /*custom styling for (content) container*/
 .ContainerCstyle {
     padding-left: 15%;
