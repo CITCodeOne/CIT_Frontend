@@ -79,7 +79,6 @@ const resolveYear = (item) => {
 };
 
 export default function PreviewCards({ item = {}, focusKey }) {
-  console.log('PreviewCards item:', item);
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);
 
@@ -174,7 +173,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }
 
   return (
-    <Link to={`/page/${item.pageId}`} className="text-decoration-none">
+    <nav to={`/page/${item.pageId}`} className="text-decoration-none">
       <div className="card h-100 shadow-sm border-0" style={{ minHeight: '475px' }}>
         <img
           src={imageSrc}
@@ -192,10 +191,10 @@ export default function PreviewCards({ item = {}, focusKey }) {
           {typeLine && <div className="mb-2">{typeLine}</div>}
 
           <p className="card-text small mb-0" style={{ whiteSpace: 'pre-line' }}>
-            {description}
+            {truncateText(description, 150)}
           </p>
         </div>
       </div>
-    </Link>
+    </nav>
   );
 }
