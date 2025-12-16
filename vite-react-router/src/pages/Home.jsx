@@ -17,7 +17,9 @@ function Home() {
   const handleToggleFeaturedBookmark = async () => {
     if (!featuredTitle) return;
 
-    const userId = 55;
+    //Gets userId from auth status
+    const { userId: authUserId } = useAuthStatus();
+    const userId = authUserId ? Number(authUserId) : null;
     const pageId = Number(featuredTitle.id);
 
     try {
@@ -40,8 +42,6 @@ function Home() {
       try {
         const list = await mdb.apiv2.titles.list({ page: 1, pageSize: 10 });
         if (cancelled) return;
-
-        console.log('titles.list result:', list);
 
         // Handle both array and paged object shapes: { items: [...] } / { data: [...] }
         const arr = Array.isArray(list)
