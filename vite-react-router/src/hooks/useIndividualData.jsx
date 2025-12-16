@@ -13,7 +13,7 @@ import placeholderImage from '../pics/Image-not-found.png';
  * @param {boolean} isLoggedIn - Whether a user is currently logged in
  * @returns {object} Complete individual data and interaction functions
  */
-export default function useIndividualData(individualId, userId = null, isLoggedIn = false) {
+export default function useIndividualData(individualId, userId = null, isLoggedIn = false, pageId) {
     // Main individual data state
     const [individual, setIndividual] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -106,10 +106,10 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
 
         try {
             if (isBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, individualId);
+                await mdb.apiv2.user.removeBookmark(userId, pageId);
                 setIsBookmarked(false);
             } else {
-                await mdb.apiv2.user.addBookmark(userId, individualId);
+                await mdb.apiv2.user.addBookmark(userId, pageId);
                 setIsBookmarked(true);
             }
         } catch (err) {

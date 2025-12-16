@@ -246,6 +246,17 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of similar title objects with genre overlap information
 		 */
 		getSimilar: (id, options) => callV2(`titles/${id}/similar`, options).then(mapTitles),
+
+		// GET: /titles/{id}/page
+		/**
+		 * Retrieves the page reference for a given title.
+		 * Returns the PageReferenceDTO for the title or 404 if not found.
+		 *
+		 * @param {string|number} id - The unique identifier of the title
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object|null>} PageReferenceDTO or null if not found
+		 */
+		getPageByTitle: (id, options) => callV2(`titles/${id}/page`, options),
 		// GET: /titles/top/{mediaType}?page=1&pageSize=20
 		/**
 		 * Retrieves top rated titles by media type.
