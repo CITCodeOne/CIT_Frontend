@@ -90,7 +90,9 @@ export default function NavbarLayout() {
                                 fluid
                                 className="flex-grow-1 py-3 ContainerCstyle overflow-auto"
                         >
-                                <Outlet />
+                                <div style={{ backgroundColor: '#f8f9fa' }}>
+                                        <Outlet />
+                                </div>
                         </Container>
                 </div>
         );
