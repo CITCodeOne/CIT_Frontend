@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Badge, Spinner, Button, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
 import UserCard from '../components/UserCard';
 import ToggleButton from '../components/ToggleButton';
 import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
+import SignInOffcanvas from '../components/SignInOffcanvas';
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
@@ -19,6 +20,7 @@ import '../style/CTitlePage.css';
 
 function Title() {
     const { pageId, titleId } = useParams();
+    const navigate = useNavigate();
     const { isSignedIn, userId } = useAuthStatus();
 
     const {
@@ -43,6 +45,7 @@ function Title() {
     const [tempRating, setTempRating] = useState(0);
     const [tempReviewText, setTempReviewText] = useState('');
     const [submitStatus, setSubmitStatus] = useState(null);
+    const [showSignIn, setShowSignIn] = useState(false);
     const [tmdbPoster, setTmdbPoster] = useState(null);
     const [castPhotos, setCastPhotos] = useState({});
     const [mdbSimilarTitles, setMdbSimilarTitles] = useState([]);
@@ -287,9 +290,9 @@ function Title() {
                         ) : (
                             <Row className="g-4 justify-content-center">
                                 {cast.slice(0, 4).map((actor) => (
-                                    <Col key={actor.id} xs={6} sm={4} md={3} lg={3} className="text-center">
+                                    <Col key={actor.pageId} xs={6} sm={4} md={3} lg={3} className="text-center">
                                         <div
-                                            onClick={() => window.location.href = `/individual/${actor.id}`}
+                                            onClick={() => navigate(`/individual/${actor.pageId}`, { replace: true })}
                                             className="top-cast-container"
                                         >
                                             <img
@@ -323,9 +326,9 @@ function Title() {
                             <div>
                                 {cast.map((actor) => (
                                     <div
-                                        key={actor.id}
+                                        key={actor.pageId}
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white cast-list-item"
-                                        onClick={() => window.location.href = `/individual/${actor.id}`}
+                                        onClick={() => navigate(`/individual/${actor.pageId}`, { replace: true })}
                                     >
                                         <img
                                             src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
@@ -368,18 +371,19 @@ function Title() {
                                     'title',
                                     ({ item }) => (
                                         <div className="similar-title-card">
+                                            
                                             <div
                                                 className="similar-poster-container"
-                                                onClick={() => window.location.href = `/title/${item.id}`}
+                                                onClick={() => navigate(`page/${item.pageId}`, { replace: true })}
                                             >
                                                 <img
-                                                    src={similarPosters[item.id] || item.poster || placeholderImage}
+                                                    src={similarPosters[item.pageId] || item.poster || placeholderImage}
                                                     alt={item.name}
                                                     className="similar-poster-image"
                                                 />
                                                 <div className="similar-title-overlay">
                                                     <ToggleButton
-                                                        itemId={item.id}
+                                                        itemId={item.pageId}
                                                         isActive={item.isBookmarked}
                                                         onToggle={item.onBookmark}
                                                         activeLabel="Remove bookmark"
@@ -415,7 +419,7 @@ function Title() {
                                         <strong>Want to leave a review?</strong>
                                     </p>
                                     <p className="text-muted">
-                                        Please <a href="/signin" className="text-primary">sign in</a> to rate and review this title.
+                                        Please <Button variant="link" className="p-0 text-primary" onClick={() => setShowSignIn(true)}>sign in</Button> to rate and review this title.
                                     </p>
                                 </Card.Body>
                             </Card>
@@ -496,6 +500,7 @@ function Title() {
                     </Card.Body>
                 </Card>
             </Container>
+            <SignInOffcanvas show={showSignIn} onClose={() => setShowSignIn(false)} />
         </MainDisplay>
     );
 }

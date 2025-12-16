@@ -69,6 +69,7 @@ export default function useAuthStatus() {
         const handleLogout = useCallback(() => {
                         if (typeof window !== 'undefined') {
                                 window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+                                window.dispatchEvent(new StorageEvent('storage', { key: TOKEN_STORAGE_KEY, newValue: null }));
                         }
                         setIsSignedIn(false);
                         setUsername('');

@@ -147,7 +147,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   if (!item.mediaType && !item.media_type) {
     // Contributor
     const knownForTitles = extraData?.known_for ? extraData.known_for.map(kf => kf.title || kf.name).filter(Boolean).join(', ') : "";
-    const truncatedKnownFor = truncateText(knownForTitles, 100); // Shorter truncate for typeLine
+    const truncatedKnownFor = truncateText(knownForTitles, 100);
     typeLine = (
       <span className="text-muted small">
         {truncatedKnownFor || "No known works"}

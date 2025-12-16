@@ -94,6 +94,7 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
         // Store JWT token
         if (payload.token && typeof window !== 'undefined') {
           localStorage.setItem('cit.jwt', payload.token);
+          window.dispatchEvent(new StorageEvent('storage', { key: 'cit.jwt', newValue: payload.token }));
         }
 
         onSignIn?.(payload);

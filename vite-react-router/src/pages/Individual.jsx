@@ -40,7 +40,7 @@ function Individual() {
         loadingKnownFor,
         isBookmarked,
         toggleBookmark
-    } = useIndividualData(individualId, userId, isSignedIn);
+    } = useIndividualData(individualId, userId, isSignedIn, pageId);
 
     // Fetch TMDB profile picture
     useEffect(() => {
