@@ -11,6 +11,7 @@ import UserBookmarksList from '../pages/UserBookmarksList';
 import Title from '../pages/Title';
 import Individual from '../pages/Individual';
 import Search from '../pages/Search';
+import Page from '../pages/Page';
 
 function AppRoutes() {
   return (
@@ -27,8 +28,9 @@ function AppRoutes() {
 
         // Titles and individual pages
         <Route path="/page/:pageId" element={<Page />}>
-          <Route path="/title/:titleId" element={<Title />} />
-          <Route path="/individual/:individualId" element={<Individual />} />
+          <Route path="/page/:pageId/title/:titleId" element={<Title />} />
+          <Route path="/page/:pageId/individual/:individualId" element={<Individual />} />
+          <Route index element={<NotFound />} />
         </Route>
 
         // Search page
@@ -37,13 +39,13 @@ function AppRoutes() {
 
         // Other minor pages
         <Route path="/about" element={<About />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
 
 
       //pages without navbar goes here
       <Route path="/signin" element={<Signin />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
