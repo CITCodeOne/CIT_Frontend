@@ -15,10 +15,13 @@ class baseTitleObject{
     constructor(){
         Object.assign(this, new baseObject());
         Object.assign(this, {
+            mediaType: "unknown",
             plot: "n/a",
             adult: "n/a",
             releaseDate: "n/a",
             runtime: "n/a",
+            startYear: "n/a",
+            endYear: "n/a",
             genres: ["n/a"],
             actors: ["n/a"],
             directors: ["n/a"],
@@ -78,7 +81,10 @@ export class Individual {
         Object.assign(this, {
             birthYear: "n/a",
             deathYear: "n/a",
-            knownFor: ["n/a"]
+            bio: "n/a",
+            description: "n/a",
+            knownFor: ["n/a"],
+            rating: "n/a"
         }, options);
         Object.seal(this);
     }

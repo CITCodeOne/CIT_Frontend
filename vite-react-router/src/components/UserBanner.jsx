@@ -1,5 +1,5 @@
-import React from "react";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
+import { normalizeDataUrl } from "./GetOrSetProfilePicture";
 
 export default function UserBanner({
   user_name,
@@ -15,12 +15,24 @@ export default function UserBanner({
   onAvatarClick,
   onShareClick,
 }) {
+  const normalizedImage = (() => {
+    if (!profile_image || profile_image.trim() === "") return defaultAvatar;
+    try {
+      const normalized = normalizeDataUrl(profile_image);
+      if (normalized && (normalized.includes("not-found") || normalized.includes("error") || normalized.includes("Image-not-found"))) {
+        return defaultAvatar;
+      }
+      return normalized || defaultAvatar;
+    } catch (err) {
+      return defaultAvatar;
+    }
+  })();
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString()
     : ""; // Prettify the join date.
 
   const canClickAvatar = isOwnProfile && isEditMode; // Owner can click avatar when editing.
-  const imgSrc = profile_image || defaultAvatar; // Fallback to default avatar image.
+  const imgSrc = normalizedImage;
 
   return (
     <section className="container my-4">

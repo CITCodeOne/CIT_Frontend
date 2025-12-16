@@ -1,0 +1,292 @@
+## TMDB Integration - Temporary Implementation Notes
+
+### Date: December 15, 2025
+### Status: TEMPORARY - Pending Backend API Updates
+
+---
+
+## Overview
+The Movie Database (TMDB) API is being used as a **temporary fallback** for missing backend endpoints. Once the backend provides these endpoints with proper data, TMDB integration can be removed or kept as fallback only.
+
+---
+
+## What TMDB Provides (Currently Used)
+
+### Individual Page (src/pages/Individual.jsx)
+1. **Profile Pictures** - `tmdb.getPersonPhoto(individual.name)`
+   - Fetches high-quality profile pictures for actors/directors/producers
+   - Used when backend doesn't provide `image` field
+   - Fallback: DefaultProfilePicture.jpg
+
+2. **Photo Gallery** - `tmdb.getPersonPhotos(individual.name, 12)`
+   - Fetches multiple photos for carousel display
+   - Returns array of image URLs
+   - Grouped into slides of 3 for Bootstrap carousel
+
+### Title Page (src/pages/Title.jsx)
+1. **Movie/Show Posters** - `tmdb.getTitlePoster(title.name, title.mediaType, title.startYear)`
+   - Fetches high-quality posters for movies/TV shows
+   - Used when backend doesn't provide poster field
+   - Fallback: Image-not-found.png
+
+2. **Cast Photos** - `tmdb.getMultiplePersonPhotos(actorNames)`
+   - Fetches profile pictures for all cast members in parallel
+   - Returns object keyed by actor name: `{ "Tom Hanks": "url...", ... }`
+   - Used for both "Top Cast" and full "Cast" sections
+
+3. **Similar Titles** - `tmdb.getSimilarTitles(title.name, title.mediaType, title.startYear, 20)`
+   - Fetches recommended similar movies/shows
+   - Backend API tried first, TMDB used as fallback if backend returns empty
+   - Returns array with: id, name, poster, startYear, mediaType
+
+4. **Similar Title Posters** - `tmdb.getTitlePoster()` for each similar title
+   - Fetches posters for similar titles returned by backend
+   - Only called if similar title doesn't already have poster URL
+   - Ensures all carousel items have images
+
+---
+
+## Backend Endpoints - What's Missing/Broken
+
+### Individual Page - Missing Data
+**Profile Pictures**
+   - Endpoint: `GET /v2/individuals/{id}`
+   - Issue: Response doesn't include `image` or `profilePath` field
+   - Needed: Add image URL field to individual response
+   - Current Workaround: TMDB getPersonPhoto()
+
+**Biographies**
+   - Endpoint: `GET /v2/individuals/{id}`
+   - Issue: Response doesn't include `bio` or `description` field
+   - Fix Applied: Added `bio` and `description` to Individual DataClass
+   - Needed: Backend should return biography text
+   - Current Workaround: Shows "No biography available"
+
+**Photo Gallery**
+   - Endpoint: DOES NOT EXIST
+   - Needed: `GET /v2/individuals/{id}/photos` returning array of image URLs
+   - Current Workaround: TMDB getPersonPhotos()
+
+**Awards & Nominations**
+   - Endpoint: DOES NOT EXIST
+   - Needed: `GET /v2/individuals/{id}/awards` returning awards data
+   - Current Workaround: Placeholder section with coming soon message
+
+### Title Page - Missing Data
+**Similar Titles**
+   - Endpoint: `GET /v2/titles/{id}/similar` EXISTS but may return incomplete data
+   - Issue: Backend similar titles don't include poster URLs
+   - Needed: Include poster URLs in response OR separate poster endpoint
+   - Current Workaround: TMDB getTitlePoster() for each similar title
+
+**Cast Photos**
+   - Endpoint: `GET /v2/titles/{id}/individuals` returns cast data
+   - Issue: Response doesn't include `profilePath` or `image` field for cast members
+   - Needed: Add image URLs to cast response
+   - Current Workaround: TMDB getMultiplePersonPhotos()
+
+**Title Posters**
+   - Endpoint: `GET /v2/titles/{id}` returns title data
+   - Issue: Some titles may not have poster field populated
+   - Needed: Ensure all titles have poster URLs
+   - Current Workaround: TMDB getTitlePoster()
+
+---
+
+## TMDB Integration Files
+
+### Core Integration Module
+**src/business-logic-layer/TmdbIntegration.jsx**
+- `getPersonPhoto(name)` - Single person profile picture
+- `getPersonPhotos(name, limit)` - Multiple photos for gallery
+- `getMultiplePersonPhotos(names)` - Batch fetch for cast photos
+- `getTitlePoster(name, mediaType, year)` - Movie/show poster
+- `getSimilarTitles(name, mediaType, year, limit)` - Similar recommendations
+
+### API Configuration
+**tmdbApiConfig.json** (root directory)
+- Contains TMDB API key and base URLs
+- Not tracked in git for security
+- Example structure:
+```json
+{
+  "apiKey": "your_tmdb_api_key_here",
+  "baseUrl": "https://api.themoviedb.org/3",
+  "imageBaseUrl": "https://image.tmdb.org/t/p/w500"
+}
+```
+
+---
+
+## Data Flow Examples
+
+### Individual Page - Profile Picture
+```
+1. Backend: GET /v2/individuals/{id}
+   Returns: { id, name, birthYear, deathYear } (NO IMAGE)
+   
+2. Frontend: Checks if individual.image exists
+   → If NO → Call tmdb.getPersonPhoto(individual.name)
+   
+3. TMDB: Search person by name → Get first result → Return profile_path
+   
+4. Display: Show TMDB photo OR fallback to DefaultProfilePicture.jpg
+```
+
+### Title Page - Cast Photos
+```
+1. Backend: GET /v2/titles/{id}/individuals
+   Returns: [{ id, name, character }] (NO IMAGES)
+   
+2. Frontend: Extracts actor names into array
+   → Call tmdb.getMultiplePersonPhotos(actorNames)
+   
+3. TMDB: Parallel fetch for all actors → Return { "Name": "photoUrl", ... }
+   
+4. Display: Use castPhotos[actor.name] for each cast member
+```
+
+### Title Page - Similar Titles
+```
+1. Backend: GET /v2/titles/{id}/similar
+   → Try backend first
+   
+2. If backend returns data:
+   → Use backend similar titles
+   → Fetch TMDB posters for each title (if missing)
+   
+3. If backend returns empty or errors:
+   → Fallback to tmdb.getSimilarTitles()
+   → TMDB provides complete data (name, poster, year)
+   
+4. Display: Show carousel with posters and bookmark buttons
+```
+
+---
+
+## Performance Considerations
+
+### Parallel Fetching
+- Cast photos fetched in parallel using `Promise.all()`
+- Similar title posters fetched in parallel
+- Reduces total wait time significantly
+
+### Caching
+- Currently: No caching implemented
+- Future: Could cache TMDB results in localStorage or memory
+- Would reduce API calls for frequently viewed pages
+
+### Rate Limiting
+- TMDB free tier: 40 requests per 10 seconds
+- Current usage: Well within limits
+- Multiple requests batched using Promise.all()
+
+---
+
+## Migration Path (When Backend Is Ready)
+
+### Phase 1: Add Backend Endpoints
+1. Add image URLs to individual response
+2. Add biography field to individual response
+3. Create photo gallery endpoint for individuals
+4. Add poster URLs to similar titles response
+5. Add image URLs to cast member responses
+
+### Phase 2: Update Frontend
+1. Check for backend data first
+2. Use TMDB only as fallback when backend data missing
+3. Keep TMDB integration for redundancy
+
+### Phase 3: Optional Removal
+1. If backend is 100% reliable, can remove TMDB entirely
+2. Or keep TMDB as fallback for missing data
+3. Update documentation to reflect backend-first approach
+
+---
+
+## Current Implementation Status
+
+### Working with TMDB
+- Individual profile pictures (with fallback)
+- Individual photo galleries (12 photos)
+- Title posters (with fallback)
+- Cast member photos (all actors)
+- Similar titles (backend first, TMDB fallback)
+- Similar title posters (fetched as needed)
+
+### Pending Backend Support
+- Native profile pictures from backend
+- Biography text from backend
+- Photo galleries from backend
+- Awards & nominations from backend
+- Cast photos from backend
+- Similar title posters from backend
+
+### Technical Debt
+- No caching of TMDB results
+- No error retry logic
+- Hardcoded image sizes (w500, w185)
+- Could optimize with lazy loading
+
+---
+
+## Testing Notes
+
+### Individual Page
+- Test with actors who have TMDB data (Tom Hanks, Scarlett Johansson)
+- Test with lesser-known actors (may have no TMDB photos)
+- Verify fallback to DefaultProfilePicture.jpg works
+
+### Title Page
+- Test with popular movies (Inception, The Matrix)
+- Test with obscure titles (may have no TMDB data)
+- Verify fallback to Image-not-found.png works
+- Test similar titles carousel with bookmarks
+
+### Error Handling
+- All TMDB calls wrapped in try-catch
+- Errors logged to console but don't crash page
+- Fallback images always provided
+- Loading states shown while fetching
+
+---
+
+## Dependencies
+
+**npm packages:**
+- None (using native fetch API)
+
+**External APIs:**
+- TMDB API v3 (https://api.themoviedb.org/3)
+- Requires API key (stored in tmdbApiConfig.json)
+
+**Assets:**
+- DefaultProfilePicture.jpg (for individuals without photos)
+- Image-not-found.png (for titles without posters)
+
+---
+
+## Summary
+
+**TMDB is currently essential** for:
+1. Individual profile pictures
+2. Individual photo galleries  
+3. Cast member photos
+4. Similar title recommendations and posters
+
+**Backend needs to provide**:
+1. Image URLs for individuals
+2. Biography text
+3. Photo gallery endpoint
+4. Awards endpoint
+5. Image URLs for cast members
+6. Poster URLs for similar titles
+
+**Once backend is complete**, TMDB can be:
+- Removed entirely (cleaner, no external dependency)
+- Kept as fallback (more robust, handles missing data)
+- Kept for photo galleries only (backend may not store multiple images)
+
+---
+
+**Recommendation**: Keep TMDB as permanent fallback even after backend improvements. This ensures app always has images/data even if backend has gaps.

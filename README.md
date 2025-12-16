@@ -60,3 +60,4 @@ Finally, the project was run as usal with:
 ```bash
 npm run dev -- --open
 ```
+

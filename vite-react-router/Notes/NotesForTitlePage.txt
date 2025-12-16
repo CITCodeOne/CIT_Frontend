@@ -1,0 +1,230 @@
+## Title Page - Implementation Notes
+### Last Updated: December 15, 2025
+
+### Overview:
+- Refactored Title page (src/pages/Title.jsx) using custom hook architecture
+- Uses useTitleData hook for data management, MainDisplay for layout
+- **TMDB Integration**: Uses TMDB API for posters, cast photos, and similar titles
+- Route: /title/:titleId
+- Backend: https://localhost:5001 | Frontend: http://localhost:5173
+
+### Page Sections:
+1. **Header** (MainDisplay): Poster (TMDB) + title, year, rating, bookmark, badges (mediaType, runtime), sections (genres, overview)
+2. **Top Cast**: Grid with 4 featured cast members (circular photos from TMDB)
+3. **Full Cast**: Simple list with all cast members (photos from TMDB, clickable rows)
+4. **Similar Titles**: Carousel with poster cards and bookmark buttons (backend first, TMDB fallback)
+5. **Reviews**: User's own review (editable UserCard) + all reviews (read-only UserCards)
+
+### Key Features:
+- **TMDB Posters**: Fetches high-quality movie/show posters when backend doesn't provide
+- **TMDB Cast Photos**: Parallel fetch for all cast member profile pictures
+- **TMDB Similar Titles**: Backend API tried first, TMDB used as fallback
+- **Similar Title Bookmarks**: Can bookmark similar titles directly from carousel
+- **Cast List Design**: Simple clickable rows with hover effects (matching Individual filmography)
+- **Responsive Carousel**: Similar titles in carousel with bookmark overlay buttons
+
+### API Integration (src/business-logic-layer/ApiClient/ApiClient.jsx):
+
+**Working Endpoints:**
+- mdb.apiv2.titles.getById(id) - Main title data
+- mdb.apiv2.titles.getIndividuals(id) - Cast/crew data
+- mdb.apiv2.titles.getRatings(id) - Reviews/ratings
+- mdb.apiv2.titles.getSimilar(id) - Similar titles (may not include posters)
+- mdb.apiv2.user.getBookmark(userId, titleId) - Check bookmark status
+- mdb.apiv2.user.addBookmark(userId, titleId) - Add bookmark
+- mdb.apiv2.user.removeBookmark(userId, titleId) - Remove bookmark
+- mdb.apiv2.user.getRating(userId, titleId) - Get user rating
+- mdb.apiv2.user.addRating(userId, titleId, rating) - Add rating
+- mdb.apiv2.user.updateRating(userId, titleId, rating) - Update rating
+
+**TMDB Integration (src/business-logic-layer/TmdbIntegration.jsx):**
+- tmdb.getTitlePoster(name, mediaType, year) - Movie/show posters
+- tmdb.getMultiplePersonPhotos(names) - Batch fetch cast photos
+- tmdb.getSimilarTitles(name, mediaType, year, limit) - Similar title recommendations
+
+**Missing Backend Data:**
+- ❌ Poster URLs (some titles) → Using TMDB
+- ❌ Cast member profile pictures → Using TMDB
+- ❌ Similar title poster URLs → Using TMDB
+- ⚠️ Similar titles endpoint may return incomplete data → TMDB fallback
+
+**Key Data Mapping:**
+- title.name + tmdbPoster → Header image
+- genres[] → Badge components in sections array
+- plotPre/plot → Overview section
+- avgRating → Displayed in MainDisplay (shows "N/A" if 0)
+- mediaType, runtime → Badge array passed to MainDisplay
+- cast[] + castPhotos{} → Top Cast and Full Cast sections
+- similarTitles[] + similarPosters{} → Carousel with bookmarks
+
+### Key Files:
+- **src/pages/Title.jsx** - Main page component
+- **src/hooks/useTitleData.jsx** - Custom hook for all data fetching
+- **src/components/MainDisplay.jsx** - Reusable header layout
+- **src/components/UserCard.jsx** - Reusable card for reviews
+- **src/components/ToggleButton.jsx** - Reusable bookmark button
+- **src/components/MakeCarousel.jsx** - Carousel component
+- **src/business-logic-layer/ApiClient/ApiClient.jsx** - Backend API client
+- **src/business-logic-layer/TmdbIntegration.jsx** - TMDB API integration
+- **src/style/CTitlePage.css** - Page styling
+- **src/routes/AppRoutes.jsx** - Route configuration
+
+### Architecture:
+
+**Title.jsx Structure:**
+- Uses useTitleData hook (returns 14 values)
+- Local state for user review text, TMDB data, and bookmark states
+- useEffect hooks for TMDB poster, cast photos, similar titles, and bookmarks
+- Conditional rendering: loading → error → no title → success
+- Prepares badges and sections arrays before rendering
+- MainDisplay with five Container sections (Top Cast, Full Cast, Similar Titles, Reviews)
+- Custom carousel render function for similar titles with bookmarks
+
+**useTitleData Hook:**
+- 10 state variables: title, loading, error, cast, loadingCast, reviews, loadingReviews, isBookmarked, userRating, loadingUserRating
+- 5 useEffect hooks (title, cast, reviews, bookmark status, user rating)
+- 3 handler functions (toggleBookmark, updateUserRating, deleteUserRating)
+- All backend data fetching centralized in hook
+- Returns all state and handlers to Title component
+
+**TMDB Integration in Title.jsx:**
+1. **Title Poster** (useEffect):
+   - Runs when title data loads
+   - Calls tmdb.getTitlePoster(title.name, title.mediaType, title.startYear)
+   - Fallback to Image-not-found.png if TMDB fails
+
+2. **Cast Photos** (useEffect):
+   - Runs when cast data loads
+   - Extracts actor names into array
+   - Calls tmdb.getMultiplePersonPhotos(actorNames)
+   - Returns object keyed by name: { "Tom Hanks": "url...", ... }
+   - Parallel fetch for performance
+
+3. **Similar Titles** (useEffect):
+   - Tries backend API first: mdb.apiv2.titles.getSimilar(titleId)
+   - Falls back to TMDB if backend returns empty or errors
+   - Calls tmdb.getSimilarTitles() for fallback
+   - Provides complete data (name, poster, year, mediaType)
+
+4. **Similar Title Posters** (useEffect):
+   - Runs when similar titles load
+   - Checks if each title already has poster
+   - Fetches missing posters from TMDB
+   - Parallel fetch using Promise.all()
+   - Stores in similarPosters state object
+
+**Bookmark Functionality:**
+- Main title bookmark in MainDisplay header
+- Similar title bookmarks in carousel (ToggleButton overlay)
+- handleSimilarTitleBookmark() toggles bookmark for each similar title
+- Calls mdb.apiv2.user.addBookmark() or removeBookmark()
+- Updates similarBookmarks state for responsive UI
+
+### Quick Start:
+Backend: `cd CIT_Backend/BackendSolution && dotnet run --project WebServiceLayer`
+Frontend: `cd CIT_Frontend/vite-react-router && npm run dev`
+Test URL: http://localhost:5173/title/tt10034318
+
+### Current State & TMDB Temporary Implementation:
+**What Works:**
+- ✅ Title posters (TMDB fallback)
+- ✅ Cast photos (TMDB batch fetch)
+- ✅ Similar titles (backend first, TMDB fallback)
+- ✅ Similar title posters (TMDB as needed)
+- ✅ Bookmark functionality (main title + similar titles)
+- ✅ Top Cast section (4 featured)
+- ✅ Full Cast section (simple list with hover)
+- ✅ Similar Titles carousel with bookmark buttons
+- ✅ User reviews and ratings
+
+**What's Missing from Backend:**
+- ❌ Poster URLs for some titles (using TMDB)
+- ❌ Cast member profile pictures (using TMDB)
+- ❌ Similar title poster URLs (using TMDB)
+- ⚠️ Similar titles may have incomplete data (TMDB fallback)
+
+**See TMDB_Integration.txt for full details** on temporary TMDB usage and migration path.
+
+### Refactoring History:
+- **Phase 1:** Created UserCard reusable component
+- **Phase 2:** Created useTitleData custom hook (extracted all data fetching logic)
+- **Phase 3:** Added TMDB integration for missing backend data
+- **Phase 4:** Added bookmark functionality to similar titles
+- **Result:** Clean, maintainable code with proper separation of concerns
+
+### Working Features:
+- Title display with TMDB poster, name, year, rating
+- Bookmark functionality (main title + similar titles in carousel)
+- User rating functionality (add/update/delete)
+- Cast display with TMDB photos and character names
+- Top Cast section (4 featured cast members)
+- Full Cast section (simple list matching Individual filmography design)
+- Reviews display with user ratings
+- Similar Titles carousel with bookmarks (backend first, TMDB fallback)
+- Loading and error states for all sections
+- Responsive Bootstrap layout
+- Genres badges and overview section
+- Clickable cast rows with hover effects
+
+### Next Steps for Backend Improvements:
+1. Add poster URLs to all title responses
+2. Add profile picture URLs to cast member responses
+3. Ensure similar titles endpoint includes poster URLs
+4. Consider caching TMDB results on backend
+5. Add review text storage (currently only ratings are saved)
+
+**See TMDB_Integration.txt** for detailed backend endpoint requirements and migration path.
+
+- GET /api/titles/:id/ratings - Returns ratings/reviews for a title (WORKING)
+
+#### Still Missing:
+- GET /api/titles/:id/similar - Similar titles recommendation endpoint
+
+#### Why Relationship Endpoints Matter:
+
+**Performance:**
+- Single JOIN query returns only needed data (KB instead of MB)
+- No need to fetch entire database and filter client-side
+- Faster load times and better user experience
+
+**Data Quality:**
+- Includes relationship metadata (character names, billing order, categories)
+- Provides properly structured data for UI components
+- Enables pagination, filtering, and sorting
+
+**REST Best Practices:**
+- Separate endpoints for entities vs relationships
+- Clear, predictable API structure
+- Follows industry standards (TMDB, Spotify, GitHub patterns)
+
+**Example Query Pattern:**
+```sql
+SELECT i.id, i.name, i.profilePath, tp.character, tp.order
+FROM title_principals tp
+JOIN individuals i ON tp.individualId = i.id
+WHERE tp.titleId = :titleId
+ORDER BY tp.order LIMIT 10
+```
+
+### Design Patterns Used:
+- Custom hooks for data management (useTitleData)
+- Component composition (MainDisplay, MediaCard, UserCard, GridListComp)
+- Separation of concerns (UI vs data fetching)
+- Conditional rendering for loading/error states
+- Props drilling minimized through hook pattern
+
+### Next Steps:
+
+**Backend:**
+- Implement /api/titles/:id/similar endpoint for recommendations
+- Add review text storage (currently only ratings are saved)
+- Implement proper authentication system
+
+**Frontend:**
+- Replace dummy auth with real authentication
+- Implement review text submission
+- Add navigation improvements
+- Build Individual page (person detail page)
+- Improve error handling and user feedback
+
+Last Updated: December 13, 2025

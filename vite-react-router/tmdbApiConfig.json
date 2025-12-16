@@ -1,0 +1,7 @@
+{
+  "tmdb": {
+    "apiKey": "1e9eb1fdefa6a2d8c83ca92e5e5198ca",
+    "baseUrl": "https://api.themoviedb.org/3",
+    "imageBaseUrl": "https://image.tmdb.org/t/p"
+  }
+}

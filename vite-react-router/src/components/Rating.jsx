@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Badge } from 'react-bootstrap';
 
 /**
@@ -6,6 +6,8 @@ import { Badge } from 'react-bootstrap';
  * 
  * A simple, reusable star rating component that can display or allow editing of ratings.
  * Uses React Bootstrap components for consistent styling.
+ * 
+ * Rating system: 0-10 scale displayed as 5 stars (each star = 2 points)
  * 
  * @param {number} initialRating - The starting rating value (0-10)
  * @param {boolean} editable - Whether the user can change the rating (default: false)
@@ -18,21 +20,29 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
     // State for hover effect when editable
     const [hoverRating, setHoverRating] = useState(0);
 
+    // Convert 0-10 rating to 0-5 stars
+    const convertToStars = (ratingValue) => Math.round(ratingValue / 2);
+    
+    // Convert star number (1-5) to rating value (2-10)
+    const convertFromStars = (starNumber) => starNumber * 2;
+
     // Handle rating click (only if editable)
-    const handleClick = (value) => {
+    const handleClick = (starValue) => {
         if (editable) {
-            setRating(value);
+            // Convert star value (2, 4, 6, 8, 10) back to 0-10 rating
+            const newRating = rating === starValue ? 0 : starValue;
+            setRating(newRating);
             // Call callback function if provided
             if (onRatingChange) {
-                onRatingChange(value);
+                onRatingChange(newRating);
             }
         }
     };
 
     // Handle mouse hover (only if editable)
-    const handleMouseEnter = (value) => {
+    const handleMouseEnter = (starValue) => {
         if (editable) {
-            setHoverRating(value);
+            setHoverRating(starValue);
         }
     };
 
@@ -45,7 +55,7 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
 
     // Convert 0-10 rating to 0-5 stars (for display)
     const displayRating = hoverRating || rating;
-    const stars = Math.round(displayRating / 2); // Convert to 5-star scale
+    const stars = convertToStars(displayRating);
 
     return (
         <div className="d-flex align-items-center gap-2">
@@ -55,21 +65,24 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
                 style={{ cursor: editable ? 'pointer' : 'default' }}
                 onMouseLeave={handleMouseLeave}
             >
-                {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                        key={star}
-                        onClick={() => handleClick(star * 2)} // Click sets rating (star * 2 for 0-10 scale)
-                        onMouseEnter={() => handleMouseEnter(star * 2)}
-                        style={{
-                            fontSize: '1.5rem',
-                            color: star <= stars ? '#1f90f3' : '#ccc', // App accent color for filled stars
-                            transition: 'color 0.2s',
-                            userSelect: 'none'
-                        }}
-                    >
-                        {star <= stars ? '★' : '☆'}
-                    </span>
-                ))}
+                {[1, 2, 3, 4, 5].map((star) => {
+                    const starRatingValue = convertFromStars(star); // Convert to 0-10 scale
+                    return (
+                        <span
+                            key={star}
+                            onClick={() => handleClick(starRatingValue)}
+                            onMouseEnter={() => handleMouseEnter(starRatingValue)}
+                            style={{
+                                fontSize: '1.5rem',
+                                color: star <= stars ? 'var(--accent-color, #1f90f3)' : '#ccc',
+                                transition: 'color 0.2s',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {star <= stars ? '★' : '☆'}
+                        </span>
+                    );
+                })}
             </div>
 
             {/* Numeric rating display (0-10 scale) using Bootstrap Badge */}
@@ -79,7 +92,7 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
                     style={{ 
                         fontSize: '0.9rem',
                         fontWeight: 'normal',
-                        backgroundColor: '#1f90f3'
+                        backgroundColor: 'var(--accent-color, #1f90f3)'
                     }}
                 >
                     {displayRating.toFixed(1)}/10

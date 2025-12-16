@@ -163,5 +163,8 @@ logs/
 .vscode/
 .idea/
 
+# Vite build cache
+.vite/
+
 # Static assets to keep out of Git history
 vite-react-router/src/pics/bowling.gif

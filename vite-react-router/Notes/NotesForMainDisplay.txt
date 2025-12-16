@@ -1,0 +1,272 @@
+## MainDisplay Component - Usage Guide
+
+### Overview
+MainDisplay is a simple, reusable layout component for displaying detail pages.
+It provides a consistent two-column layout:
+- **Left column**: Image with optional bookmark button
+- **Right column**: Title, subtitle, rating, badges, description, and children
+
+### When to Use MainDisplay
+**USE for:**
+- Title pages (movies, TV shows)
+- Individual pages (actors, directors, crew)
+- Any detail page with an image + text content layout
+
+**DON'T USE for:**
+- User profile pages (use UserBanner instead)
+- List/grid views (use PreviewCards or custom components)
+- Home page (needs custom layout)
+- Search results (needs list/grid layout)
+
+### Component API
+
+```jsx
+<MainDisplay
+    image={string}              // URL of poster/profile image
+    title={string}              // Main heading
+    subtitle={string}           // Secondary text (year, birth date, etc.)
+    rating={number}             // Rating 0-10 (optional, won't show if not provided)
+    badges={array}              // Array of { text, color } objects
+    description={string}        // Main text content (plot, bio, etc.)
+    bookmarkButton={object}     // { itemId, isActive, onToggle } (optional)
+    className={string}          // Additional CSS classes (optional)
+>
+    {children}                  // Additional sections (Cast, Reviews, etc.)
+</MainDisplay>
+```
+
+---
+
+## Usage Example 1: Title Page (Movie/TV Show)
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import MainDisplay from '../components/MainDisplay';
+
+function Title() {
+    const { titleId } = useParams();
+    const [title, setTitle] = useState(null);
+    const [isBookmarked, setIsBookmarked] = useState(false);
+
+    useEffect(() => {
+        // Fetch title data from API
+        fetchTitleData(titleId).then(data => setTitle(data));
+    }, [titleId]);
+
+    const handleBookmarkToggle = async () => {
+        const newState = !isBookmarked;
+        setIsBookmarked(newState);
+        
+        // Call API to save bookmark
+        if (newState) {
+            await mdb.apiv2.user.addBookmark(userId, titleId);
+        } else {
+            await mdb.apiv2.user.removeBookmark(userId, titleId);
+        }
+    };
+
+    if (!title) return <div>Loading...</div>;
+
+    // Prepare badges array
+    const badges = [];
+    
+    // Add media type
+    if (title.mediaType) {
+        badges.push({ text: title.mediaType, color: 'primary' });
+    }
+    
+    // Add runtime
+    if (title.runtime > 0) {
+        badges.push({ text: `${title.runtime} min`, color: 'info' });
+    }
+    
+    // Add year
+    if (title.startYear) {
+        badges.push({ text: title.startYear.toString(), color: 'secondary' });
+    }
+    
+    // Add genres
+    if (title.genres?.length > 0) {
+        title.genres.forEach(genre => {
+            badges.push({ text: genre.name, color: 'secondary' });
+        });
+    }
+
+    return (
+        <MainDisplay
+            image={title.poster}
+            title={title.name}
+            subtitle={title.startYear ? `(${title.startYear})` : null}
+            rating={title.avgRating}
+            badges={badges}
+            description={title.plot || 'No plot available'}
+            bookmarkButton={{
+                itemId: title.id,
+                isActive: isBookmarked,
+                onToggle: handleBookmarkToggle
+            }}
+        >
+            {/* Additional sections below main content */}
+            <CastSection cast={title.cast} />
+            <SimilarTitlesSection titles={title.similar} />
+            <ReviewsSection reviews={title.reviews} />
+        </MainDisplay>
+    );
+}
+```
+
+---
+
+## Usage Example 2: Individual Page (Actor/Person)
+
+```jsx
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import MainDisplay from '../components/MainDisplay';
+
+function Individual() {
+    const { individualId } = useParams();
+    const [person, setPerson] = useState(null);
+
+    useEffect(() => {
+        // Fetch person data from API
+        fetchPersonData(individualId).then(data => setPerson(data));
+    }, [individualId]);
+
+    if (!person) return <div>Loading...</div>;
+
+    // Prepare badges array
+    const badges = [];
+    
+    // Add primary profession
+    if (person.primaryProfession) {
+        badges.push({ text: person.primaryProfession, color: 'info' });
+    }
+    
+    // Add additional professions
+    if (person.professions?.length > 0) {
+        person.professions.forEach(prof => {
+            badges.push({ text: prof, color: 'secondary' });
+        });
+    }
+
+    // Create subtitle with birth/death info
+    let subtitle = '';
+    if (person.birthYear) {
+        subtitle = `Born: ${person.birthYear}`;
+        if (person.deathYear) {
+            subtitle += ` - Died: ${person.deathYear}`;
+        }
+    }
+
+    return (
+        <MainDisplay
+            image={person.profilePicture || person.poster}
+            title={person.name}
+            subtitle={subtitle}
+            badges={badges}
+            description={person.biography || 'No biography available'}
+            // Note: No rating or bookmark for individuals
+        >
+            {/* Additional sections */}
+            <KnownForSection titles={person.knownForTitles} />
+            <FilmographySection filmography={person.filmography} />
+        </MainDisplay>
+    );
+}
+```
+
+---
+
+## Badge Color Options
+
+Use Bootstrap badge colors for consistency:
+- `'primary'` - Blue (for main category like mediaType)
+- `'secondary'` - Gray (for genres, general info)
+- `'success'` - Green
+- `'danger'` - Red
+- `'warning'` - Yellow
+- `'info'` - Cyan (for professions, roles)
+- `'light'` - Light gray
+- `'dark'` - Dark gray
+
+---
+
+## Key Features
+
+### Simple Props
+No nested objects required - just pass simple values directly.
+
+### Flexible Badges
+Build your badges array however you want - add metadata, genres, categories, etc.
+
+### Optional Elements
+Only shows what you provide:
+- No rating? It won't display
+- No bookmark? It won't display
+- No subtitle? It won't display
+
+### Children Support
+Add any additional sections below the main content using the children prop.
+
+### Responsive
+Uses Bootstrap grid system (Col md={3} and md={9}) for mobile-friendly layout.
+
+---
+
+## Common Patterns
+
+### Pattern 1: Building Badges Dynamically
+```jsx
+const badges = [];
+
+// Conditionally add badges
+if (data.category) badges.push({ text: data.category, color: 'primary' });
+if (data.year) badges.push({ text: data.year, color: 'secondary' });
+
+// Map array to badges
+data.tags?.forEach(tag => {
+    badges.push({ text: tag, color: 'secondary' });
+});
+```
+
+### Pattern 2: Bookmark Integration
+```jsx
+const [isBookmarked, setIsBookmarked] = useState(false);
+
+const handleBookmark = async () => {
+    try {
+        await toggleBookmarkAPI(itemId, !isBookmarked);
+        setIsBookmarked(!isBookmarked);
+    } catch (error) {
+        console.error('Bookmark failed:', error);
+    }
+};
+
+<MainDisplay
+    bookmarkButton={{
+        itemId: item.id,
+        isActive: isBookmarked,
+        onToggle: handleBookmark
+    }}
+    // ... other props
+/>
+```
+
+### Pattern 3: Additional Sections
+```jsx
+<MainDisplay {...props}>
+    {/* Custom sections */}
+    <Container className="mt-4">
+        <h4>Cast</h4>
+        <Row>
+            {cast.map(actor => (
+                <Col key={actor.id} md={4}>
+                    <ActorCard actor={actor} />
+                </Col>
+            ))}
+        </Row>
+    </Container>
+</MainDisplay>
+```
