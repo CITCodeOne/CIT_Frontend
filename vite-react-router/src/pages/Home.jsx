@@ -4,6 +4,7 @@ import SignInOffcanvas from '../components/SignInOffcanvas';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
+import { NavLink } from 'react-router-dom';
 
 function Home() {
   const [showAuth, setShowAuth] = useState(false);
@@ -147,7 +148,7 @@ function Home() {
       </div>
     );
   }
-// If no featured title found
+  // If no featured title found
   if (!featuredTitle) {
     return (
       <div style={{ padding: '1rem' }}>
@@ -206,6 +207,11 @@ function Home() {
         <h3 style={{ margin: '0 0 12px 0' }}>Most popular celebrities</h3>
         {makeCarousel(individuals, '<Contribution Type>')}
       </div>
+
+      <NavLink to="/page/159000">
+        Home
+      </NavLink>
+
     </div>
   );
 }

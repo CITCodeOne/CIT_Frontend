@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 
 function Page() {
   const { pageId } = useParams();
-  const [target, setTarget] = useState(null);
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -25,9 +25,13 @@ function Page() {
         const tconst = pageData.tconst ? String(pageData.tconst).trim() : null;
         const iconst = pageData.iconst ? String(pageData.iconst).trim() : null;
 
-        if (tconst) setTarget(`/title:${tconst}`);
-        else if (iconst) setTarget(`/individual:${iconst}`);
-        else setError('Response contains neither tconst nor iconst');
+        if (tconst) {
+          navigate(`/title/${tconst}`, { replace: true });
+        } else if (iconst) {
+          navigate(`/individual/${iconst}`, { replace: true });
+        } else {
+          setError('Response contains neither tconst nor iconst');
+        }
       })
       .catch((err) => {
         if (!mounted) return;
@@ -35,11 +39,9 @@ function Page() {
       });
 
     return () => { mounted = false; };
-  }, [pageId]);
+  }, [pageId, navigate]);
 
   if (error) return <div>Error: {error}</div>;
-  if (target) return <Navigate to={target} replace />;
-  return <div>Redirecting...</div>;
 }
 
 export default Page;
