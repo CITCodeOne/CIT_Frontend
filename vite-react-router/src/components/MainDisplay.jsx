@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import Rating from './Rating';
 import BookmarkButton from './BookmarkButton';
@@ -42,138 +43,139 @@ function MainDisplay({
         return [mediaType, formattedDate].filter(Boolean).join(' · ');
     })();
 
-    const resolvedSections = sections;
     return (
-        <div className="title-page-background">
-            {/* Main Display Card */}
-            <Container className="py-4">
-                <Card className="shadow-sm">
-                    <Card.Body>
-                        {/* Title, Year, Runtime, and Rating Row */}
-                        <div className="d-flex justify-content-between align-items-start mb-3">
-                            <div>
+        <Link to={`/page/${item.pageId}`} className="text-decoration-none">
+            <div className="title-page-background">
+                {/* Main Display Card */}
+                <Container className="py-4">
+                    <Card className="shadow-sm">
+                        <Card.Body>
+                            {/* Title, Year, Runtime, and Rating Row */}
+                            <div className="d-flex justify-content-between align-items-start mb-3">
+                                <div>
                                     <h2 className="mb-1">{resolvedTitle}</h2>
                                     {(resolvedSubtitle || badges.length > 0) && (
-                                    <div className="text-muted" style={{ fontSize: '1.1rem' }}>
+                                        <div className="text-muted" style={{ fontSize: '1.1rem' }}>
                                             {resolvedSubtitle && <span>{resolvedSubtitle}</span>}
                                             {resolvedSubtitle && badges.length > 0 && <span> · </span>}
-                                        {badges.map((badge, index) => (
-                                            <span key={index}>
-                                                {badge.text}
-                                                {index < badges.length - 1 && ' · '}
-                                            </span>
-                                        ))}
+                                            {badges.map((badge, index) => (
+                                                <span key={index}>
+                                                    {badge.text}
+                                                    {index < badges.length - 1 && ' · '}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Rating or Custom Action in Top Right Corner */}
+                                {customAction ? (
+                                    <div className="text-end">
+                                        <Button
+                                            variant={customAction.variant || 'primary'}
+                                            size="sm"
+                                            onClick={customAction.onClick}
+                                        >
+                                            {customAction.icon && <span className="me-1">{customAction.icon}</span>}
+                                            {customAction.label}
+                                        </Button>
+                                    </div>
+                                ) : resolvedRating !== undefined && resolvedRating !== null ? (
+                                    <div className="text-end">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <span className="rating-star">★</span>
+                                            <div>
+                                                <div className="d-flex align-items-baseline gap-1">
+                                                    <strong className="rating-value">
+                                                        {resolvedRating > 0 ? resolvedRating.toFixed(1) : 'N/A'}
+                                                    </strong>
+                                                    {resolvedRating > 0 && <span className="text-muted">/10</span>}
+                                                </div>
+                                                <div className="rating-label">Rating</div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            variant="outline-primary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const reviewsSection = document.getElementById('reviews-section');
+                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }}
+                                        >
+                                            Rate
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="text-end">
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const reviewsSection = document.getElementById('reviews-section');
+                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }}
+                                        >
+                                            ★ Rate
+                                        </Button>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Rating or Custom Action in Top Right Corner */}
-                            {customAction ? (
-                                <div className="text-end">
-                                    <Button 
-                                        variant={customAction.variant || 'primary'}
-                                        size="sm"
-                                        onClick={customAction.onClick}
-                                    >
-                                        {customAction.icon && <span className="me-1">{customAction.icon}</span>}
-                                        {customAction.label}
-                                    </Button>
-                                </div>
-                            ) : resolvedRating !== undefined && resolvedRating !== null ? (
-                                <div className="text-end">
-                                    <div className="d-flex align-items-center gap-2 mb-2">
-                                        <span className="rating-star">★</span>
-                                        <div>
-                                            <div className="d-flex align-items-baseline gap-1">
-                                                <strong className="rating-value">
-                                                        {resolvedRating > 0 ? resolvedRating.toFixed(1) : 'N/A'}
-                                                </strong>
-                                                    {resolvedRating > 0 && <span className="text-muted">/10</span>}
-                                            </div>
-                                            <div className="rating-label">Rating</div>
-                                        </div>
-                                    </div>
-                                    <Button 
-                                        variant="outline-primary" 
-                                        size="sm"
-                                        onClick={() => {
-                                            const reviewsSection = document.getElementById('reviews-section');
-                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        }}
-                                    >
-                                        Rate
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="text-end">
-                                    <Button 
-                                        variant="primary" 
-                                        size="sm"
-                                        onClick={() => {
-                                            const reviewsSection = document.getElementById('reviews-section');
-                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        }}
-                                    >
-                                        ★ Rate
-                                    </Button>
-                                </div>
-                            )}
-                        </div>
-
-                        <Row>
-                            {/* Image and Genres Column */}
-                            <Col md={4} className="text-center">
-                                <div style={{ position: 'relative' }}>
+                            <Row>
+                                {/* Image and Genres Column */}
+                                <Col md={4} className="text-center">
+                                    <div style={{ position: 'relative' }}>
                                         <img
                                             src={resolvedImage}
                                             alt={resolvedTitle || 'Image'}
-                                        className="img-fluid rounded poster-image"
-                                    />
-                                    
-                                    {/* Bookmark Button */}
-                                    {bookmark && (
-                                        <div className="bookmark-overlay">
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    bookmark.onToggle();
-                                                }}
-                                                className="bookmark-btn"
-                                                aria-label={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                                                title={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-                                            >
-                                                {bookmark.isBookmarked ? '✓' : '+'}
-                                            </button>
+                                            className="img-fluid rounded poster-image"
+                                        />
+
+                                        {/* Bookmark Button */}
+                                        {bookmark && (
+                                            <div className="bookmark-overlay">
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        bookmark.onToggle();
+                                                    }}
+                                                    className="bookmark-btn"
+                                                    aria-label={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                                                    title={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+                                                >
+                                                    {bookmark.isBookmarked ? '✓' : '+'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Genres below the image */}
+                                    {sections.find(section => section.title === 'Genres') && (
+                                        <div className="mt-3 text-start">
+                                            {sections.find(section => section.title === 'Genres').content}
                                         </div>
                                     )}
-                                </div>
-                                
-                                {/* Genres below the image */}
-                                {resolvedSections.find(section => section.title === 'Genres') && (
-                                    <div className="mt-3 text-start">
-                                        {resolvedSections.find(section => section.title === 'Genres').content}
-                                    </div>
-                                )}
-                            </Col>
+                                </Col>
 
-                            {/* Info Column - Only Overview and other sections (not Genres) */}
-                            <Col md={8}>
-                                {/* Sections excluding Genres */}
-                                {resolvedSections.filter(section => section.title !== 'Genres').map((section, index) => (
-                                    <div key={index} className="mb-3">
-                                        {section.title && <h5>{section.title}</h5>}
-                                        {section.content}
-                                    </div>
-                                ))}
-                            </Col>
-                        </Row>
-                    </Card.Body>
-                </Card>
-            </Container>
+                                {/* Info Column - Only Overview and other sections (not Genres) */}
+                                <Col md={8}>
+                                    {/* Sections excluding Genres */}
+                                    {sections.filter(section => section.title !== 'Genres').map((section, index) => (
+                                        <div key={index} className="mb-3">
+                                            {section.title && <h5>{section.title}</h5>}
+                                            {section.content}
+                                        </div>
+                                    ))}
+                                </Col>
+                            </Row>
+                        </Card.Body>
+                    </Card>
+                </Container>
 
-            {/* Additional Content */}
-            {children}
-        </div>
+                {/* Additional Content */}
+                {children}
+            </div>
+        </Link>
     );
 }
 
