@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import Rating from './Rating';
 import BookmarkButton from './BookmarkButton';
-
 /**
  * MainDisplay Component - Versatile layout for detail pages
  * 
@@ -29,12 +29,17 @@ function MainDisplay({
     sections = [],
     bookmark,
     customAction,
-    children
+    children,
+    disableLink = false, // Disables the link wrapper
 }) {
     // Prefer explicitly provided props but fall back to item fields when present
     const resolvedImage = image ?? item?.image ?? item?.poster ?? item?.posterUrl;
     const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title';
     const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null;
+
+    // Add image fallback state and handler for broken image URLs
+    const [imageSrc, setImageSrc] = useState(resolvedImage || defaultImage);
+    const handleImageError = () => setImageSrc(defaultImage);
 
     const resolvedSubtitle = subtitle ?? (() => {
         if (!item) return subtitle;
@@ -126,9 +131,10 @@ function MainDisplay({
                                 <Col md={4} className="text-center">
                                     <div style={{ position: 'relative' }}>
                                         <img
-                                            src={resolvedImage}
+                                            src={imageSrc} // Use imageSrc instead of resolvedImage
                                             alt={resolvedTitle || 'Image'}
                                             className="img-fluid rounded poster-image"
+                                            onError={handleImageError} // Add onError handler
                                         />
 
                                         {/* Bookmark Button */}
