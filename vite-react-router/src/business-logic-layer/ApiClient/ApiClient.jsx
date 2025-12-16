@@ -263,6 +263,16 @@ const apiv2 = {
 			...options,
 		}).then(mapTitles),
 
+		// GET: /titles/featured
+		/**
+		 * Retrieves a featured title.
+		 * Returns a curated highlighted title.
+		 *
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object|null>} Mapped title object or null if not found
+		 */
+		featured: (options) => callV2('titles/featured', options).then(mapTitles),
+
 	},
 
 
