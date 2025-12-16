@@ -2,8 +2,6 @@ import { Route, Routes } from 'react-router-dom';
 import Home from '../pages/Home';
 import About from '../pages/About';
 import Navbar from '../components/Navbar';
-import Signin from '../pages/Signin';
-import Signup from '../pages/Signup';
 import NotFound from '../pages/NotFound';
 import User from '../pages/User';
 import UserRatingsList from '../pages/UserRatingsList';
@@ -41,11 +39,6 @@ function AppRoutes() {
         <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Route>
-
-
-      //pages without navbar goes here
-      <Route path="/signin" element={<Signin />} />
-      <Route path="/signup" element={<Signup />} />
     </Routes>
   );
 }
