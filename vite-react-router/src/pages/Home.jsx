@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import MainDisplay from '../components/MainDisplay';
-import SignInOffcanvas from '../components/SignInOffcanvas';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 
 function Home() {
-  const [showAuth, setShowAuth] = useState(false);
   const [featuredTitle, setFeaturedTitle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [individuals, setIndividuals] = useState([]);
@@ -73,9 +71,7 @@ function Home() {
           .filter((t) =>
             featuredTitle ? String(t.id) !== String(featuredTitle.id) : true
           )
-          .slice()
-          // sort by rating (should already be sorted, but ensure)
-          .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+          .slice();
 
         setTopRatedTitles(top);
       } catch (err) {
@@ -100,7 +96,7 @@ function Home() {
         const list = await mdb.apiv2.individuals.popular({ page: 1, pageSize: 10 });
         if (cancelled) return;
 
-        setIndividuals(list || []);
+        setIndividuals([]);
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to load popular individuals', err);
@@ -118,12 +114,6 @@ function Home() {
     return (
       <div style={{ padding: '1rem' }}>
         <p>Loading...</p>
-        <SignInOffcanvas
-          show={showAuth}
-          onClose={() => setShowAuth(false)}
-          onSignIn={() => setShowAuth(false)}
-          onSignUp={() => setShowAuth(false)}
-        />
       </div>
     );
   }
@@ -132,17 +122,12 @@ function Home() {
     return (
       <div style={{ padding: '1rem' }}>
         <p>No titles found.</p>
-        <SignInOffcanvas
-          show={showAuth}
-          onClose={() => setShowAuth(false)}
-          onSignIn={() => setShowAuth(false)}
-          onSignUp={() => setShowAuth(false)}
-        />
       </div>
     );
   }
 
   // Get rating or default to 0
+  // On the apiV2 featured titles should always return a rating, but just in case
   const titleRating = featuredTitle.rating ?? 0;
 
   // Construct header data for MainDisplay
