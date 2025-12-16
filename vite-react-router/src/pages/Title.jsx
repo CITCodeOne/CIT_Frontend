@@ -73,12 +73,25 @@ export default function Title() {
         const token = getStoredToken();
         const options = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
+        console.log('handleBookmarkToggle ->', { userId, pageIdNum, newState, tokenExists: !!token });
+
         try {
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, pageIdNum, options);
+                const addRes = await mdb.apiv2.user.addBookmark(userId, pageIdNum, options);
+                console.log('addBookmark response:', addRes);
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, pageIdNum, options);
+                const delRes = await mdb.apiv2.user.removeBookmark(userId, pageIdNum, options);
+                console.log('removeBookmark response:', delRes);
+
+                // Verify server-side deletion by fetching bookmarks
+                try {
+                    const bk = await mdb.apiv2.user.getBookmarks(userId, options);
+                    console.log('bookmarks after delete:', bk);
+                } catch (verErr) {
+                    console.warn('Failed to fetch bookmarks for verification:', verErr);
+                }
             }
+
             setIsBookmarked(newState);
         } catch (err) {
             console.error('Bookmark toggle failed:', err);
