@@ -10,6 +10,7 @@ import Title from '../pages/Title';
 import Individual from '../pages/Individual';
 import Search from '../pages/Search';
 import Page from '../pages/Page';
+import Test from '../Tests/TestApiClient';
 
 function AppRoutes() {
   return (
@@ -38,6 +39,7 @@ function AppRoutes() {
         // Other minor pages
         <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
+        <Route path="test" element={<Test />} />
       </Route>
     </Routes>
   );
