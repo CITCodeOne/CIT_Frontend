@@ -42,7 +42,7 @@ function Home() {
       try {
         const title = await mdb.apiv2.titles.featured();
         if (cancelled) return;
-        
+
         setFeaturedTitle(title);
       } catch (err) {
         if (cancelled) return;
@@ -68,9 +68,7 @@ function Home() {
         const list = await mdb.apiv2.titles.top('movie', { page: 1, pageSize: 10 });
         if (cancelled) return;
 
-        const arr = Array.isArray(list) ? list : [];
-
-        const top = arr
+        const top = list
           // exclude the featured title if we have one
           .filter((t) =>
             featuredTitle ? String(t.id) !== String(featuredTitle.id) : true
