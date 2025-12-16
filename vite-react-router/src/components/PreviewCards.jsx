@@ -173,7 +173,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }
 
   return (
-    <nav to={`/page/${item.pageId}`} className="text-decoration-none">
+    <Link to={`/page/${item.pageId}`} className="text-decoration-none">
       <div className="card h-100 shadow-sm border-0" style={{ minHeight: '475px' }}>
         <img
           src={imageSrc}
@@ -195,6 +195,6 @@ export default function PreviewCards({ item = {}, focusKey }) {
           </p>
         </div>
       </div>
-    </nav>
+    </Link>
   );
 }

@@ -289,7 +289,7 @@ function Title() {
             badges={badges}
             sections={sections}
             bookmark={{
-                itemId: title.id,
+                itemId: title.pageId,
                 isBookmarked: isBookmarked,
                 onToggle: toggleBookmark
             }}
