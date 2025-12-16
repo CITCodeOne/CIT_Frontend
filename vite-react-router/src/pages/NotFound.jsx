@@ -16,7 +16,6 @@ function NotFound() {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                minHeight: '100vh',
                                 textAlign: 'center',
                                 padding: '1.5rem',
                         }}
@@ -29,6 +28,7 @@ function NotFound() {
                                         margin: '0 0 1rem 0',
                                         fontFamily: 'monospace',
                                         lineHeight: '1',
+                                        overflowY: 'hidden',
                                 }}
                         >
                                 {asciiArt}
