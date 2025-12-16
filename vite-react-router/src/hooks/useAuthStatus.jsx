@@ -43,6 +43,15 @@ export default function useAuthStatus() {
                         return;
                 }
 
+                const expMs = claims?.exp ? Number(claims.exp) * 1000 : null;
+                if (expMs && expMs <= Date.now()) {
+                        window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+                        setIsSignedIn(false);
+                        setUsername('');
+                        setUserId('');
+                        return;
+                }
+
                 setIsSignedIn(true);
                 setUsername(deriveUsername(claims));
                 setUserId(deriveUserId(claims));
