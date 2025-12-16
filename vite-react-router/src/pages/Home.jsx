@@ -40,31 +40,13 @@ function Home() {
 
     (async () => {
       try {
-        const list = await mdb.apiv2.titles.list({ page: 1, pageSize: 10 });
+        const title = await mdb.apiv2.titles.featured();
         if (cancelled) return;
-
-        // Handle both array and paged object shapes: { items: [...] } / { data: [...] }
-        const arr = Array.isArray(list)
-          ? list
-          : list?.items ??
-          list?.data ??
-          [];
-
-        // Try to find movies first (mediaType = movie)
-        const movies = arr.filter((t) => {
-          const mt =
-            (t.mediaType).toString().toLowerCase();
-          return mt === 'movie';
-        });
-
-
-        // Prefer first movie; if none, just take the first title
-        const selected = movies[0] ?? arr[0] ?? null;
-
-        setFeaturedTitle(selected);
+        
+        setFeaturedTitle(title);
       } catch (err) {
         if (cancelled) return;
-        console.error('Failed to load featured movie', err);
+        console.error('Failed to load featured title', err);
         setFeaturedTitle(null);
       } finally {
         if (!cancelled) setLoading(false);
