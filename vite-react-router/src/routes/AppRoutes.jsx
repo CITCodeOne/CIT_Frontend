@@ -26,8 +26,10 @@ function AppRoutes() {
         <Route path="/user/:userId/bookmarks" element={<UserBookmarksList />} />
 
         // Titles and individual pages
-        <Route path="/title/:titleId" element={<Title />} />
-        <Route path="/individual/:individualId" element={<Individual />} />
+        <Route path="/page/:pageId" element={<Page />}>
+          <Route path="/title/:titleId" element={<Title />} />
+          <Route path="/individual/:individualId" element={<Individual />} />
+        </Route>
 
         // Search page
         <Route path="/search" element={<Search />} />
