@@ -64,7 +64,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
             try {
                 setLoadingCast(true);
                 const castData = await mdb.apiv2.titles.getIndividuals(titleId);
-                
+
                 // Map to format expected by MediaCard component
                 const formattedCast = Array.isArray(castData) ? castData.map(person => ({
                     id: person.id,
@@ -72,7 +72,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
                     character: person.character || null,
                     profilePath: person.profilePath || placeholderImage
                 })) : [];
-                
+
                 setCast(formattedCast);
             } catch (err) {
                 console.error('Failed to load cast:', err);
@@ -93,7 +93,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
             try {
                 setLoadingReviews(true);
                 const ratingsData = await mdb.apiv2.titles.getRatings(titleId);
-                
+
                 // Map to format expected by UserCard component
                 const formattedReviews = Array.isArray(ratingsData) ? ratingsData.map((rating, index) => ({
                     id: rating.userId || index,
@@ -104,7 +104,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
                     authorAvatar: placeholderImage,
                     time: rating.time
                 })) : [];
-                
+
                 setReviews(formattedReviews);
             } catch (err) {
                 console.error('Failed to load reviews:', err);
@@ -118,15 +118,16 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
     }, [titleId]);
 
     // 4. Check if title is bookmarked (if user is logged in)
+    // TODO: Currently calls with titleId which is wrong. The correct call would be to check the bookmark by pageId
     useEffect(() => {
         const checkBookmarkStatus = async () => {
             if (!isLoggedIn || !userId || !titleId) {
                 setIsBookmarked(false);
                 return;
             }
-            
+
             try {
-                const bookmark = await mdb.apiv2.user.getBookmark(userId, titleId);
+                const bookmark = await mdb.apiv2.user.getBookmark(userId, titleId); // FIX: should be pageId
                 setIsBookmarked(!!bookmark);
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);
@@ -145,7 +146,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
                 setUserRating(0);
                 return;
             }
-            
+
             try {
                 setLoadingUserRating(true);
                 const rating = await mdb.apiv2.user.getRating(userId, titleId);
@@ -191,7 +192,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false)
 
         try {
             const review = reviewText && reviewText.trim() ? reviewText.trim() : null;
-            
+
             if (userRating === 0) {
                 // Add new rating
                 await mdb.apiv2.user.addRating(userId, titleId, newRating, review);
