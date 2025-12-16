@@ -45,7 +45,7 @@ function Title() {
     const [submitStatus, setSubmitStatus] = useState(null);
     const [tmdbPoster, setTmdbPoster] = useState(null);
     const [castPhotos, setCastPhotos] = useState({});
-    const [tmdbSimilarTitles, setTmdbSimilarTitles] = useState([]);
+    const [mdbSimilarTitles, setMdbSimilarTitles] = useState([]);
     const [loadingSimilar, setLoadingSimilar] = useState(false);
     const [similarBookmarks, setSimilarBookmarks] = useState({});
     const [similarPosters, setSimilarPosters] = useState({});
@@ -85,7 +85,7 @@ function Title() {
         fetchCastPhotos();
     }, [cast]);
 
-    // Fetch similar titles (backend API with TMDB fallback)
+    // Fetch similar titles (backend API only)
     useEffect(() => {
         const fetchSimilarTitles = async () => {
             if (!titleId) return;
@@ -95,34 +95,13 @@ function Title() {
                 const backendSimilar = await mdb.apiv2.titles.getSimilar(titleId);
 
                 if (backendSimilar && backendSimilar.length > 0) {
-                    setTmdbSimilarTitles(backendSimilar.slice(0, 20));
+                    setMdbSimilarTitles(backendSimilar.slice(0, 20));
                 } else {
-                    if (title?.name && title?.mediaType) {
-                        const tmdbSimilar = await tmdb.getSimilarTitles(
-                            title.name,
-                            title.mediaType,
-                            title.startYear,
-                            20
-                        );
-                        setTmdbSimilarTitles(tmdbSimilar || []);
-                    }
+                    setMdbSimilarTitles([]);
                 }
             } catch (err) {
                 console.error('Error fetching similar titles:', err);
-                if (title?.name && title?.mediaType) {
-                    try {
-                        const tmdbSimilar = await tmdb.getSimilarTitles(
-                            title.name,
-                            title.mediaType,
-                            title.startYear,
-                            20
-                        );
-                        setTmdbSimilarTitles(tmdbSimilar || []);
-                    } catch (tmdbErr) {
-                        console.error('TMDB fallback failed:', tmdbErr);
-                        setTmdbSimilarTitles([]);
-                    }
-                }
+                setMdbSimilarTitles([]);
             } finally {
                 setLoadingSimilar(false);
             }
@@ -134,13 +113,13 @@ function Title() {
     // Fetch TMDB posters for similar titles
     useEffect(() => {
         const fetchSimilarPosters = async () => {
-            if (tmdbSimilarTitles.length === 0) {
+            if (mdbSimilarTitles.length === 0) {
                 setSimilarPosters({});
                 return;
             }
 
             try {
-                const posterPromises = tmdbSimilarTitles.map(async (similar) => {
+                const posterPromises = mdbSimilarTitles.map(async (similar) => {
                     try {
                         // If the similar title already has a poster from TMDB API, use it
                         if (similar.poster) {
@@ -172,24 +151,24 @@ function Title() {
         };
 
         fetchSimilarPosters();
-    }, [tmdbSimilarTitles]);
+    }, [mdbSimilarTitles]);
 
     // Check bookmark status for similar titles
     useEffect(() => {
         const checkSimilarBookmarks = async () => {
-            if (!isSignedIn || !userId || tmdbSimilarTitles.length === 0) {
+            if (!isSignedIn || !userId || mdbSimilarTitles.length === 0) {
                 setSimilarBookmarks({});
                 return;
             }
 
             try {
                 const bookmarkChecks = await Promise.all(
-                    tmdbSimilarTitles.map(async (similar) => {
+                    mdbSimilarTitles.map(async (similar) => {
                         try {
-                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.id);
-                            return { id: similar.id, isBookmarked };
+                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.pageId);
+                            return { id: similar.pageId, isBookmarked };
                         } catch (err) {
-                            return { id: similar.id, isBookmarked: false };
+                            return { id: similar.pageId, isBookmarked: false };
                         }
                     })
                 );
@@ -205,7 +184,7 @@ function Title() {
         };
 
         checkSimilarBookmarks();
-    }, [isSignedIn, userId, tmdbSimilarTitles]);
+    }, [isSignedIn, userId, mdbSimilarTitles]);
 
     const handleSimilarTitleBookmark = async (similarTitleId, newState) => {
         if (!isSignedIn || !userId) {
@@ -215,11 +194,11 @@ function Title() {
 
         try {
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, similarTitleId);
+                await mdb.apiv2.user.addBookmark(userId, similarTitleId.pageId);
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, similarTitleId);
+                await mdb.apiv2.user.removeBookmark(userId, similarTitleId.pageId);
             }
-            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState }));
+            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId.pageId]: newState }));
         } catch (err) {
             console.error('Error toggling similar title bookmark:', err);
         }
@@ -374,12 +353,12 @@ function Title() {
                             <div className="text-center py-4">
                                 <Spinner animation="border" size="sm" />
                             </div>
-                        ) : tmdbSimilarTitles.length === 0 ? (
+                        ) : mdbSimilarTitles.length === 0 ? (
                             <p className="text-muted">No similar titles available.</p>
                         ) : (
                             <div>
                                 {makeCarousel(
-                                    tmdbSimilarTitles.map(similar => ({
+                                    mdbSimilarTitles.map(similar => ({
                                         ...similar,
                                         title: similar.name,
                                         subtitle: similar.startYear ? `(${similar.startYear})` : null,
