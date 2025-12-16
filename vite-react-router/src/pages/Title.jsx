@@ -7,7 +7,7 @@ import useAuthStatus from '../hooks/useAuthStatus'; // to manage user authentica
 import BookmarkButton from '../components/BookmarkButton'; // to handle bookmarking functionality
 
 export default function Title() {
-    const { titleId } = useParams();
+    const { titleId, pageId } = useParams();
     const [data, setData] = useState(null);
     const [titlecast, setTitleCast] = useState([]);
     const [similartitles, setSimilarTitles] = useState([]);
@@ -20,21 +20,33 @@ export default function Title() {
         let cancelled = false;
         (async () => {
             try {
-                const title = await mdb.apiv2.titles.getById(titleId);
+                // Fetch page data first
+                const pageData = await mdb.apiv2.page.getById(pageId);
                 if (cancelled) return;
-                setData(title);
+                console.log('Fetched page data:', pageData);
 
-                if (isSignedIn && userId && title.pageId) {
+                // Fetch full title data using tconst
+                const title = await mdb.apiv2.titles.getById(pageData.tconst.trim());
+                if (cancelled) return;
+
+                // Merge pageId into title data
+                setData({ ...title, pageId: pageData.pageId });
+                console.log('Fetched title data:', { ...title, pageId: pageData.pageId });
+
+                // Use pageId from pageData for bookmark check
+                const pageIdNum = Number(pageData.pageId);
+                if (isSignedIn && userId && !isNaN(pageIdNum)) {
                     try {
-                        await mdb.apiv2.user.getBookmark(userId, title.pageId); 
+                        await mdb.apiv2.user.getBookmark(userId, pageIdNum);
                         setIsBookmarked(true);
                     } catch {
                         setIsBookmarked(false);
                     }
                 }
 
-                const inds = await mdb.apiv2.titles.getIndividuals(titleId);
-                const sim = await mdb.apiv2.titles.getSimilar(titleId);
+                // Use tconst for cast/similar
+                const inds = await mdb.apiv2.titles.getIndividuals(pageData.tconst.trim());
+                const sim = await mdb.apiv2.titles.getSimilar(pageData.tconst.trim());
                 if (cancelled) return;
                 setTitleCast(inds || []);
                 setSimilarTitles(sim || []);
@@ -44,24 +56,32 @@ export default function Title() {
                 if (!cancelled) setLoading(false);
             }
         })();
+
+
         return () => { cancelled = true; };
-    }, [titleId, isSignedIn, userId]);
+    }, [titleId, pageId, isSignedIn, userId]);
 
     const handleBookmarkToggle = async (newState) => {
         if (!isSignedIn || !userId || !data?.pageId) return;
 
+        const pageIdNum = Number(data.pageId);
+        if (isNaN(pageIdNum) || data.pageId === 'n/a') {
+            console.error('Invalid pageId:', data.pageId);
+            return;
+        }
+
         try {
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, data.pageId); // Use addBookmark API
+                await mdb.apiv2.user.addBookmark(userId, pageIdNum);
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, data.pageId);
+                await mdb.apiv2.user.removeBookmark(userId, pageIdNum);
             }
             setIsBookmarked(newState);
         } catch (err) {
             console.error('Bookmark toggle failed:', err);
-            // Optionally show toast or error message
         }
     };
+
 
     if (loading) return <div>Loading…</div>;
     if (!data) return <div>Not found</div>;
@@ -75,16 +95,22 @@ export default function Title() {
 
     return (
         <div className="p-3">
+            {console.log('Bookmark condition check:', {
+                isSignedIn,
+                pageId: data?.pageId,
+                notNa: data?.pageId !== 'n/a',
+                isNumber: !isNaN(Number(data?.pageId)),
+                overall: isSignedIn && data?.pageId && data.pageId !== 'n/a' && !isNaN(Number(data.pageId))
+            })}
+
             <MainDisplay
                 item={data}
                 sections={sections}
+                disableLink={true}
                 bookmark={
-                    isSignedIn ? {
-                        itemId: data.pageId,
-                        isBookmarked,
-                        onToggle: handleBookmarkToggle,
-                    } 
-                    : undefined
+                    isSignedIn && data?.pageId && data.pageId !== 'n/a' && !isNaN(Number(data.pageId))
+                        ? { isBookmarked, onToggle: handleBookmarkToggle }
+                        : undefined  // Hide button if pageId invalid
                 }
             />
             {titlecast.length > 0 && (
