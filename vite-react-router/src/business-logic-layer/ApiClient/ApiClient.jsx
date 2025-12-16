@@ -415,6 +415,20 @@ const apiv2 = {
 			...options,
 		}),
 	},
+	/**
+ * Page endpoints for retrieving page resources.
+ */
+	page: {
+		// GET: /page/{pageId}
+		/**
+		 * Retrieves a page by id (raw DTO).
+		 *
+		 * @param {string|number} pageId - The id of the page
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object|null>} Page DTO or null
+		 */
+		getById: (pageId, options) => callV2(`pages/${pageId}`, options),
+	},
 
 	/**
 	 * User management endpoints for profile data, bookmarks, and ratings.
@@ -510,41 +524,41 @@ const apiv2 = {
 		 * @returns {Promise<Object|null>} Rating object or null if not found
 		 */
 		getRating: (userId, titleId, options) => callV2(`users/${userId}/ratings/${titleId}`, options).then(mapSingleRating),
-	// POST: /users/{userId}/ratings
-	/**
-	 * Adds a new rating (and optional review) for a user.
-	 * Creates a rating association between the user and a title.
-	 *
-	 * @param {string|number} userId - The unique identifier of the user
-	 * @param {string|number} titleId - The identifier of the title to rate
-	 * @param {number} rating - The rating value (typically 1-5 or 1-10 scale)
-	 * @param {string} review - Optional review text content
-	 * @param {Object} options - Additional fetch options
-	 * @returns {Promise<Object>} Created rating object
-	 */
-	addRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings`, {
-		method: 'POST',
-		body: review ? { titleId, rating, review } : { titleId, rating },
-		...options,
-	}),
+		// POST: /users/{userId}/ratings
+		/**
+		 * Adds a new rating (and optional review) for a user.
+		 * Creates a rating association between the user and a title.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {string|number} titleId - The identifier of the title to rate
+		 * @param {number} rating - The rating value (typically 1-5 or 1-10 scale)
+		 * @param {string} review - Optional review text content
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object>} Created rating object
+		 */
+		addRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings`, {
+			method: 'POST',
+			body: review ? { titleId, rating, review } : { titleId, rating },
+			...options,
+		}),
 
-	// PUT: /users/{userId}/ratings/{titleId}
-	/**
-	 * Updates an existing rating (and optional review) for a user.
-	 * Modifies the rating value and/or review text for a title that the user has already rated.
-	 *
-	 * @param {string|number} userId - The unique identifier of the user
-	 * @param {string|number} titleId - The identifier of the title being rated
-	 * @param {number} rating - The new rating value
-	 * @param {string} review - Optional review text content
-	 * @param {Object} options - Additional fetch options
-	 * @returns {Promise<Object>} Updated rating object
-	 */
-	updateRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings/${titleId}`, {
-		method: 'PUT',
-		body: review ? { rating, review } : { rating },
-		...options,
-	}),		// DELETE: /users/{userId}/ratings/{titleId}
+		// PUT: /users/{userId}/ratings/{titleId}
+		/**
+		 * Updates an existing rating (and optional review) for a user.
+		 * Modifies the rating value and/or review text for a title that the user has already rated.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {string|number} titleId - The identifier of the title being rated
+		 * @param {number} rating - The new rating value
+		 * @param {string} review - Optional review text content
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Object>} Updated rating object
+		 */
+		updateRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings/${titleId}`, {
+			method: 'PUT',
+			body: review ? { rating, review } : { rating },
+			...options,
+		}),		// DELETE: /users/{userId}/ratings/{titleId}
 		/**
 		 * Removes a rating for a user.
 		 * Deletes the rating association between the user and a title.
@@ -570,7 +584,7 @@ const apiv2 = {
 		 * @returns {Promise<Object>} Response containing image data
 		 */
 		//getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
-		
+
 		// PUT: /users/{userId}/profile-image
 		/**
 		 * Updates or sets a user's profile image.
