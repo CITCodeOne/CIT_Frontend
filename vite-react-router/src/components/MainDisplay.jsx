@@ -19,6 +19,7 @@ import BookmarkButton from './BookmarkButton';
  * @param {ReactNode} children - Additional content rendered below main card
  */
 function MainDisplay({
+    item,
     image,
     title,
     subtitle,
@@ -29,6 +30,19 @@ function MainDisplay({
     customAction,
     children
 }) {
+    // Prefer explicitly provided props but fall back to item fields when present
+    const resolvedImage = image ?? item?.image ?? item?.poster ?? item?.posterUrl;
+    const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title';
+    const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null;
+
+    const resolvedSubtitle = subtitle ?? (() => {
+        if (!item) return subtitle;
+        const mediaType = item.mediaType ?? item.type;
+        const formattedDate = item.releaseDate ? new Date(item.releaseDate).toLocaleDateString('da-DK') : null;
+        return [mediaType, formattedDate].filter(Boolean).join(' · ');
+    })();
+
+    const resolvedSections = sections;
     return (
         <div className="title-page-background">
             {/* Main Display Card */}
@@ -38,11 +52,11 @@ function MainDisplay({
                         {/* Title, Year, Runtime, and Rating Row */}
                         <div className="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h2 className="mb-1">{title || 'No Title'}</h2>
-                                {(subtitle || badges.length > 0) && (
+                                    <h2 className="mb-1">{resolvedTitle}</h2>
+                                    {(resolvedSubtitle || badges.length > 0) && (
                                     <div className="text-muted" style={{ fontSize: '1.1rem' }}>
-                                        {subtitle && <span>{subtitle}</span>}
-                                        {subtitle && badges.length > 0 && <span> · </span>}
+                                            {resolvedSubtitle && <span>{resolvedSubtitle}</span>}
+                                            {resolvedSubtitle && badges.length > 0 && <span> · </span>}
                                         {badges.map((badge, index) => (
                                             <span key={index}>
                                                 {badge.text}
@@ -65,16 +79,16 @@ function MainDisplay({
                                         {customAction.label}
                                     </Button>
                                 </div>
-                            ) : rating !== undefined && rating !== null ? (
+                            ) : resolvedRating !== undefined && resolvedRating !== null ? (
                                 <div className="text-end">
                                     <div className="d-flex align-items-center gap-2 mb-2">
                                         <span className="rating-star">★</span>
                                         <div>
                                             <div className="d-flex align-items-baseline gap-1">
                                                 <strong className="rating-value">
-                                                    {rating > 0 ? rating.toFixed(1) : 'N/A'}
+                                                        {resolvedRating > 0 ? resolvedRating.toFixed(1) : 'N/A'}
                                                 </strong>
-                                                {rating > 0 && <span className="text-muted">/10</span>}
+                                                    {resolvedRating > 0 && <span className="text-muted">/10</span>}
                                             </div>
                                             <div className="rating-label">Rating</div>
                                         </div>
@@ -110,9 +124,9 @@ function MainDisplay({
                             {/* Image and Genres Column */}
                             <Col md={4} className="text-center">
                                 <div style={{ position: 'relative' }}>
-                                    <img
-                                        src={image}
-                                        alt={title || 'Image'}
+                                        <img
+                                            src={resolvedImage}
+                                            alt={resolvedTitle || 'Image'}
                                         className="img-fluid rounded poster-image"
                                     />
                                     
@@ -135,9 +149,9 @@ function MainDisplay({
                                 </div>
                                 
                                 {/* Genres below the image */}
-                                {sections.find(section => section.title === 'Genres') && (
+                                {resolvedSections.find(section => section.title === 'Genres') && (
                                     <div className="mt-3 text-start">
-                                        {sections.find(section => section.title === 'Genres').content}
+                                        {resolvedSections.find(section => section.title === 'Genres').content}
                                     </div>
                                 )}
                             </Col>
@@ -145,7 +159,7 @@ function MainDisplay({
                             {/* Info Column - Only Overview and other sections (not Genres) */}
                             <Col md={8}>
                                 {/* Sections excluding Genres */}
-                                {sections.filter(section => section.title !== 'Genres').map((section, index) => (
+                                {resolvedSections.filter(section => section.title !== 'Genres').map((section, index) => (
                                     <div key={index} className="mb-3">
                                         {section.title && <h5>{section.title}</h5>}
                                         {section.content}

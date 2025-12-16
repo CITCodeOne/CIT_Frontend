@@ -3,6 +3,7 @@ import MainDisplay from '../components/MainDisplay';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
+import useAuthStatus from '../hooks/useAuthStatus';
 
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
@@ -96,7 +97,7 @@ function Home() {
         const list = await mdb.apiv2.individuals.popular({ page: 1, pageSize: 10 });
         if (cancelled) return;
 
-        setIndividuals([]);
+        setIndividuals(list || []);
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to load popular individuals', err);
@@ -126,28 +127,6 @@ function Home() {
     );
   }
 
-  // Get rating or default to 0
-  // On the apiV2 featured titles should always return a rating, but just in case
-  const titleRating = featuredTitle.rating ?? 0;
-
-  // Construct header data for MainDisplay
-  const header = {
-    image: featuredTitle.image,
-    title: featuredTitle.name,
-    subtitle: [
-      featuredTitle.mediaType,
-      featuredTitle.releaseDate
-        ? new Date(featuredTitle.releaseDate).toLocaleDateString('da-DK')
-        : '',
-    ]
-      .filter(Boolean)
-      .join(' · '),
-    rating: titleRating,
-    showBookmark: true,
-    isBookmarked: isFeaturedBookmarked,
-    onBookmarkToggle: handleToggleFeaturedBookmark,
-  };
-
   const sections = featuredTitle.plot
     ? [{ content: formatPlotPre(featuredTitle.plot) }]
     : [];
@@ -156,7 +135,14 @@ function Home() {
     <div style={{ padding: '1rem' }}>
       <h2 style={{ margin: '0 0 12px 0' }}>Today&apos;s top pick</h2>
 
-      <MainDisplay header={header} metadata={[]} sections={sections} />
+      <MainDisplay
+        item={featuredTitle}
+        sections={sections}
+        bookmark={{
+          isBookmarked: isFeaturedBookmarked,
+          onToggle: handleToggleFeaturedBookmark,
+        }}
+      />
 
       {/* Top rated titles */}
       {topRatedTitles.length > 0 && (
