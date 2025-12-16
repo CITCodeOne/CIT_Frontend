@@ -96,9 +96,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   useEffect(() => {
     // Fetch TMDB data for contributors (items without mediaType but with name)
     if (item.name && !item.mediaType && !item.media_type) {
-      console.log('Fetching TMDB for:', item.name);
       tmdbApi.searchPerson(item.name).then(data => {
-        console.log('TMDB data:', data);
         if (data.results && data.results.length > 0) {
           // Default to the first result from TMDB and enrich with person details
           const result = data.results[0];
@@ -110,7 +108,6 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
           // Fetch full person details
           tmdbApi.getPerson(result.id).then(personData => {
-            console.log('Person details:', personData);
 
             const topCredit = personData?.combined_credits?.cast?.[0] || null;
             const topCreditRole = topCredit?.character || null;
