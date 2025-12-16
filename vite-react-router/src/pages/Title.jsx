@@ -4,6 +4,7 @@ import mdb from '../business-logic-layer/ApiClient/ApiClient'; // to access imag
 import MainDisplay from '../components/MainDisplay'; // to display title info
 import makeCarousel from '../components/MakeCarousel'; // to create carousels for displaying cast and similar titles
 import useAuthStatus from '../hooks/useAuthStatus'; // to manage user authentication status
+import { getStoredToken } from '../components/ExtractJwtData';
 import BookmarkButton from '../components/BookmarkButton'; // to handle bookmarking functionality
 
 export default function Title() {
@@ -13,7 +14,6 @@ export default function Title() {
     const [similartitles, setSimilarTitles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isBookmarked, setIsBookmarked] = useState(false);
-
     const { isSignedIn, userId } = useAuthStatus();
 
     useEffect(() => {
@@ -62,19 +62,22 @@ export default function Title() {
     }, [titleId, pageId, isSignedIn, userId]);
 
     const handleBookmarkToggle = async (newState) => {
-        if (!isSignedIn || !userId || !data?.pageId) return;
+        if (!isSignedIn || !userId) return;
 
-        const pageIdNum = Number(data.pageId);
-        if (isNaN(pageIdNum) || data.pageId === 'n/a') {
-            console.error('Invalid pageId:', data.pageId);
+        const pageIdNum = Number(pageId ?? data?.pageId);
+        if (isNaN(pageIdNum)) {
+            console.error('Invalid pageId:', pageId, data?.pageId);
             return;
         }
 
+        const token = getStoredToken();
+        const options = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+
         try {
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, pageIdNum);
+                await mdb.apiv2.user.addBookmark(userId, pageIdNum, options);
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, pageIdNum);
+                await mdb.apiv2.user.removeBookmark(userId, pageIdNum, options);
             }
             setIsBookmarked(newState);
         } catch (err) {
