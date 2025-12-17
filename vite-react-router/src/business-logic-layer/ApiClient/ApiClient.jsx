@@ -289,19 +289,26 @@ const apiv2 = {
 			queryParams: { name: actorName },
 			...options,
 		}).then(mapIndividuals),
-		// GET: /individuals/search?name={name}
-		/**
-		 * Searches for individuals by name and returns their contributions to titles.
-		 * Performs case-insensitive partial matching. Returns all individuals if name is empty.
-		 *
-		 * @param {string} [name] - Name to search for (optional, returns all if empty)
-		 * @param {Object} options - Additional fetch options
-		 * @returns {Promise<Array>} Array of individual search results with contributions
-		 */
-		search: (name, options) => callV2('individuals/search', {
-			queryParams: name ? { name } : {},
-			...options,
-		}).then(mapIndividuals),
+		   // GET: /individuals/search
+		   /**
+			* Searches for individuals with flexible filters and sorting.
+			* Supports filtering by name (case-insensitive, partial match), birth year range, and sorting by name, birth year, rating, or popularity.
+			*
+			* @param {Object} parameters - Search parameters
+			* @param {string} [parameters.name] - Name to search for (partial, case-insensitive)
+			* @param {number} [parameters.minBirthYear] - Minimum birth year
+			* @param {number} [parameters.maxBirthYear] - Maximum birth year
+			* @param {string} [parameters.sortBy] - Sort field ('name', 'birthYear', 'rating', or default 'popularity')
+			* @param {boolean} [parameters.sortDescending] - Sort direction (true for descending)
+			* @param {number} [parameters.page] - Page number (default: 1)
+			* @param {number} [parameters.pageSize] - Items per page (default: 20)
+			* @param {Object} options - Additional fetch options
+			* @returns {Promise<Array>} Array of individual reference objects (not co-actors)
+			*/
+		   search: (parameters = {}, options) => callV2('individuals/search', {
+			   queryParams: parameters,
+			   ...options,
+		   }).then(mapIndividuals),
 	},
 
 	/**
