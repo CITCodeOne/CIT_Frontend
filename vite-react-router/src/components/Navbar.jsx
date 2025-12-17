@@ -8,12 +8,68 @@ import Form from 'react-bootstrap/Form';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
+import Stack from 'react-bootstrap/Stack';
+import Dropdown from 'react-bootstrap/Dropdown';
 import SignInOffcanvas from './SignInOffcanvas';
 import useAuthStatus from '../hooks/useAuthStatus';
+import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
 
 export default function NavbarLayout() {
         const [showSignIn, setShowSignIn] = useState(false);
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
+        const [searchTitlesResult, setSearchTitlesResult] = useState(null);
+        const [searchIndividualsResult, setSearchIndividualsResult] = useState(null);
+        const [showDropdown, setShowDropdown] = useState(false);
+
+        const handleSearchChange = async (e) => {
+                const query = e.target.value;
+                if (query.length === 0) {
+                        setSearchTitlesResult(null);
+                        setSearchIndividualsResult(null);
+                        setShowDropdown(false);
+                        return; // Skip empty queries
+                }
+                // Implement search logic here, e.g., update state or make API calls
+                console.log('Search query:', query);
+                searchTitles(query);
+                searchIndividuals(query);
+                setShowDropdown(true);
+        };
+
+        const searchTitles = async (query) => {
+                const searchParams = {
+                        name: query,	// Optional: search in title names
+                        page: 1,                  	// Optional: page number
+                        pageSize: 3              	// Optional: items per page
+                };
+
+                try {
+                        const results = await mdb.apiv2.titles.search(searchParams);
+                        console.log('Search results:', results);
+                        setSearchTitlesResult(results);
+                        // results will be an array of mapped Title objects
+                } catch (error) {
+                        console.error('Search failed:', error);
+                }
+        };
+
+        const searchIndividuals = async (query) => {
+                const searchParams = {
+                        name: query,	// Optional: search in title names
+                        page: 1,                  	// Optional: page number
+                        pageSize: 3              	// Optional: items per page
+                };
+
+                try {
+                        const results = await mdb.apiv2.individuals.search(searchParams);
+                        console.log('Search results:', results);
+                        setSearchIndividualsResult(results);
+                        // results will be an array of mapped Title objects
+                } catch (error) {
+                        console.error('Search failed:', error);
+                }
+        };
+
         return (
                 <div className="min-vh-100 d-flex flex-column">
                         <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow">
@@ -34,7 +90,7 @@ export default function NavbarLayout() {
                                                         <NavDropdown.Item as={Link} to="/about">About</NavDropdown.Item>
                                                 </NavDropdown>
                                                 <div className="d-flex justify-content-between flex-grow-1">
-                                                        <Form className="d-flex flex-grow-1">
+                                                        <Stack>
                                                                 <Form.Control
                                                                         id="navbar-search"
                                                                         name="search"
@@ -42,9 +98,44 @@ export default function NavbarLayout() {
                                                                         placeholder="Search"
                                                                         className="me-2"
                                                                         aria-label="Search"
+                                                                        onChange={(e) => handleSearchChange(e)}
                                                                 />
-                                                                <Button variant="outline-success Cbutton">Search</Button>
-                                                        </Form>
+                                                                <Dropdown>
+                                                                        <Dropdown.Menu show={showDropdown} className="Csearch-dropdown-menu">
+                                                                                <p className="px-3 mb-1 text-muted">Search Results</p>
+                                                                                {searchTitlesResult && searchTitlesResult.length > 0 && (
+                                                                                        <>
+                                                                                                <Dropdown.Header>Titles</Dropdown.Header>
+                                                                                                {searchTitlesResult.map((title) => (
+                                                                                                        <Dropdown.Item
+                                                                                                                as={Link}
+                                                                                                                to={`/page/${title.pageId}/title/${title.id}`}
+                                                                                                                key={title.id}
+                                                                                                        >
+                                                                                                                {title.name} ({title.year})
+                                                                                                        </Dropdown.Item>
+                                                                                                ))}
+                                                                                                <Dropdown.Divider />
+                                                                                        </>
+                                                                                )}
+                                                                                {searchIndividualsResult && searchIndividualsResult.length > 0 && (
+                                                                                        <>
+                                                                                                <Dropdown.Header>Individuals</Dropdown.Header>
+                                                                                                {searchIndividualsResult.map((individual) => (
+                                                                                                        <Dropdown.Item
+                                                                                                                as={Link}
+                                                                                                                to={`/page/${individual.pageId}/individual/${individual.id}`}
+                                                                                                                key={individual.id}
+                                                                                                        >
+                                                                                                                {individual.name}
+                                                                                                        </Dropdown.Item>
+                                                                                                ))}
+                                                                                        </>
+                                                                                )}
+                                                                        </Dropdown.Menu>
+                                                                </Dropdown>
+                                                        </Stack>
+                                                        <Button variant="outline-success Cbutton">Search</Button>
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
                                                                 {isSignedIn ? (
@@ -90,7 +181,7 @@ export default function NavbarLayout() {
                                 fluid
                                 className="flex-grow-1 py-3 ContainerCstyle overflow-auto"
                         >
-                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px'}}>
+                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px' }}>
                                         <Outlet />
                                 </div>
                         </Container>
