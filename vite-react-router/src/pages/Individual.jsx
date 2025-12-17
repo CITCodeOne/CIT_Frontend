@@ -292,6 +292,7 @@ function Individual() {
                                                                     borderRadius: '8px',
                                                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                                                 }}
+                                                                onError={(e) => { e.target.src = placeholderImage; }}
                                                             />
                                                         </div>
                                                     ))}
@@ -330,6 +331,7 @@ function Individual() {
                                                     src={title.image || title.poster || placeholderImage}
                                                     alt={title.name}
                                                     className="known-for-poster"
+                                                    onError={(e) => { e.target.src = placeholderImage; }}
                                                 />
                                                 
                                                 {/* Bookmark button */}
@@ -389,6 +391,7 @@ function Individual() {
                                             src={title.image || title.poster || placeholderImage}
                                             alt={title.name}
                                             className="filmography-thumbnail me-3"
+                                            onError={(e) => { e.target.src = placeholderImage; }}
                                         />
                                         <div>
                                             <h6 className="mb-0">{title.name}</h6>
