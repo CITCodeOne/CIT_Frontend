@@ -183,13 +183,18 @@ function MainDisplay({
         </div>
     );
 
-    return item?.pageId ? (
-        <Link to={`/page/${item.pageId}`} className="text-decoration-none">
-            {content}
-        </Link>
-    ) : (
-        content
-    );
+    // Only wrap with a Link for non-individual items that have a pageId.
+    // Wrapping Individual pages causes their children (which may have their own
+    // navigation handlers) to trigger double navigation.
+    if (item?.pageId && !isIndividual) {
+        return (
+            <Link to={`/page/${item.pageId}`} className="text-decoration-none">
+                {content}
+            </Link>
+        );
+    }
+
+    return content;
 }
 
 export default MainDisplay;
