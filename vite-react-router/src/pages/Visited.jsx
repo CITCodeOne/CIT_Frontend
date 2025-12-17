@@ -20,6 +20,13 @@ export default function Visited() {
 			setError("");
 			try {
 				const token = getStoredToken();
+				// endpoint is protected - require a token
+				if (!token) {
+					setError('Authentication required to view visits');
+					setVisits([]);
+					setLoading(false);
+					return;
+				}
 				const res = await mdb.apiv2.user.getVisits(targetUserId, { authToken: token });
 				const raw = Array.isArray(res) ? res.slice() : [];
 
