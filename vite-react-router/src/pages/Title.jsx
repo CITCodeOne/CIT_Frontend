@@ -125,7 +125,7 @@ function Title() {
             try {
                 const posterPromises = mdbSimilarTitles.map(async (similar) => {
                     try {
-                        // If the similar title already has a poster from TMDB API, use it
+                        // If the similar title already has a poster from MDB API, use it
                         if (similar.poster) {
                             return { id: similar.id, poster: similar.poster };
                         }
