@@ -99,10 +99,17 @@ export default function NavbarLayout() {
                                                                         className="me-2"
                                                                         aria-label="Search"
                                                                         onChange={(e) => handleSearchChange(e)}
-                                                                        onFocus={() => { if ((searchTitlesResult && searchTitlesResult.length>0) || (searchIndividualsResult && searchIndividualsResult.length>0)) setShowDropdown(true); }}
+                                                                        onFocus={() => {
+                                                                                if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
+                                                                        }}
                                                                 />
-                                                                <Dropdown show={showDropdown} onToggle={(nextShow) => setShowDropdown(nextShow)}>
-                                                                        <Dropdown.Menu className="Csearch-dropdown-menu">
+                                                                {/* Dropdown for search results
+                                                                        The Menu is shown dependent on the showDropdown state
+                                                                        the rootCloseEvent is set to mousedown to close the dropdown when clicking outside
+                                                                        the onToggle updates the showDropdown state and is required for rootCloseEvent to work when controlling visibility manually
+                                                                */}
+                                                                <Dropdown show={showDropdown} onToggle={(next) => setShowDropdown(next)} className="Csearch-dropdown"> {/* NOTE: Use show and onToggle to control visibility */}
+                                                                        <Dropdown.Menu rootCloseEvent="mousedown" className="Csearch-dropdown-menu"> {/* NOTE: Use rootCloseEvent to close on outside click */}
                                                                                 <p className="px-3 mb-1 text-muted">Search Results</p>
                                                                                 {searchTitlesResult && searchTitlesResult.length > 0 && (
                                                                                         <>
