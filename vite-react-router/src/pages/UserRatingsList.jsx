@@ -12,7 +12,7 @@ export default function UserRatingsList() {
     const isOwnProfile = userId === loggedInUserId;
     const isLoggedIn = isOwnProfile;
 
-    // (ListManager removed)
+
 
     // dummy ratings list
     const [ratedTitles, setRatedTitles] = useState([
