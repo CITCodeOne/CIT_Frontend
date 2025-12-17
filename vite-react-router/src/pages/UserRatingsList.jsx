@@ -96,7 +96,7 @@ export default function UserRatingsList() {
             {error && <p className="text-danger">Error: {error}</p>}
 
             {!loading && !error && ratedTitles.length === 0 && (
-                <p className="text-muted">This user has not rated any titles yet.</p>
+                <p className="text-muted">You have not rated any titles yet.</p>
             )}
 
             {!loading && !error && ratedTitles.length > 0 && (

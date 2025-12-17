@@ -129,13 +129,13 @@ export default function UserBookmarksList() {
     // returns a list of all the user's bookmarks
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">Bookmarks for user: {userId}</h2>
+            <h2 className="h4 mb-3">Your bookmarks</h2>
 
             {loading && <p>Loading bookmarks...</p>}
             {error && <p className="text-danger">Error: {error}</p>}
 
             {!loading && !error && bookmarkedPages.length === 0 && (
-                <p className="text-muted">This user has not bookmarked any titles yet.</p>
+                <p className="text-muted">You have not bookmarked any titles yet.</p>
             )}
 
             {!loading && !error && bookmarkedPages.length > 0 && (
