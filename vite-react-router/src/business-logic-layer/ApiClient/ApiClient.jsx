@@ -12,9 +12,7 @@
  */
 
 import fetchSimplified from '../helper-function/FetchSimplified';
-import { MapTitle, MapIndividual } from '../ItemMapper';
-import { normalizeKey, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES } from '../KeyAliases';
-import { User } from '../DataClasses';
+import { MapTitle, MapIndividual, mapTitles, mapIndividuals, mapUser, mapRatings, mapSingleRating, mapBookmarks, mapSingleBookmark } from '../ItemMapper';
 import tmdb from './ApiClientTMDB';
 
 /**
@@ -30,138 +28,6 @@ const callV2 = (endpoint, options = {}) => fetchSimplified({
 	endpoint,
 	...options,
 });
-
-/**
- * Ensures the input is an array. If it's already an array, returns it as-is.
- * If it's a single item, wraps it in an array. If null/undefined, returns empty array.
- * This is done to normalize API responses that may return single objects or arrays.
- *
- * @param {unknown} data - The data to convert to an array
- * @returns {Array} An array containing the data
- */
-const toArray = (data) => Array.isArray(data) ? data : (data ? [data] : []);
-
-/**
- * Maps raw title data from the API to application-specific title objects.
- * Uses the MapTitle function from ItemMapper to transform DTOs.
- * Handles both single title and array of titles responses.
- *
- * @param {Object|Array} payload - Raw title data from API (single or array)
- * @returns {Object|Array|null} Mapped title object(s) or null if no data
- */
-const mapTitles = (payload) => { // Maps raw title data from the API to application-specific title objects.
-	const mapped = MapTitle(toArray(payload)); // Use MapTitle to transform DTOs.
-	return Array.isArray(payload) ? mapped : mapped[0] ?? null; // Handle both single title and array of titles responses.
-};
-
-/**
- * Maps raw individual data from the API to application-specific individual objects.
- * Uses the MapIndividual function from ItemMapper to transform DTOs.
- * Handles both single individual and array of individuals responses.
- *
- * @param {Object|Array} payload - Raw individual data from API (single or array)
- * @returns {Object|Array|null} Mapped individual object(s) or null if no data
- */
-const mapIndividuals = (payload) => {
-	const mapped = MapIndividual(toArray(payload));
-	return Array.isArray(payload) ? mapped : mapped[0] ?? null;
-};
-
-/**
- * Maps a raw user DTO from the API to a User instance.
- * Uses key aliases to handle different naming conventions between frontend and backend.
- *
- * @param {Object} dto - Raw user data from API
- * @returns {User|null} Mapped User instance or null if no data
- */
-const mapUser = (dto) => { // Maps a raw user DTO from the API to a User instance.
-	if (!dto) return null; // Return null if no data.
-	const user = new User(); // Create a new User instance.
-	Object.entries(dto).forEach(([rawKey, value]) => { // Iterate over each key-value pair in the DTO.
-		if (value === undefined || value === null) return; // Skip undefined or null values.
-		const key = normalizeKey(USER_KEY_ALIASES, rawKey); // Normalize the key using USER_KEY_ALIASES.
-		if (key in user) { // If the normalized key exists in the User instance,
-			user[key] = value; // assign the value to the corresponding property.
-		}
-	});
-
-	// If ratingsCount is 0 but we have ratings array, calculate the count
-	if (user.ratingsCount === 0 && Array.isArray(user.ratings)) {
-		user.ratingsCount = user.ratings.length;
-	}
-	// Similarly for bookmarks
-	if (user.bookmarksCount === 0 && Array.isArray(user.bookmarks)) {
-		user.bookmarksCount = user.bookmarks.length;
-	}
-	return user;
-};
-
-/**
- * Maps raw rating data from the API to application-specific rating objects.
- * Uses key aliases to normalize field names and ensures consistent structure.
- *
- * @param {Object|Array} payload - Raw rating data from API (single or array)
- * @returns {Array} Array of mapped rating objects
- */
-const mapRatings = (payload) => toArray(payload).map((dto) => {
-	const rating = { userId: null, titleId: null, rating: null, time: null, reviewText: null };
-	Object.entries(dto || {}).forEach(([rawKey, value]) => {
-		if (value === undefined || value === null) return;
-		const key = normalizeKey(RATING_KEY_ALIASES, rawKey);
-		if (key in rating) {
-			rating[key] = value;
-		}
-	});
-	return rating;
-});
-
-/**
- * Maps a single rating DTO to a rating object.
- * Useful when expecting a single rating response.
- *
- * @param {Object} payload - Raw rating data from API
- * @returns {Object|null} Mapped rating object or null if no data
- */
-const mapSingleRating = (payload) => mapRatings(payload)[0] ?? null;
-
-/**
- * Maps raw bookmark data from the API to application-specific bookmark objects.
- * Uses key aliases to normalize field names and ensures consistent structure.
- *
- * @param {Object|Array} payload - Raw bookmark data from API (single or array)
- * @returns {Array} Array of mapped bookmark objects
- */
-const mapBookmarks = (payload) => toArray(payload).map((dto) => {
-	const bookmark = { userId: null, pageId: null, titleId: null, individualId: null, time: null };
-	Object.entries(dto || {}).forEach(([rawKey, value]) => {
-		if (value === undefined || value === null) return;
-		const key = normalizeKey(BOOKMARK_KEY_ALIASES, rawKey);
-		if (key in bookmark) {
-			bookmark[key] = value;
-		}
-	});
-	return bookmark;
-});
-
-/**
- * Maps a single bookmark DTO to a bookmark object.
- * Useful when expecting a single bookmark response.
- *
- * @param {Object} payload - Raw bookmark data from API
- * @returns {Object|null} Mapped bookmark object or null if no data
- */
-const mapSingleBookmark = (payload) => mapBookmarks(payload)[0] ?? null;
-
-/**
- * Main API client object for version 2 of the backend API.
- * This object is structured to mirror the REST API endpoints, providing
- * a clean, organized interface for frontend components to interact with the backend.
- * Each property corresponds to a resource type, and contains methods for
- * performing operations on that resource.
- *
- * All methods return Promises that resolve to the mapped data structures,
- * handling authentication, error responses, and data transformation automatically.
- */
 
 
 
