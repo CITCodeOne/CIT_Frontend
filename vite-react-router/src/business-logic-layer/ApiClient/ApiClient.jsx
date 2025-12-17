@@ -150,7 +150,60 @@ const apiv2 = {
 		 */
 		featured: (options) => callV2('titles/featured', options).then(mapTitles),
 
-	},
+		// POST: /titles/search
+		/**
+		 * Searches titles with flexible parameters.
+		 * Supports filtering by rating, genre, media type, title term, year range, adult content,
+		 * and sorting options with pagination.
+		 *
+		 * @param {Object} parameters - Search parameters
+		 * @param {number} [parameters.minRating] - Minimum average rating
+		 * @param {string} [parameters.genre] - Genre to filter by
+		 * @param {string} [parameters.mediaType] - Media type ('movie', 'tvSeries', etc.)
+		 * @param {string} [parameters.titleSearchTerm] - Title name search term
+		 * @param {number} [parameters.minYear] - Minimum release year
+		 * @param {number} [parameters.maxYear] - Maximum release year
+		 * @param {boolean} [parameters.isAdult] - Filter adult content
+		 * @param {string} [parameters.sortBy] - Sort field ('year', 'title', or default 'rating')
+		 * @param {boolean} [parameters.sortDescending] - Sort direction
+		 * @param {number} parameters.page - Page number (required)
+		 * @param {number} parameters.pageSize - Items per page (required)
+		 * @param {Object} options - Additional fetch options
+		 * @returns {Promise<Array>} Array of mapped title objects
+		 */
+		search: (parameters, options) => callV2('titles/search', {
+			method: 'POST',
+			body: parameters,
+			...options,
+		}).then(mapTitles),
+
+	},/*
+	__________________________________________
+	|| Example usage of the search endpoint:||
+	__________________________________________
+
+	const searchTitles = async () => {
+    	const searchParams = {
+        minRating: 7.0,           	// Optional: minimum average rating
+        genre: 'Action',          	// Optional: filter by genre
+        mediaType: 'movie',       	// Optional: 'movie', 'tvSeries', etc.
+        titleSearchTerm: 'Batman',	// Optional: search in title names
+        minYear: 2000,            	// Optional: minimum release year
+        maxYear: 2020,            	// Optional: maximum release year
+        isAdult: false,           	// Optional: filter adult content
+        sortBy: 'year',           	// Optional: 'year', 'title', or omit for rating
+        sortDescending: true,     	// Optional: sort direction
+        page: 1,                  	// Optional: page number
+        pageSize: 20              	// Optional: items per page
+    };
+
+    try {
+        const results = await mdb.apiv2.titles.search(searchParams);
+        console.log('Search results:', results);
+        // results will be an array of mapped Title objects
+    } catch (error) {
+        console.error('Search failed:', error);
+    } */
 
 
 
