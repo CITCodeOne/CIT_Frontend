@@ -305,7 +305,7 @@ const apiv2 = {
 			* @param {Object} options - Additional fetch options
 			* @returns {Promise<Array>} Array of individual reference objects (not co-actors)
 			*/
-		   search: (parameters = {}, options) => callV2('individuals/search', {
+		   search: (parameters = {}, options) => callV2('individuals', {
 			   queryParams: parameters,
 			   ...options,
 		   }).then(mapIndividuals),
