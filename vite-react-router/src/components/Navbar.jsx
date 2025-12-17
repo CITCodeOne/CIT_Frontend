@@ -47,7 +47,7 @@ export default function NavbarLayout() {
                         const results = await mdb.apiv2.titles.search(searchParams);
                         console.log('Search results:', results);
                         setSearchTitlesResult(results);
-                        setShowDropdown(results && results.length > 0);
+                        if (results.length !== 0) setShowDropdown(true);
                         return results;
                 } catch (error) {
                         console.error('Search failed:', error);
@@ -66,7 +66,7 @@ export default function NavbarLayout() {
                         const results = await mdb.apiv2.individuals.search(searchParams);
                         console.log('Search results:', results);
                         setSearchIndividualsResult(results);
-                        setShowDropdown(results && results.length > 0);
+                        if (results.length !== 0) setShowDropdown(true);
                         return results;
                 } catch (error) {
                         console.error('Search failed:', error);
@@ -131,7 +131,7 @@ export default function NavbarLayout() {
                                                                                                                 key={title.id}
                                                                                                                 onClick={() => setShowDropdown(false)}
                                                                                                         >
-                                                                                                                {title.name} ({title.year})
+                                                                                                                {title.name} ({title.mediaType})
                                                                                                         </Dropdown.Item>
                                                                                                 ))}
                                                                                         </>
@@ -149,7 +149,8 @@ export default function NavbarLayout() {
                                                                                                                 key={individual.id}
                                                                                                                 onClick={() => setShowDropdown(false)}
                                                                                                         >
-                                                                                                                {individual.name}
+                                                                                                                {individual.name} ({individual.birthYear ? individual.birthYear : 'N/A'}
+                                                                                                                {(individual.deathYear && individual.deathYear) !== "n/a" ? ` - ${individual.deathYear}` : ''})
                                                                                                         </Dropdown.Item>
                                                                                                 ))}
                                                                                         </>
