@@ -214,12 +214,12 @@ export default function User() {
 
     // navigate to user's full ratings list
     const handleBrowseAllRatings = () => {
-        navigate(`/userpage/${userId}/ratings`);
+        navigate(`/user/${userId}/ratings`);
     };
 
     // navigate to user's full bookmarks list
     const handleBrowseAllBookmarks = () => {
-        navigate(`/userpage/${userId}/bookmarks`);
+        navigate(`/user/${userId}/bookmarks`);
     };
 
     // delete bookmark handler (using dummy auth)
