@@ -13,6 +13,8 @@ export default function UserBanner({
   isEditMode,
   onEditClick,
   onAvatarClick,
+  showUndo,
+  onUndoAvatar,
   onShareClick,
 }) {
   const normalizedImage = (() => {
@@ -58,6 +60,17 @@ export default function UserBanner({
                   >
                     Upload image
                   </span>
+                )}
+                {canClickAvatar && showUndo && typeof onUndoAvatar === 'function' && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); onUndoAvatar(); }}
+                    className="btn btn-sm btn-light position-absolute"
+                    style={{ right: -6, bottom: -6, borderRadius: '50%', padding: '4px 6px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                    title="Undo avatar change"
+                  >
+                    ⤺
+                  </button>
                 )}
               </div>
 

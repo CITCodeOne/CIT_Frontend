@@ -7,6 +7,7 @@ import { getStoredToken } from "../components/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";
+import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils";
 
 export default function User() {
     const { userId } = useParams();
@@ -41,7 +42,33 @@ export default function User() {
 
                 const user = await mdb.apiv2.user.get(userId, authOptions);
                 setUserData(user);
-                setAvatarUrl(user?.image || null);
+
+                // try to fetch stored profile image from backend (GET /users/{userId}/profile-image)
+                let apiProfileImage = null;
+                try {
+                    const imgDto = await mdb.apiv2.user.getProfileImage(userId, authOptions);
+                    apiProfileImage = imgDto?.profileImage || imgDto?.ProfileImage || null;
+                } catch (err) {
+                    // ignore 404 (no image) but log other errors
+                    if (!err || err.status !== 404) console.debug('getProfileImage failed', err);
+                }
+
+                const initialAvatar = apiProfileImage || user?.image || null;
+                setAvatarUrl(initialAvatar);
+                setOriginalAvatarUrl(initialAvatar);
+
+                // restore pending avatar (base64) from localStorage if present (overrides server-stored image)
+                try {
+                    const key = `cit.pendingAvatar.${userId}`;
+                    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+                    if (stored) {
+                        setPendingAvatarDataUrl(stored);
+                        setAvatarUrl(stored);
+                        // Note: can't reconstruct the File object; pendingAvatarFile stays null
+                    }
+                } catch (e) {
+                    // ignore storage errors
+                }
 
                 // Fetch user ratings and bookmarks (use correct API signatures)
                 const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
@@ -168,6 +195,9 @@ export default function User() {
     const latestBookmarks = bookmarkedPages.slice(0, 3);
 
     const [avatarUrl, setAvatarUrl] = useState(userData?.image || null);
+    const [originalAvatarUrl, setOriginalAvatarUrl] = useState(userData?.image || null);
+    const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
+    const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [shareMessage, setShareMessage] = useState("");
 
@@ -176,6 +206,39 @@ export default function User() {
 
     const handleToggleEditMode = () => {
         if (!isOwnProfile) return;
+        // if turning off edit mode, save pending avatar if present
+        const turningOff = isEditMode;
+        if (turningOff && (pendingAvatarFile || pendingAvatarDataUrl)) {
+            (async () => {
+                try {
+                    const token = getStoredToken();
+                    if (!token) throw new Error('Not authenticated');
+
+                    // Prefer stored base64 if available (fast, persisted); otherwise encode the File
+                    const dataUrl = pendingAvatarDataUrl || (pendingAvatarFile ? await encodeImageToBase64(pendingAvatarFile) : null);
+                    if (!dataUrl) throw new Error('No image data to upload');
+
+                    // Use ApiClient v2 upsert endpoint which includes consistent options handling
+                    await mdb.apiv2.user.upsertProfileImage(userId, dataUrl, { authToken: token });
+
+                    setUserData((prev) => ({ ...(prev || {}), image: dataUrl }));
+                    setOriginalAvatarUrl(dataUrl);
+                    if (avatarUrl && avatarUrl.startsWith('blob:')) {
+                        try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
+                    }
+                    setPendingAvatarFile(null);
+                    setPendingAvatarDataUrl(null);
+                    try { const key = `cit.pendingAvatar.${userId}`; if (typeof window !== 'undefined') window.localStorage.removeItem(key); } catch (e) {}
+                    setShareMessage('Profile image saved');
+                    setTimeout(() => setShareMessage(''), 2000);
+                } catch (err) {
+                    console.error('Failed to save profile image', err);
+                    setShareMessage('Failed to save image');
+                    setTimeout(() => setShareMessage(''), 3000);
+                }
+            })();
+        }
+
         setIsEditMode((prev) => !prev);
     };
 
@@ -208,8 +271,45 @@ export default function User() {
     const handleAvatarFileChange = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
+        // store original to allow undo
+        if (!originalAvatarUrl) setOriginalAvatarUrl(avatarUrl || userData?.image || defaultAvatar);
+
         const newUrl = URL.createObjectURL(file);
+        setPendingAvatarFile(file);
         setAvatarUrl(newUrl);
+
+        // asynchronously encode and persist the data URL so it survives reloads
+        (async () => {
+            try {
+                const dataUrl = await encodeImageToBase64(file);
+                setPendingAvatarDataUrl(dataUrl);
+                try {
+                    const key = `cit.pendingAvatar.${userId}`;
+                    if (typeof window !== 'undefined') window.localStorage.setItem(key, dataUrl);
+                } catch (e) {
+                    // ignore storage errors
+                }
+            } catch (err) {
+                console.error('Failed to encode image for persistence', err);
+            }
+        })();
+
+        // reset input so same file can be selected later
+        event.target.value = null;
+    };
+
+    const handleUndoAvatar = () => {
+        if (pendingAvatarFile && avatarUrl && avatarUrl.startsWith('blob:')) {
+            try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
+        }
+        setPendingAvatarFile(null);
+        setPendingAvatarDataUrl(null);
+        try {
+            const key = `cit.pendingAvatar.${userId}`;
+            if (typeof window !== 'undefined') window.localStorage.removeItem(key);
+        } catch (e) {}
+        setAvatarUrl(originalAvatarUrl || defaultAvatar);
+        if (fileInputRef.current) fileInputRef.current.value = null;
     };
 
     // navigate to user's full ratings list
@@ -287,6 +387,8 @@ export default function User() {
                         isEditMode={isEditMode}
                         onEditClick={handleToggleEditMode}
                         onAvatarClick={handleAvatarClick}
+                        showUndo={!!pendingAvatarFile}
+                        onUndoAvatar={handleUndoAvatar}
                         onShareClick={handleShareClick}
                     />
                     {/* latest 3 ratings */}

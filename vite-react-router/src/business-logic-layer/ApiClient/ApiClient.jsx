@@ -516,10 +516,10 @@ const apiv2 = {
 		 * Returns the base64-encoded image data for the user's avatar.
 		 *
 		 * @param {string|number} userId - The unique identifier of the user
-		 * @param {Object} options - Additional fetch options
-		 * @returns {Promise<Object>} Response containing image data
+		 * @param {Object} options - Additional fetch options (authToken if needed)
+		 * @returns {Promise<Object|null>} Object like { userId, profileImage } or null
 		 */
-		//getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
+		getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
 
 		// PUT: /users/{userId}/profile-image
 		/**
