@@ -536,6 +536,34 @@ const apiv2 = {
 			body: { imageBase64 },
 			...options,
 		}),
+
+		// VISITS
+		// POST: /users/{userId}/visits
+		/**
+		 * Adds a visited page record for a user.
+		 * Creates a visit entry linking the user to a page they visited.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {string|number} pageId - The identifier of the page that was visited
+		 * @param {Object} options - Additional fetch options (authToken, etc.)
+		 * @returns {Promise<Object>} Response containing the created visit
+		 */
+		addVisit: (userId, pageId, options) => callV2(`users/${userId}/visits`, {
+			method: 'POST',
+			body: { pageId },
+			...options,
+		}),
+
+		// GET: /users/{userId}/visits
+		/**
+		 * Retrieves the list of visited pages for a user.
+		 * Returns an array of visited page DTOs (may be empty).
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {Object} options - Additional fetch options (authToken, etc.)
+		 * @returns {Promise<Array>} Array of visited page DTOs
+		 */
+		getVisits: (userId, options) => callV2(`users/${userId}/visits`, options),
 	}
 
 

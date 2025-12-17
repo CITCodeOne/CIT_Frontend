@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useParams } from 'react-router-dom';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import useAuthStatus from '../hooks/useAuthStatus';
+import { getStoredToken } from '../components/ExtractJwtData';
 
 function Page() {
         const pageId = useParams().pageId; // Get pageId from route params
+        const { userId: authUserId, isSignedIn } = useAuthStatus();
         const navigate = useNavigate(); // initialize navigate function
 
         // Fetch page data when component mounts or pageId changes
@@ -21,6 +24,21 @@ function Page() {
                                         navigate(`/page/${pageId}/individual/${data.iconst}`, { replace: true });
                                 } else {
                                         console.warn('Page data does not contain tconst or iconst');
+                                }
+
+                                // If the user is signed in, record a visit for this page.
+                                try {
+                                        const token = getStoredToken();
+                                        if (isSignedIn && authUserId) {
+                                                mdb.apiv2.user.addVisit(authUserId, pageId, { authToken: token })
+                                                        .then(() => {
+                                                        })
+                                                        .catch((err) => {
+                                                                console.debug('Failed to record visit:', err);
+                                                        });
+                                        }
+                                } catch (err) {
+                                        console.debug('Error while attempting to record visit:', err);
                                 }
                         } catch (error) {
                                 console.error('Error fetching page data:', error);

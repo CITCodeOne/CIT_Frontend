@@ -23,6 +23,7 @@ export default function TestApiClient() {
     const [demoUser, setDemoUser] = useState(null);
     const [titleId, setTitleId] = useState('tt10257794');
     const [individualId, setIndividualId] = useState('nm0000158');
+    const [pageId, setPageId] = useState('');
     const [tmdbQuery, setTmdbQuery] = useState('');
     const [tmdbPersonId, setTmdbPersonId] = useState('');
 
@@ -152,6 +153,17 @@ export default function TestApiClient() {
                         <button onClick={() => runCall('user.getBookmark', () => mdb.apiv2.user.getBookmark(userId, 500, { authToken: token }))}>Get bookmark (500)</button>
                         <button onClick={() => runCall('user.addBookmark', () => mdb.apiv2.user.addBookmark(userId, 500, { authToken: token }))}>Add bookmark (500)</button>
                         <button onClick={() => runCall('user.removeBookmark', () => mdb.apiv2.user.removeBookmark(userId, 500, { authToken: token }))}>Remove bookmark (500)</button>
+                    </div>
+                    <label>
+                        Page ID (visit):
+                        <input value={pageId} onChange={(e) => setPageId(e.target.value)} style={{ width: '100%' }} placeholder="page id (e.g. 500)" />
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <button onClick={() => runCall('user.getVisits', () => mdb.apiv2.user.getVisits(userId, { authToken: token }))}>Get visits</button>
+                        <button onClick={() => {
+                            if (!pageId) { setError('Page ID required for Add visit'); setOutput(''); return; }
+                            runCall('user.addVisit', () => mdb.apiv2.user.addVisit(userId, pageId, { authToken: token }));
+                        }}>Add visit (Page ID)</button>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button onClick={() => runCall('user.getRatings', () => mdb.apiv2.user.getRatings(userId, { authToken: token }))}>Ratings</button>
