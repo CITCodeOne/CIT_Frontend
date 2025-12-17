@@ -99,9 +99,10 @@ export default function NavbarLayout() {
                                                                         className="me-2"
                                                                         aria-label="Search"
                                                                         onChange={(e) => handleSearchChange(e)}
+                                                                        onFocus={() => { if ((searchTitlesResult && searchTitlesResult.length>0) || (searchIndividualsResult && searchIndividualsResult.length>0)) setShowDropdown(true); }}
                                                                 />
-                                                                <Dropdown>
-                                                                        <Dropdown.Menu show={showDropdown} className="Csearch-dropdown-menu">
+                                                                <Dropdown show={showDropdown} onToggle={(nextShow) => setShowDropdown(nextShow)}>
+                                                                        <Dropdown.Menu className="Csearch-dropdown-menu">
                                                                                 <p className="px-3 mb-1 text-muted">Search Results</p>
                                                                                 {searchTitlesResult && searchTitlesResult.length > 0 && (
                                                                                         <>
@@ -111,6 +112,7 @@ export default function NavbarLayout() {
                                                                                                                 as={Link}
                                                                                                                 to={`/page/${title.pageId}/title/${title.id}`}
                                                                                                                 key={title.id}
+                                                                                                                onClick={() => setShowDropdown(false)}
                                                                                                         >
                                                                                                                 {title.name} ({title.year})
                                                                                                         </Dropdown.Item>
@@ -126,6 +128,7 @@ export default function NavbarLayout() {
                                                                                                                 as={Link}
                                                                                                                 to={`/page/${individual.pageId}/individual/${individual.id}`}
                                                                                                                 key={individual.id}
+                                                                                                                onClick={() => setShowDropdown(false)}
                                                                                                         >
                                                                                                                 {individual.name}
                                                                                                         </Dropdown.Item>
