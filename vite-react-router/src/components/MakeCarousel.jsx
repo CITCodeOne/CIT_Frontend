@@ -108,18 +108,31 @@ const CarouselRenderer = ({ items, focusKey, cardComponent }) => {
 				{slides.map((slide, slideIndex) => (
 					<Carousel.Item key={`slide-${slideIndex}`}>
 						<div className="d-flex justify-content-center gap-3 flex-wrap py-4">
-							{slide.map((entry, entryIndex) => (
-								<div
-									key={`card-${slideIndex}-${entryIndex}`}
-									style={{
-										flex: `0 0 ${cardWidthPx}px`,
-										maxWidth: `${cardWidthPx}px`,
-										minWidth: `${cardWidthPx}px`
-									}}
-								>
-									<CardComponent item={entry} focusKey={focusKey} />
-								</div>
-							))}
+							{slide.map((entry, entryIndex) => {
+								const stableKey =
+									entry?.pageId ||
+									entry?.id ||
+									entry?._id ||
+									entry?.slug ||
+									entry?.imdbId ||
+									entry?.tmdbId ||
+									entry?.title ||
+									entry?.name ||
+									`card-${slideIndex}-${entryIndex}`;
+
+								return (
+									<div
+										key={stableKey}
+										style={{
+											flex: `0 0 ${cardWidthPx}px`,
+											maxWidth: `${cardWidthPx}px`,
+											minWidth: `${cardWidthPx}px`
+										}}
+									>
+										<CardComponent item={entry} focusKey={focusKey} />
+									</div>
+								);
+							})}
 						</div>
 					</Carousel.Item>
 				))}
