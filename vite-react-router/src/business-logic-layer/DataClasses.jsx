@@ -1,4 +1,3 @@
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import defaultImage from "../pics/Image-not-found.png";
 
 class baseObject{
@@ -28,6 +27,39 @@ class baseTitleObject{
             rating: "n/a",
             numVotes: "n/a"
         })
+    }
+}
+
+class baseUtil {
+    constructor(){
+        Object.assign(this, {
+            userId: null, 
+            time: null
+        })
+    }
+}
+
+export class Rating {
+    constructor(options = {}){
+        Object.assign(this, new baseUtil())
+        Object.assign(this, {
+            titleId: null,
+            rating: null, 
+            reviewText: null
+        }, options);
+        Object.seal(this);
+    }
+}
+
+export class Bookmark {
+    constructor(options = {}){
+        Object.assign(this, new baseUtil())
+        Object.assign(this, { 
+            pageId: null, 
+            titleId: null, 
+            individualId: null
+        }, options);
+        Object.seal(this);
     }
 }
 
@@ -106,3 +138,5 @@ export class User {
         Object.seal(this);
     }
 };
+
+ 

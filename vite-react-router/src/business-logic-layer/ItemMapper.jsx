@@ -6,7 +6,7 @@
  * format and the internal application data model, ensuring type safety and consistentformat.
  */
 
-import { Movie, TvEpisode, TvSeries, Individual, MiscMedia, User } from "./DataClasses";
+import { Movie, TvEpisode, TvSeries, Individual, MiscMedia, User, Rating, Bookmark } from "./DataClasses";
 import { TITLE_KEY_ALIASES, INDIVIDUAL_KEY_ALIASES, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES, normalizeKey } from "./KeyAliases";
 
 /**
@@ -262,7 +262,7 @@ export const mapUser = (dto) => {
  * @returns {Array} Array of mapped rating objects
  */
 export const mapRatings = (payload) => toArray(payload).map((dto) => {
-    const rating = { userId: null, titleId: null, rating: null, time: null, reviewText: null };
+    const rating = new Rating();
     Object.entries(dto || {}).forEach(([rawKey, value]) => {
         if (value === undefined || value === null) return;
         const key = normalizeKey(RATING_KEY_ALIASES, rawKey);
@@ -290,7 +290,7 @@ export const mapSingleRating = (payload) => mapRatings(payload)[0] ?? null;
  * @returns {Array} Array of mapped bookmark objects
  */
 export const mapBookmarks = (payload) => toArray(payload).map((dto) => {
-    const bookmark = { userId: null, pageId: null, titleId: null, individualId: null, time: null };
+    const bookmark = new Bookmark();
     Object.entries(dto || {}).forEach(([rawKey, value]) => {
         if (value === undefined || value === null) return;
         const key = normalizeKey(BOOKMARK_KEY_ALIASES, rawKey);
