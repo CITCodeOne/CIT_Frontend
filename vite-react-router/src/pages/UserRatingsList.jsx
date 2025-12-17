@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import RowComp from "../components/RowList";
-import ListManager from "../components/ListManager";
 import Rating from "../components/Rating";
 import placeholderImage from "../pics/Image-not-found.png";
 
@@ -13,9 +12,7 @@ export default function UserRatingsList() {
     const isOwnProfile = userId === loggedInUserId;
     const isLoggedIn = isOwnProfile;
 
-    // ListManager state
-    const [showListModal, setShowListModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
+    // (ListManager removed)
 
     // dummy ratings list
     const [ratedTitles, setRatedTitles] = useState([
@@ -74,27 +71,7 @@ export default function UserRatingsList() {
         setTimeout(() => setMessage(""), 1500);
     };
 
-    // Handle opening the list modal
-    const handleAddToList = (item) => {
-        setSelectedItem(item);
-        setShowListModal(true);
-    };
-
-    // Handle success when added to list
-    const handleListSuccess = (result) => {
-        if (result.action === 'created') {
-            setMessage(`Created list "${result.listName}" and added ${result.itemName}!`);
-        } else {
-            setMessage(`Added ${result.itemName} to "${result.listName}"!`);
-        }
-        setTimeout(() => setMessage(""), 2000);
-    };
-
-    // Handle error when adding to list
-    const handleListError = (error) => {
-        setMessage(`Error: ${error}`);
-        setTimeout(() => setMessage(""), 2000);
-    };
+    // (ListManager handlers removed)
 
     return (
         <main className="container py-4">
@@ -141,17 +118,6 @@ export default function UserRatingsList() {
                                     <>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-primary ms-2"
-                                            onClick={() => handleAddToList({
-                                                id: item.titleId,
-                                                name: item.title,
-                                                type: 'title'
-                                            })}
-                                        >
-                                            📋
-                                        </button>
-                                        <button
-                                            type="button"
                                             className="btn btn-sm btn-outline-danger ms-2"
                                             onClick={() => handleRemoveRating(item.titleId)}
                                         >
@@ -166,18 +132,7 @@ export default function UserRatingsList() {
             )}
 
             {/* ListManager Modal */}
-            {selectedItem && (
-                <ListManager
-                    show={showListModal}
-                    onHide={() => setShowListModal(false)}
-                    itemType={selectedItem.type}
-                    itemId={selectedItem.id}
-                    itemName={selectedItem.name}
-                    userId={loggedInUserId}
-                    onSuccess={handleListSuccess}
-                    onError={handleListError}
-                />
-            )}
+            {/* ListManager removed */}
 
             {/* message popup*/}
             {message && (

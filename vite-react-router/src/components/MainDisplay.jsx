@@ -44,6 +44,9 @@ function MainDisplay({
         return [mediaType, formattedDate].filter(Boolean).join(' · ');
     })();
 
+    // Treat objects without a mediaType as individuals/contributors
+    const isIndividual = !!(item && !item.mediaType && !item.media_type);
+
     const content = (
         <div className="title-page-background">
             {/* Main Display Card */}
@@ -80,7 +83,7 @@ function MainDisplay({
                                         {customAction.label}
                                     </Button>
                                 </div>
-                            ) : resolvedRating !== undefined && resolvedRating !== null ? (
+                            ) : (!isIndividual && resolvedRating !== undefined && resolvedRating !== null) ? (
                                 <div className="text-end">
                                     <div className="d-flex align-items-center gap-2 mb-2">
                                         <span className="rating-star">★</span>
@@ -106,18 +109,20 @@ function MainDisplay({
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="text-end">
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={() => {
-                                            const reviewsSection = document.getElementById('reviews-section');
-                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        }}
-                                    >
-                                        ★ Rate
-                                    </Button>
-                                </div>
+                                !isIndividual ? (
+                                    <div className="text-end">
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const reviewsSection = document.getElementById('reviews-section');
+                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }}
+                                        >
+                                            ★ Rate
+                                        </Button>
+                                    </div>
+                                ) : null
                             )}
                         </div>
 

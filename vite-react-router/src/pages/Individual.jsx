@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Spinner, Carousel, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import ListManager from '../components/ListManager';
 import ToggleButton from '../components/ToggleButton';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
@@ -27,7 +26,6 @@ function Individual() {
     const { isSignedIn, userId } = useAuthStatus();
 
     // State management
-    const [showListModal, setShowListModal] = useState(false);
     const [tmdbImages, setTmdbImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
     const [tmdbProfilePicture, setTmdbProfilePicture] = useState(null);
@@ -173,18 +171,7 @@ function Individual() {
         navigate(`/page/${targetPageId}/title/${targetTitleId}`, { replace: true });
     };
 
-    // List modal handlers
-    const handleAddToList = () => {
-        setShowListModal(true);
-    };
-
-    const handleListSuccess = (result) => {
-        console.log(`Successfully added ${result.itemName} to list "${result.listName}"`);
-    };
-
-    const handleListError = (error) => {
-        console.error('List operation failed:', error);
-    };
+    // (List functionality removed) 
 
     if (loading) return <LoadingState />;
     if (error) return <ErrorState error={error} />;
@@ -224,6 +211,7 @@ function Individual() {
     return (
         <>
             <MainDisplay
+                item={individual}
                 image={tmdbProfilePicture || individual.image || placeholderImage}
                 title={customName}
                 subtitle={null}
@@ -234,12 +222,7 @@ function Individual() {
                     isBookmarked: isBookmarked,
                     onToggle: toggleBookmark
                 } : null}
-                customAction={{
-                    label: 'Add to List',
-                    variant: 'primary',
-                    icon: '📋',
-                    onClick: handleAddToList
-                }}
+                
             >
             {/* Photo Gallery */}
             <Container className="mt-4">
@@ -408,17 +391,7 @@ function Individual() {
             </Container>
         </MainDisplay>
 
-        {/* List Manager Modal */}
-        <ListManager
-            show={showListModal}
-            onHide={() => setShowListModal(false)}
-            itemName={individual?.name}
-            itemId={individualId}
-            itemType="individual"
-            userId={userId}
-            onSuccess={handleListSuccess}
-            onError={handleListError}
-        />
+        {/* List functionality removed */}
     </>
     );
 }
