@@ -57,18 +57,7 @@ export default function User() {
                 setAvatarUrl(initialAvatar);
                 setOriginalAvatarUrl(initialAvatar);
 
-                // restore pending avatar (base64) from localStorage if present (overrides server-stored image)
-                try {
-                    const key = `cit.pendingAvatar.${userId}`;
-                    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
-                    if (stored) {
-                        setPendingAvatarDataUrl(stored);
-                        setAvatarUrl(stored);
-                        // Note: can't reconstruct the File object; pendingAvatarFile stays null
-                    }
-                } catch (e) {
-                    // ignore storage errors
-                }
+                // No persisted pending avatar: pending selection is kept only in-memory while on this page
 
                 // Fetch user ratings and bookmarks (use correct API signatures)
                 const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
@@ -197,7 +186,6 @@ export default function User() {
     const [avatarUrl, setAvatarUrl] = useState(userData?.image || null);
     const [originalAvatarUrl, setOriginalAvatarUrl] = useState(userData?.image || null);
     const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
-    const [pendingAvatarDataUrl, setPendingAvatarDataUrl] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [shareMessage, setShareMessage] = useState("");
 
@@ -208,14 +196,13 @@ export default function User() {
         if (!isOwnProfile) return;
         // if turning off edit mode, save pending avatar if present
         const turningOff = isEditMode;
-        if (turningOff && (pendingAvatarFile || pendingAvatarDataUrl)) {
+        if (turningOff && pendingAvatarFile) {
             (async () => {
                 try {
                     const token = getStoredToken();
                     if (!token) throw new Error('Not authenticated');
-
-                    // Prefer stored base64 if available (fast, persisted); otherwise encode the File
-                    const dataUrl = pendingAvatarDataUrl || (pendingAvatarFile ? await encodeImageToBase64(pendingAvatarFile) : null);
+                    // Encode the selected File to base64 and upload
+                    const dataUrl = pendingAvatarFile ? await encodeImageToBase64(pendingAvatarFile) : null;
                     if (!dataUrl) throw new Error('No image data to upload');
 
                     // Use ApiClient v2 upsert endpoint which includes consistent options handling
@@ -227,8 +214,6 @@ export default function User() {
                         try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
                     }
                     setPendingAvatarFile(null);
-                    setPendingAvatarDataUrl(null);
-                    try { const key = `cit.pendingAvatar.${userId}`; if (typeof window !== 'undefined') window.localStorage.removeItem(key); } catch (e) {}
                     setShareMessage('Profile image saved');
                     setTimeout(() => setShareMessage(''), 2000);
                 } catch (err) {
@@ -278,21 +263,7 @@ export default function User() {
         setPendingAvatarFile(file);
         setAvatarUrl(newUrl);
 
-        // asynchronously encode and persist the data URL so it survives reloads
-        (async () => {
-            try {
-                const dataUrl = await encodeImageToBase64(file);
-                setPendingAvatarDataUrl(dataUrl);
-                try {
-                    const key = `cit.pendingAvatar.${userId}`;
-                    if (typeof window !== 'undefined') window.localStorage.setItem(key, dataUrl);
-                } catch (e) {
-                    // ignore storage errors
-                }
-            } catch (err) {
-                console.error('Failed to encode image for persistence', err);
-            }
-        })();
+        // keep selection in-memory only; encode/upload when the user saves (leaving edit mode)
 
         // reset input so same file can be selected later
         event.target.value = null;
@@ -303,11 +274,6 @@ export default function User() {
             try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
         }
         setPendingAvatarFile(null);
-        setPendingAvatarDataUrl(null);
-        try {
-            const key = `cit.pendingAvatar.${userId}`;
-            if (typeof window !== 'undefined') window.localStorage.removeItem(key);
-        } catch (e) {}
         setAvatarUrl(originalAvatarUrl || defaultAvatar);
         if (fileInputRef.current) fileInputRef.current.value = null;
     };
