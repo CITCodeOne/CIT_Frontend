@@ -179,6 +179,7 @@ export default function NavbarLayout() {
                                                                                 align="end"
                                                                         >
                                                                                 <NavDropdown.Item as={Link} to={`/user/${userId}`}>Profile</NavDropdown.Item>
+                                                                                <NavDropdown.Item as={Link} to={`/user/visited`}>My visits</NavDropdown.Item>
                                                                                 <NavDropdown.Divider />
                                                                                 <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
                                                                         </NavDropdown>
