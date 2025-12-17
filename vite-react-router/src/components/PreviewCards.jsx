@@ -245,8 +245,6 @@ export default function PreviewCards({ item = {}, focusKey }) {
           }).catch(err => console.error('Error fetching person details:', err));
         }
       }).catch(err => console.error('Error fetching TMDB data:', err));
-    } else {
-      console.log('Not fetching TMDB, mediaType:', item.mediaType, 'media_type:', item.media_type, 'name:', item.name);
     }
   }, [item.name, item.mediaType, item.media_type]);
 
