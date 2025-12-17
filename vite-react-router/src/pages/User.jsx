@@ -319,7 +319,7 @@ export default function User() {
                                             style={{ flex: 1 }}
                                         >
                                             <img
-                                                src={item.poster}
+                                                src={item.poster || placeholderImage}
                                                 alt={item.title}
                                                 style={{
                                                     width: "100px",
@@ -327,6 +327,7 @@ export default function User() {
                                                     objectFit: "cover",
                                                     borderRadius: "4px",
                                                 }}
+                                                onError={(e) => { e.target.src = placeholderImage; }}
                                             />
                                             <div>
                                                 <div className="fs-5 fw-semibold">
@@ -392,7 +393,7 @@ export default function User() {
                                             style={{ flex: 1 }}
                                         >
                                             <img
-                                                src={item.poster}
+                                                src={item.poster || placeholderImage}
                                                 alt={item.title}
                                                 style={{
                                                     width: "100px",
@@ -400,6 +401,7 @@ export default function User() {
                                                     objectFit: "cover",
                                                     borderRadius: "4px",
                                                 }}
+                                                onError={(e) => { e.target.src = placeholderImage; }}
                                             />
 
                                             {/* Title & plot preview*/}
