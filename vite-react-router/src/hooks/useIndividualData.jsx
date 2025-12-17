@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import placeholderImage from '../pics/Image-not-found.png';
+import { getStoredToken } from '../components/ExtractJwtData';
 
 /**
  * useIndividualData Hook
@@ -87,6 +88,7 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
             }
             
             try {
+                const token = getStoredToken();
                 const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId);
                 setIsBookmarked(!!bookmark);
             } catch (err) {
@@ -96,7 +98,7 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
         };
 
         checkBookmarkStatus();
-    }, [individualId, userId, isLoggedIn]);
+    }, [individualId, userId, isLoggedIn, pageId]);
 
     // Bookmark toggle handler
     const toggleBookmark = async () => {
@@ -106,11 +108,12 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
         }
 
         try {
+            const token = getStoredToken();
             if (isBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, pageId);
+                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
                 setIsBookmarked(false);
             } else {
-                await mdb.apiv2.user.addBookmark(userId, pageId);
+                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
                 setIsBookmarked(true);
             }
         } catch (err) {
