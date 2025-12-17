@@ -21,11 +21,59 @@ export default function Visited() {
 			try {
 				const token = getStoredToken();
 				const res = await mdb.apiv2.user.getVisits(targetUserId, { authToken: token });
-				const arr = Array.isArray(res) ? res.slice() : [];
+				const raw = Array.isArray(res) ? res.slice() : [];
+
+				const authOptions = token ? { authToken: token } : undefined;
+
+				// Enrich each visit by resolving the page to a title or individual name
+				const enriched = await Promise.all(
+					raw.map(async (v) => {
+						try {
+							// Visit may already contain pageId; normalize
+							const pageId = v.pageId || v.page?.id || v.id || null;
+							if (!pageId) return { ...v, displayName: v.title || v.name || 'Unknown', pageId: pageId };
+
+							// Resolve page reference to check if it points to a title or individual
+							const pageRef = await mdb.apiv2.page.getById(pageId, authOptions);
+							const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
+							const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+
+							if (tconst) {
+								const title = await mdb.apiv2.titles.getById(tconst, authOptions);
+								return {
+									...v,
+									displayName: title?.name ?? title?.title ?? pageRef?.title ?? 'Unknown',
+									kind: 'title',
+									pageId,
+								};
+							}
+
+							if (iconst) {
+								const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+								return {
+									...v,
+									displayName: individual?.name ?? pageRef?.name ?? 'Unknown',
+									kind: 'individual',
+									pageId,
+								};
+							}
+
+							// fallback to pageRef fields
+							return {
+								...v,
+								displayName: pageRef?.name ?? pageRef?.title ?? v.title ?? v.name ?? 'Unknown',
+								kind: 'unknown',
+								pageId,
+							};
+						} catch (err) {
+							return { ...v, displayName: v.title || v.name || 'Unknown', kind: 'error', pageId: v.pageId || v.id };
+						}
+					})
+				);
 
 				const getTime = (v) => v.visitedAt || v.createdAt || v.timestamp || v.time || v.date || null;
 
-				arr.sort((a, b) => {
+				enriched.sort((a, b) => {
 					const ta = getTime(a);
 					const tb = getTime(b);
 					if (ta && tb) return new Date(tb) - new Date(ta);
@@ -34,7 +82,7 @@ export default function Visited() {
 					return 0;
 				});
 
-				setVisits(arr);
+				setVisits(enriched);
 			} catch (err) {
 				setError(err?.message || String(err));
 			} finally {
@@ -69,14 +117,14 @@ export default function Visited() {
 				<ul className="list-group">
 					{visits.map((v, idx) => {
 						const pageId = v.pageId || v.page?.id || v.pageId?.toString() || v.id || v.pageRef || '';
-						const title = v.title || v.pageTitle || v.name || pageId || `Page ${idx + 1}`;
+						const name = v.displayName || v.title || v.pageTitle || v.name || pageId || `Page ${idx + 1}`;
 						return (
 							<li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
 								<div>
 									{pageId ? (
-										<Link to={`/page/${pageId}`}>{title}</Link>
+										<Link to={`/page/${pageId}`}>{name}</Link>
 									) : (
-										<span>{title}</span>
+										<span>{name}</span>
 									)}
 									<div className="text-muted small">Page ID: {pageId || 'N/A'}</div>
 								</div>
