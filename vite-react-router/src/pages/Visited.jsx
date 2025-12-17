@@ -111,7 +111,7 @@ export default function Visited() {
 
 	return (
 		<main className="container py-4">
-			<h2 className="h4 mb-3">Visited pages by user: {targetUserId || '—'}</h2>
+			<h2 className="h4 mb-3">Your visited pages:</h2>
 
 			{loading && <p className="text-muted">Loading visits…</p>}
 			{error && <p className="text-danger">{error}</p>}
