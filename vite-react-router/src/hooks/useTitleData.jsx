@@ -123,15 +123,18 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
     // TODO: Currently calls with titleId which is wrong. The correct call would be to check the bookmark by pageId
     useEffect(() => {
         const checkBookmarkStatus = async () => {
-            if (!isLoggedIn || !userId || !titleId) {
+            // require pageId for bookmark checks (API identifies bookmarks by pageId)
+            if (!isLoggedIn || !userId || !pageId) {
                 setIsBookmarked(false);
                 return;
             }
 
             try {
                 const token = getStoredToken();
-                const bookmark = await mdb.apiv2.user.getBookmark(userId, pageId, { authToken: token }); // FIX: should be pageId
-                setIsBookmarked(!!bookmark);
+                // Fetch user's bookmarks and check if this pageId is present
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
+                setIsBookmarked(bookmarkedSet.has(String(pageId)));
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);
                 setIsBookmarked(false);
@@ -139,7 +142,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         };
 
         checkBookmarkStatus();
-    }, [titleId, userId, isLoggedIn]);
+    }, [pageId, userId, isLoggedIn]);
 
     // 5. Fetch user's rating for this title (if logged in)
     useEffect(() => {

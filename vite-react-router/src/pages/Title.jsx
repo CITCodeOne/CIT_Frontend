@@ -157,7 +157,7 @@ function Title() {
         fetchSimilarPosters();
     }, [mdbSimilarTitles]);
 
-    // Check bookmark status for similar titles
+    // Check bookmark status for similar titles (fetch bookmarks once)
     useEffect(() => {
         const checkSimilarBookmarks = async () => {
             if (!isSignedIn || !userId || mdbSimilarTitles.length === 0) {
@@ -167,24 +167,20 @@ function Title() {
 
             try {
                 const token = getStoredToken();
-                const bookmarkChecks = await Promise.all(
-                    mdbSimilarTitles.map(async (similar) => {
-                        try {
-                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.pageId, { authToken: token });
-                            return { id: similar.pageId, isBookmarked };
-                        } catch (err) {
-                            return { id: similar.pageId, isBookmarked: false };
-                        }
-                    })
-                );
+                // Fetch all bookmarks for the user in one call
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+
+                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
-                bookmarkChecks.forEach(({ id, isBookmarked }) => {
-                    bookmarkMap[id] = isBookmarked;
+                mdbSimilarTitles.forEach(similar => {
+                    if (similar.pageId) bookmarkMap[similar.pageId] = bookmarkedSet.has(String(similar.pageId));
                 });
+
                 setSimilarBookmarks(bookmarkMap);
             } catch (err) {
                 console.error('Error checking similar title bookmarks:', err);
+                setSimilarBookmarks({});
             }
         };
 

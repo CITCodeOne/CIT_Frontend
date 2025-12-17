@@ -100,7 +100,7 @@ function Individual() {
         }
     }, [individual]);
 
-    // Check bookmark status for Known For titles
+    // Check bookmark status for Known For titles (fetch all bookmarks once)
     useEffect(() => {
         const checkTitleBookmarks = async () => {
             if (!isSignedIn || !userId || knownForTitles.length === 0) {
@@ -110,27 +110,24 @@ function Individual() {
 
             try {
                 const token = getStoredToken();
-                const bookmarkChecks = await Promise.all(
-                    knownForTitles.map(async (title) => {
-                        const pageRef = title.pageId || null;
-                        if (!pageRef) return { id: null, isBookmarked: false };
-                        try {
-                            const bookmark = await mdb.apiv2.user.getBookmark(userId, pageRef, { authToken: token });
-                            return { id: pageRef, isBookmarked: !!bookmark };
-                        } catch (err) {
-                            console.error(`Failed to check bookmark for title page ${pageRef}:`, err);
-                            return { id: pageRef, isBookmarked: false };
-                        }
-                    })
-                );
+                // Fetch all bookmarks for the user in a single call
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+
+                // Build a lookup set for quick checks
+                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
-                bookmarkChecks.forEach(({ id, isBookmarked }) => {
-                    if (id) bookmarkMap[id] = isBookmarked;
+                knownForTitles.forEach(title => {
+                    const pageRef = title.pageId || null;
+                    if (pageRef) {
+                        bookmarkMap[pageRef] = bookmarkedSet.has(String(pageRef));
+                    }
                 });
+
                 setTitleBookmarks(bookmarkMap);
             } catch (err) {
                 console.error('Failed to check title bookmarks:', err);
+                setTitleBookmarks({});
             }
         };
 
