@@ -95,6 +95,7 @@ export const RATING_KEY_ALIASES = {
     id: "titleId",
     rating: "rating",
     time: "time",
+    reviewtext: "reviewText",
 };
 
 export const BOOKMARK_KEY_ALIASES = {

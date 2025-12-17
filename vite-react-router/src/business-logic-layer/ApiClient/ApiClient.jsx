@@ -104,7 +104,7 @@ const mapUser = (dto) => { // Maps a raw user DTO from the API to a User instanc
  * @returns {Array} Array of mapped rating objects
  */
 const mapRatings = (payload) => toArray(payload).map((dto) => {
-	const rating = { userId: null, titleId: null, rating: null, time: null };
+	const rating = { userId: null, titleId: null, rating: null, time: null, reviewText: null };
 	Object.entries(dto || {}).forEach(([rawKey, value]) => {
 		if (value === undefined || value === null) return;
 		const key = normalizeKey(RATING_KEY_ALIASES, rawKey);
@@ -543,13 +543,13 @@ const apiv2 = {
 		 * @param {string|number} userId - The unique identifier of the user
 		 * @param {string|number} titleId - The identifier of the title to rate
 		 * @param {number} rating - The rating value (typically 1-5 or 1-10 scale)
-		 * @param {string} review - Optional review text content
+		 * @param {string} reviewText - Optional review text content
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object>} Created rating object
 		 */
-		addRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings`, {
+		addRating: (userId, titleId, rating, reviewText = null, options) => callV2(`users/${userId}/ratings`, {
 			method: 'POST',
-			body: review ? { titleId, rating, review } : { titleId, rating },
+			body: reviewText ? { titleId, rating, reviewText } : { titleId, rating },
 			...options,
 		}),
 
@@ -561,13 +561,13 @@ const apiv2 = {
 		 * @param {string|number} userId - The unique identifier of the user
 		 * @param {string|number} titleId - The identifier of the title being rated
 		 * @param {number} rating - The new rating value
-		 * @param {string} review - Optional review text content
+		 * @param {string} reviewText - Optional review text content
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object>} Updated rating object
 		 */
-		updateRating: (userId, titleId, rating, review = null, options) => callV2(`users/${userId}/ratings/${titleId}`, {
+		updateRating: (userId, titleId, rating, reviewText = null, options) => callV2(`users/${userId}/ratings/${titleId}`, {
 			method: 'PUT',
-			body: review ? { rating, review } : { rating },
+			body: reviewText ? { rating, reviewText } : { rating },
 			...options,
 		}),		// DELETE: /users/{userId}/ratings/{titleId}
 		/**

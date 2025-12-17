@@ -102,7 +102,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                     userId: rating.userId,
                     author: rating.userId || 'Anonymous',
                     rating: rating.rating || 'N/A',
-                    content: rating.review || rating.content || 'No review content available.',
+                    content: rating.reviewText || rating.content || 'No review content available.',
                     authorAvatar: placeholderImage,
                     time: rating.time
                 })) : [];
@@ -155,6 +155,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 const token = getStoredToken();
                 const rating = await mdb.apiv2.user.getRating(userId, titleId, { authToken: token });
                 setUserRating(rating?.rating || 0);
+                setUserReview(rating?.reviewText || '');
             } catch (err) {
                 console.error('Failed to fetch user rating:', err);
                 setUserRating(0);
@@ -201,10 +202,10 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
 
             if (userRating === 0) {
                 // Add new rating
-                await mdb.apiv2.user.addRating(userId, titleId, newRating, { authToken: token });
+                await mdb.apiv2.user.addRating(userId, titleId, newRating, review, { authToken: token });
             } else {
                 // Update existing rating
-                await mdb.apiv2.user.updateRating(userId, titleId, newRating, { authToken: token });
+                await mdb.apiv2.user.updateRating(userId, titleId, newRating, review, { authToken: token });
             }
             setUserRating(newRating);
             setUserReview(reviewText);
