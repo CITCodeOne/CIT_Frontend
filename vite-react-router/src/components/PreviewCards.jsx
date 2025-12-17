@@ -304,7 +304,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
         <div className="card-body ">
           <p className="text-uppercase text-muted small mb-2">{displayFocusKey}</p>
 
-          <h5 className="card-title mb-1">{title}{(!item.mediaType && !item.media_type && extraData?.popularity) ? ` (${extraData.popularity})` : ''}</h5>
+          <h5 className="card-title mb-1">{title}</h5>
           <p className="card-subtitle text-muted mb-1">{subtitle}</p>
 
           {typeLine && <div className="mb-2">{typeLine}</div>}
