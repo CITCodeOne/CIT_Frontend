@@ -31,9 +31,9 @@ export default function NavbarLayout() {
                 }
                 // Implement search logic here, e.g., update state or make API calls
                 console.log('Search query:', query);
-                searchTitles(query);
-                searchIndividuals(query);
-                setShowDropdown(true);
+                // Perform search for titles and individuals and once both are done, hide dropdown if no results
+                const [titlesResults, individualsResults] = await Promise.all([searchTitles(query), searchIndividuals(query)]);
+                setShowDropdown((titlesResults && titlesResults.length > 0) || (individualsResults && individualsResults.length > 0));
         };
 
         const searchTitles = async (query) => {
@@ -47,9 +47,11 @@ export default function NavbarLayout() {
                         const results = await mdb.apiv2.titles.search(searchParams);
                         console.log('Search results:', results);
                         setSearchTitlesResult(results);
-                        // results will be an array of mapped Title objects
+                        setShowDropdown(results && results.length > 0);
+                        return results;
                 } catch (error) {
                         console.error('Search failed:', error);
+                        return [];
                 }
         };
 
@@ -64,9 +66,11 @@ export default function NavbarLayout() {
                         const results = await mdb.apiv2.individuals.search(searchParams);
                         console.log('Search results:', results);
                         setSearchIndividualsResult(results);
-                        // results will be an array of mapped Title objects
+                        setShowDropdown(results && results.length > 0);
+                        return results;
                 } catch (error) {
                         console.error('Search failed:', error);
+                        return [];
                 }
         };
 
@@ -108,9 +112,15 @@ export default function NavbarLayout() {
                                                                         the rootCloseEvent is set to mousedown to close the dropdown when clicking outside
                                                                         the onToggle updates the showDropdown state and is required for rootCloseEvent to work when controlling visibility manually
                                                                 */}
-                                                                <Dropdown show={showDropdown} onToggle={(next) => setShowDropdown(next)} className="Csearch-dropdown"> {/* NOTE: Use show and onToggle to control visibility */}
-                                                                        <Dropdown.Menu rootCloseEvent="mousedown" className="Csearch-dropdown-menu"> {/* NOTE: Use rootCloseEvent to close on outside click */}
-                                                                                <p className="px-3 mb-1 text-muted">Search Results</p>
+                                                                <Dropdown
+                                                                        show={showDropdown && ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0))} // NOTE: Control visibility via state
+                                                                        onToggle={(next) => setShowDropdown(next)} // NOTE: Use show and onToggle to control visibility
+                                                                        className="Csearch-dropdown"
+                                                                >
+                                                                        <Dropdown.Menu
+                                                                                rootCloseEvent="mousedown" // NOTE: Use rootCloseEvent to close on outside click
+                                                                                className="Csearch-dropdown-menu"
+                                                                        >
                                                                                 {searchTitlesResult && searchTitlesResult.length > 0 && (
                                                                                         <>
                                                                                                 <Dropdown.Header>Titles</Dropdown.Header>
@@ -124,8 +134,10 @@ export default function NavbarLayout() {
                                                                                                                 {title.name} ({title.year})
                                                                                                         </Dropdown.Item>
                                                                                                 ))}
-                                                                                                <Dropdown.Divider />
                                                                                         </>
+                                                                                )}
+                                                                                {searchTitlesResult && searchTitlesResult.length > 0 && searchIndividualsResult && searchIndividualsResult.length > 0 && (
+                                                                                        <Dropdown.Divider />
                                                                                 )}
                                                                                 {searchIndividualsResult && searchIndividualsResult.length > 0 && (
                                                                                         <>
@@ -195,7 +207,7 @@ export default function NavbarLayout() {
                                         <Outlet />
                                 </div>
                         </Container>
-                </div>
+                </div >
         );
 }
 
