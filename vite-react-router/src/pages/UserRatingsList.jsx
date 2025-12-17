@@ -130,10 +130,6 @@ export default function UserRatingsList() {
                     )}
                 />
             )}
-
-            {/* ListManager Modal */}
-            {/* ListManager removed */}
-
             {/* message popup*/}
             {message && (
                 <div
