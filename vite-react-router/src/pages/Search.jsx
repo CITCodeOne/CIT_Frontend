@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import PreviewCards from '../components/PreviewCards';
 
-export default function SearchTitle() {
+export default function Search() {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -16,6 +16,10 @@ export default function SearchTitle() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 12;
+
+const searchParams = {
+        titleSearchTerm: qParam	
+    };
 
   useEffect(() => {
     setType(typeParam);
@@ -47,37 +51,19 @@ export default function SearchTitle() {
             Array.isArray(payload) ? payload.length : payload
           );
         } else {
-          const searchParams = {
-            titleSearchTerm: qParam,
+          // TITLE SEARCH – use GET /titles?name={qParam}&page={page}&pageSize={pageSize}
+          console.log('[Search] title list request', {
+            name: qParam,
             page,
             pageSize,
-          };
+          });
 
-          console.log('[Search] title search request', searchParams);
+          payload = await mdb.apiv2.titles.list(searchParams);
 
-          try {
-            payload = await mdb.apiv2.titles.search(searchParams);
-            console.log(
-              '[Search] title search POST response',
-              Array.isArray(payload) ? payload.length : payload
-            );
-          } catch (err) {
-            const errStr = String(err || '');
-            console.warn('[Search] title POST failed, falling back to GET', errStr);
-
-            if (errStr.includes('405') || errStr.includes('Method Not Allowed')) {
-              payload = await mdb.apiv2.titles.list(
-                { page, pageSize },
-                { queryParams: { name: qParam, pageNumber: page, pageSize } }
-              );
-              console.log(
-                '[Search] title list GET response',
-                Array.isArray(payload) ? payload.length : payload
-              );
-            } else {
-              throw err;
-            }
-          }
+          console.log(
+            '[Search] title list response',
+            Array.isArray(payload) ? payload.length : payload
+          );
         }
 
         if (cancelled) return;
@@ -164,6 +150,7 @@ export default function SearchTitle() {
                   {results.map((person) => (
                     <li
                       key={person.id ?? person.personId}
+                      class early
                       className="list-group-item d-flex align-items-center"
                     >
                       <a
