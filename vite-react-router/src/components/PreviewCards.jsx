@@ -1,7 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
+
+// Caches to avoid refetching when cards are remounted due to carousel layout changes
+const imageCache = new Map();
+const extraDataCache = new Map();
+const tmdbPosterCache = new Map();
+
+const buildTmdbImageUrl = (path, size = "w342") => {
+  if (!path) return null;
+  return `https://image.tmdb.org/t/p/${size}${path}`;
+};
+
+const fallbackImage = fallbackImageAsset;
+
+const cacheKeyForItem = (item) => {
+  return (
+    item?.pageId ||
+    item?.id ||
+    item?._id ||
+    item?.imdbId ||
+    item?.imdb_id ||
+    item?.tmdbId ||
+    item?.tmdb_id ||
+    item?.name ||
+    item?.title ||
+    "unknown"
+  );
+};
 
 const truncateText = (text, max = 500) => {
   if (!text) return "";
@@ -64,8 +91,6 @@ const resolveImage = (item, extraData) => {
   return raw;
 };
 
-const fallbackImage = fallbackImageAsset;
-
 const resolveYear = (item) => {
   if (item.year && item.year !== "n/a") return item.year;
   if (item.startYear && item.startYear !== "n/a") return item.startYear;
@@ -81,6 +106,9 @@ const resolveYear = (item) => {
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);
+  const tmdbFallbackTriedRef = useRef(false);
+
+  const cacheKey = cacheKeyForItem(item);
 
   const displayFocusKey = (!item.mediaType && !item.media_type) ? (extraData?.known_for_department || "CONTRIBUTOR") : item.mediaType?.toUpperCase() || "TITLE";
 
@@ -90,13 +118,95 @@ export default function PreviewCards({ item = {}, focusKey }) {
   const image = resolveImage(item, extraData);
   const year = resolveYear(item);
 
+  const tryTmdbPosterFallback = async () => {
+    if (tmdbFallbackTriedRef.current) return;
+    tmdbFallbackTriedRef.current = true;
+
+    if (cacheKey && tmdbPosterCache.has(cacheKey)) {
+      const cachedPoster = tmdbPosterCache.get(cacheKey);
+      setImageSrc(cachedPoster);
+      return;
+    }
+
+    try {
+      let posterUrl = null;
+
+      const posterFromMovie = async (moviePromise) => {
+        const movie = await moviePromise;
+        return buildTmdbImageUrl(movie?.poster_path) || null;
+      };
+
+      if (item?.tmdbId || item?.tmdb_id) {
+        posterUrl = await posterFromMovie(tmdbApi.getMovie(item.tmdbId || item.tmdb_id));
+      }
+
+      if (!posterUrl && (item?.imdbId || item?.imdb_id)) {
+        posterUrl = await posterFromMovie(tmdbApi.getMovieByImdb(item.imdbId || item.imdb_id));
+      }
+
+      if (!posterUrl && item?.title) {
+        const posters = await tmdbApi.getMoviePosters(item.title);
+        if (Array.isArray(posters) && posters.length) {
+          posterUrl = posters[0].posterUrl || buildTmdbImageUrl(posters[0].poster_path);
+        }
+
+        if (!posterUrl) {
+          const search = await tmdbApi.searchMovie(item.title);
+          const first = search?.results?.[0];
+          posterUrl = buildTmdbImageUrl(first?.poster_path);
+        }
+      }
+
+      if (posterUrl) {
+        setImageSrc(posterUrl);
+        if (cacheKey) {
+          imageCache.set(cacheKey, posterUrl);
+          tmdbPosterCache.set(cacheKey, posterUrl);
+        }
+        return;
+      }
+    } catch (err) {
+      console.error("TMDB poster fallback failed", err);
+    }
+
+    setImageSrc(fallbackImage);
+    if (cacheKey) imageCache.set(cacheKey, fallbackImage);
+  };
+
   useEffect(() => {
-    setImageSrc(image || fallbackImage);
-  }, [image]);
+    const cachedImage = cacheKey ? imageCache.get(cacheKey) : null;
+    if (cachedImage) {
+      setImageSrc(cachedImage);
+      return;
+    }
+
+    const next = image || fallbackImage;
+    setImageSrc(next);
+    if (cacheKey) imageCache.set(cacheKey, next);
+
+    if (!image) {
+      // If we have no primary image, immediately try TMDB fallback
+      tryTmdbPosterFallback();
+    }
+  }, [cacheKey, image]);
+
+  // When extraData changes and provides a TMDB profile_path, update imageSrc and cache
+  useEffect(() => {
+    if (!item.mediaType && !item.media_type && extraData?.profile_path) {
+      const tmdbProfileUrl = `https://image.tmdb.org/t/p/w185${extraData.profile_path}`;
+      setImageSrc(tmdbProfileUrl);
+      if (cacheKey) imageCache.set(cacheKey, tmdbProfileUrl);
+    }
+  }, [extraData?.profile_path, item.mediaType, item.media_type, cacheKey]);
 
   useEffect(() => {
     // Fetch TMDB data for contributors (items without mediaType but with name)
     if (item.name && !item.mediaType && !item.media_type) {
+      if (cacheKey && extraDataCache.has(cacheKey)) {
+        setExtraData(extraDataCache.get(cacheKey));
+        return;
+      }
+
       tmdbApi.searchPerson(item.name).then(data => {
         if (data.results && data.results.length > 0) {
           // Default to the first result from TMDB and enrich with person details
@@ -115,7 +225,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
             const topCreditTitle = topCredit?.title || topCredit?.name || null;
             const topCreditType = topCredit?.media_type || null;
 
-            setExtraData({
+            const enriched = {
               profile_path: result.profile_path,
               popularity: result.popularity,
               known_for_department: result.known_for_department,
@@ -128,7 +238,10 @@ export default function PreviewCards({ item = {}, focusKey }) {
               top_credit_role: topCreditRole,
               top_credit_media_type: topCreditType,
               known_for: result.known_for
-            });
+            };
+
+            setExtraData(enriched);
+            if (cacheKey) extraDataCache.set(cacheKey, enriched);
           }).catch(err => console.error('Error fetching person details:', err));
         }
       }).catch(err => console.error('Error fetching TMDB data:', err));
@@ -138,7 +251,15 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }, [item.name, item.mediaType, item.media_type]);
 
   const handleImageError = () => {
-    if (imageSrc !== fallbackImage) setImageSrc(fallbackImage);
+    if (!tmdbFallbackTriedRef.current) {
+      tryTmdbPosterFallback();
+      return;
+    }
+
+    if (imageSrc !== fallbackImage) {
+      setImageSrc(fallbackImage);
+      if (cacheKey) imageCache.set(cacheKey, fallbackImage);
+    }
   };
 
   // Check type to determine either mediaType or contributionType
