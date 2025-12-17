@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
 import Rating from "../components/Rating";
 import useAuthStatus from "../hooks/useAuthStatus";
+import { getStoredToken } from "../components/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";
@@ -34,20 +35,117 @@ export default function User() {
                 setLoading(true);
                 setError(null);
 
-                // Fetch user profile (no auth needed)
-                const user = await mdb.apiv2.user.get(userId);
-                setUserData(user);
+                // Fetch user profile (include auth token when available)
+                const token = getStoredToken();
+                const authOptions = token ? { authToken: token } : undefined;
 
-                // Fetch ratings and bookmarks if authenticated
-                const authToken = localStorage.getItem('token');
-                if (authToken) {
-                    const [ratings, bookmarks] = await Promise.all([
-                        mdb.apiv2.user.getRatings(userId, { authToken }),
-                        mdb.apiv2.user.getBookmarks(userId, { authToken })
-                    ]);
-                    setRatedTitles(ratings);
-                    setBookmarkedPages(bookmarks);
+                const user = await mdb.apiv2.user.get(userId, authOptions);
+                setUserData(user);
+                setAvatarUrl(user?.image || null);
+
+                // Fetch user ratings and bookmarks (use correct API signatures)
+                const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
+
+                // Enrich each rating with title data (poster, title name, year, mediaType, short plot)
+                let enrichedRatings = [];
+                if (Array.isArray(ratings) && ratings.length > 0) {
+                    enrichedRatings = await Promise.all(
+                                ratings.map(async (r) => {
+                            try {
+                                const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                                return {
+                                    ...r,
+                                            title: title?.name ?? title?.title ?? 'Unknown',
+                                            poster: title?.image ?? placeholderImage,
+                                            startYear: title?.startYear ?? title?.releaseDate ?? null,
+                                            mediaType: title?.mediaType ?? 'unknown',
+                                            plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                            pageId: title?.pageId ?? null,
+                                };
+                            } catch (err) {
+                                return {
+                                    ...r,
+                                    title: 'Unknown',
+                                    poster: placeholderImage,
+                                    startYear: null,
+                                    mediaType: 'unknown',
+                                    plotPre: '',
+                                            pageId: null,
+                                };
+                            }
+                        })
+                    );
                 }
+
+                setRatedTitles(enrichedRatings);
+
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
+
+                // Enrich bookmarks: a bookmark references a pageId which may point to a title or an individual
+                let enrichedBookmarks = [];
+                if (Array.isArray(bookmarks) && bookmarks.length > 0) {
+                    enrichedBookmarks = await Promise.all(
+                        bookmarks.map(async (b) => {
+                            try {
+                                // resolve page to find whether it's a title or individual
+                                const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
+
+                                // API returns { pageId, tconst, iconst }
+                                const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
+                                const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+
+                                if (tconst) {
+                                    const title = await mdb.apiv2.titles.getById(tconst, authOptions);
+                                    return {
+                                        ...b,
+                                        kind: 'title',
+                                        title: title?.name ?? title?.title ?? 'Unknown',
+                                        poster: title?.image ?? placeholderImage,
+                                        plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                        mediaType: title?.mediaType ?? 'unknown',
+                                        pageId: b.pageId,
+                                    };
+                                }
+
+                                if (iconst) {
+                                    const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+                                    return {
+                                        ...b,
+                                        kind: 'individual',
+                                        title: individual?.name ?? 'Unknown',
+                                        poster: individual?.image ?? placeholderImage,
+                                        plotPre: individual?.bio ? String(individual.bio).slice(0, 200) : '',
+                                        mediaType: 'individual',
+                                        pageId: b.pageId,
+                                    };
+                                }
+
+                                // fallback when pageRef doesn't contain ids
+                                return {
+                                    ...b,
+                                    kind: 'unknown',
+                                    title: pageRef?.name ?? pageRef?.title ?? 'Unknown',
+                                    poster: pageRef?.image ?? placeholderImage,
+                                    plotPre: pageRef?.plot ? String(pageRef.plot).slice(0, 200) : '',
+                                    mediaType: 'unknown',
+                                    pageId: b.pageId,
+                                };
+                            } catch (err) {
+                                return {
+                                    ...b,
+                                    kind: 'error',
+                                    title: 'Unknown',
+                                    poster: placeholderImage,
+                                    plotPre: '',
+                                    mediaType: 'unknown',
+                                    pageId: b.pageId,
+                                };
+                            }
+                        })
+                    );
+                }
+
+                setBookmarkedPages(enrichedBookmarks);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -214,7 +312,11 @@ export default function User() {
                                         key={item.titleId}
                                         className="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2"
                                     >
-                                        <div className="d-flex align-items-center gap-3">
+                                        <Link
+                                            to={`/page/${item.pageId ?? ''}`}
+                                            className="d-flex align-items-center gap-3 text-decoration-none text-reset"
+                                            style={{ flex: 1 }}
+                                        >
                                             <img
                                                 src={item.poster}
                                                 alt={item.title}
@@ -227,17 +329,17 @@ export default function User() {
                                             />
                                             <div>
                                                 <div className="fs-5 fw-semibold">
-                                                    {item.title}{" "}
+                                                    {item.title} {" "}
                                                     {item.startYear && (
                                                         <span className="text-muted">({item.startYear})</span>
                                                     )}
                                                 </div>
                                                 <div className="text-muted small">{item.mediaType}</div>
                                             </div>
-                                        </div>
+                                        </Link>
 
                                         {/* Rating and Remove button */}
-                                        <div className="d-flex align-items-center gap-2 ms-md-auto">
+                                        <div className="d-flex align-items-center gap-2 ms-md-3">
                                             <Rating
                                                 initialRating={item.rating}
                                                 editable={false}
@@ -283,24 +385,30 @@ export default function User() {
                                         key={item.pageId}
                                         className="list-group-item d-flex align-items-center gap-3"
                                     >
-                                        <img
-                                            src={item.poster}
-                                            alt={item.title}
-                                            style={{
-                                                width: "100px",
-                                                height: "140px",
-                                                objectFit: "cover",
-                                                borderRadius: "4px",
-                                            }}
-                                        />
+                                        <Link
+                                            to={`/page/${item.pageId ?? ''}`}
+                                            className="d-flex align-items-center gap-3 text-decoration-none text-reset"
+                                            style={{ flex: 1 }}
+                                        >
+                                            <img
+                                                src={item.poster}
+                                                alt={item.title}
+                                                style={{
+                                                    width: "100px",
+                                                    height: "140px",
+                                                    objectFit: "cover",
+                                                    borderRadius: "4px",
+                                                }}
+                                            />
 
-                                        {/* Title & plot preview*/}
-                                        <div className="flex-grow-1">
-                                            <div className="fs-5 fw-semibold">
-                                                {item.title}</div>
-                                            <div className="text-muted small">
-                                                {formatPlotPre(item.plotPre)}</div>
-                                        </div>
+                                            {/* Title & plot preview*/}
+                                            <div className="flex-grow-1">
+                                                <div className="fs-5 fw-semibold">{item.title}</div>
+                                                <div className="text-muted small">
+                                                    {formatPlotPre(item.plotPre)}
+                                                </div>
+                                            </div>
+                                        </Link>
 
                                         {/* Delete bookmark button */}
                                         {isOwnProfile && (
