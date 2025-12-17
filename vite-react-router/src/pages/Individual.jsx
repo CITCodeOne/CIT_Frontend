@@ -7,6 +7,7 @@ import ToggleButton from '../components/ToggleButton';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
 import useAuthStatus from '../hooks/useAuthStatus';
+import { getStoredToken } from '../components/ExtractJwtData';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
@@ -108,21 +109,24 @@ function Individual() {
             }
 
             try {
+                const token = getStoredToken();
                 const bookmarkChecks = await Promise.all(
                     knownForTitles.map(async (title) => {
+                        const pageRef = title.pageId || null;
+                        if (!pageRef) return { id: null, isBookmarked: false };
                         try {
-                            const bookmark = await mdb.apiv2.user.getBookmark(userId, title.id);
-                            return { id: title.id, isBookmarked: !!bookmark };
+                            const bookmark = await mdb.apiv2.user.getBookmark(userId, pageRef, { authToken: token });
+                            return { id: pageRef, isBookmarked: !!bookmark };
                         } catch (err) {
-                            console.error(`Failed to check bookmark for title ${title.id}:`, err);
-                            return { id: title.id, isBookmarked: false };
+                            console.error(`Failed to check bookmark for title page ${pageRef}:`, err);
+                            return { id: pageRef, isBookmarked: false };
                         }
                     })
                 );
 
                 const bookmarkMap = {};
                 bookmarkChecks.forEach(({ id, isBookmarked }) => {
-                    bookmarkMap[id] = isBookmarked;
+                    if (id) bookmarkMap[id] = isBookmarked;
                 });
                 setTitleBookmarks(bookmarkMap);
             } catch (err) {
@@ -134,21 +138,28 @@ function Individual() {
     }, [knownForTitles, userId, isSignedIn]);
 
     // Toggle bookmark for a title
-    const toggleTitleBookmark = async (titleId, titleName) => {
+    const toggleTitleBookmark = async (pageId, titleId, titleName) => {
         if (!isSignedIn || !userId) {
             alert('Please log in to bookmark titles');
             return;
         }
 
+        if (!pageId) {
+            console.warn('No pageId available for title, cannot bookmark');
+            alert('Unable to bookmark this title');
+            return;
+        }
+
         try {
-            const isCurrentlyBookmarked = titleBookmarks[titleId];
+            const token = getStoredToken();
+            const isCurrentlyBookmarked = titleBookmarks[pageId];
             
             if (isCurrentlyBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, titleId);
-                setTitleBookmarks(prev => ({ ...prev, [titleId]: false }));
+                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: false }));
             } else {
-                await mdb.apiv2.user.addBookmark(userId, titleId);
-                setTitleBookmarks(prev => ({ ...prev, [titleId]: true }));
+                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: true }));
             }
         } catch (err) {
             console.error('Failed to toggle title bookmark:', err);
@@ -326,21 +337,21 @@ function Individual() {
                                                 
                                                 {/* Bookmark button */}
                                                 <ToggleButton
-                                                    itemId={title.id}
-                                                    isActive={titleBookmarks[title.id]}
-                                                    onToggle={(id, newState) => {
+                                                    itemId={title.pageId || title.id}
+                                                    isActive={titleBookmarks[title.pageId]}
+                                                    onToggle={() => {
                                                         if (!isSignedIn) {
                                                             alert('Please log in to bookmark titles');
                                                             return;
                                                         }
-                                                        toggleTitleBookmark(id, title.name);
+                                                        toggleTitleBookmark(title.pageId, title.id, title.name);
                                                     }}
                                                     activeLabel="Remove bookmark"
                                                     inactiveLabel="Add bookmark"
-                                                    className={`known-for-bookmark ${titleBookmarks[title.id] ? 'bookmarked' : ''}`}
+                                                    className={`known-for-bookmark ${titleBookmarks[title.pageId] ? 'bookmarked' : ''}`}
                                                 >
                                                     <span className="known-for-bookmark-icon">
-                                                        {titleBookmarks[title.id] ? '✓' : '+'}
+                                                        {titleBookmarks[title.pageId] ? '✓' : '+'}
                                                     </span>
                                                 </ToggleButton>
                                             </div>

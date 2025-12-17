@@ -4,6 +4,7 @@ import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import useAuthStatus from '../hooks/useAuthStatus';
+import { getStoredToken } from '../components/ExtractJwtData';
 
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
@@ -12,20 +13,26 @@ function Home() {
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
   const [topRatedTitles, setTopRatedTitles] = useState([]);
 
+  const { userId: authUserId, isSignedIn } = useAuthStatus();
+
   // Toggle bookmark for featured title using ApiClient
   const handleToggleFeaturedBookmark = async () => {
     if (!featuredTitle) return;
 
-    //Gets userId from auth status
-    const { userId: authUserId } = useAuthStatus();
     const userId = authUserId ? Number(authUserId) : null;
+    if (!userId || !isSignedIn) {
+      alert('Please log in to bookmark');
+      return;
+    }
+
     const pageId = Number(featuredTitle.id);
+    const token = getStoredToken();
 
     try {
       if (!isFeaturedBookmarked) {
-        await mdb.apiv2.user.addBookmark(userId, pageId);
+        await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
       } else {
-        await mdb.apiv2.user.removeBookmark(userId, pageId);
+        await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
       }
       setIsFeaturedBookmarked((prev) => !prev);
     } catch (err) {
