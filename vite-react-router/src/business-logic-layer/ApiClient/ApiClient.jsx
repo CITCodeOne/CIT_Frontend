@@ -171,7 +171,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of mapped title objects
 		 */
-		search: (parameters, options) => callV2('titles/search', {
+		search: (parameters, options) => callV2('titles', {
 			queryParams: parameters,
 			...options,
 		}).then(mapTitles),
