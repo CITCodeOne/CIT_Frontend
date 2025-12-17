@@ -172,8 +172,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of mapped title objects
 		 */
 		search: (parameters, options) => callV2('titles/search', {
-			method: 'POST',
-			body: parameters,
+			queryParams: parameters,
 			...options,
 		}).then(mapTitles),
 
