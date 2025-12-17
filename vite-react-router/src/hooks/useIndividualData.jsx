@@ -37,6 +37,23 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
                 const individualData = await mdb.apiv2.individuals.getById(individualId);
                 setIndividual(individualData);
                 setError(null);
+                // If backend doesn't provide a bio/description, try to enrich from TMDB
+                try {
+                    if (individualData?.name && (!individualData?.bio || individualData.bio === 'n/a') && (!individualData?.description || individualData.description === 'n/a')) {
+                        const search = await mdb.tmdb.searchPerson(individualData.name);
+                        if (search?.results && search.results.length > 0) {
+                            const tmdbId = search.results[0].id;
+                            const personDetails = await mdb.tmdb.getPerson(tmdbId);
+                            const tmdbBio = personDetails?.biography;
+                            if (tmdbBio) {
+                                setIndividual(prev => ({ ...prev, bio: tmdbBio }));
+                            }
+                        }
+                    }
+                } catch (tmdbErr) {
+                    // Non-fatal: log and continue
+                    console.error('Failed to fetch TMDB biography:', tmdbErr);
+                }
             } catch (err) {
                 setError(err.message || 'Failed to load individual');
                 setIndividual(null);

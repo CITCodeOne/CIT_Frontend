@@ -162,7 +162,7 @@ function MainDisplay({
                             <Col md={8}>
                                 {/* Sections excluding Genres */}
                                 {sections.filter(section => section.title !== 'Genres').map((section, index) => (
-                                    <div key={index} className="mb-3">
+                                    <div key={index} className="mb-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                                         {section.title && <h5>{section.title}</h5>}
                                         {section.content}
                                     </div>
