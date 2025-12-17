@@ -25,7 +25,7 @@ function AppRoutes() {
         <Route path="/user/:userId" element={<User />} />
         <Route path="/user/:userId/ratings" element={<UserRatingsList />} />
         <Route path="/user/:userId/bookmarks" element={<UserBookmarksList />} />
-        <Route path="/user/:userId/visited" element={<Visited />} />
+        <Route path="/user/visited" element={<Visited />} />
 
         // Titles and individual pages
         <Route path="/page/:pageId" element={<Page />}>
@@ -40,7 +40,7 @@ function AppRoutes() {
 
         // Other minor pages
         <Route path="/about" element={<About />} />
-        <Route path="/visited" element={<Visited />} />
+
         <Route path="*" element={<NotFound />} />
         <Route path="test" element={<Test />} />
       </Route>
