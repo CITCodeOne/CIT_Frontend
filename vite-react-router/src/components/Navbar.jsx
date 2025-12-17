@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../style/Cstyle.css';
 import Button from 'react-bootstrap/Button';
@@ -12,8 +12,22 @@ import SignInOffcanvas from './SignInOffcanvas';
 import useAuthStatus from '../hooks/useAuthStatus';
 
 export default function NavbarLayout() {
+        // State to control SignInOffcanvas visibility
         const [showSignIn, setShowSignIn] = useState(false);
+        // Custom hook to get authentication status and user info
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
+        // For navbar search input
+        const [searchQ, setSearchQ] = useState('');
+        // For navigation on search
+        const navigate = useNavigate();
+        // Submit search handler for search form submission
+        const onSearchSubmit = (e) => {
+                e?.preventDefault(); // Stop the browser from reloading the page
+                const q = (searchQ || '').trim(); // Trim whitespace from search query to avoid empty searches
+                if (!q) return; // Do nothing if search query is empty
+                navigate(`/search?q=${encodeURIComponent(q)}`);
+        };
+
         return (
                 <div className="min-vh-100 d-flex flex-column">
                         <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow">
@@ -34,16 +48,15 @@ export default function NavbarLayout() {
                                                         <NavDropdown.Item as={Link} to="/about">About</NavDropdown.Item>
                                                 </NavDropdown>
                                                 <div className="d-flex justify-content-between flex-grow-1">
-                                                        <Form className="d-flex flex-grow-1">
+                                                        {/* Search form */}
+                                                        <Form className="d-flex flex-grow-1" onSubmit={onSearchSubmit}>
                                                                 <Form.Control
-                                                                        id="navbar-search"
-                                                                        name="search"
-                                                                        type="search"
                                                                         placeholder="Search"
                                                                         className="me-2"
-                                                                        aria-label="Search"
+                                                                        value={searchQ}
+                                                                        onChange={(e) => setSearchQ(e.target.value)} // Update state on input change
                                                                 />
-                                                                <Button variant="outline-success Cbutton">Search</Button>
+                                                                <Button variant="outline-success Cbutton" type="submit">Search</Button>
                                                         </Form>
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
@@ -90,7 +103,7 @@ export default function NavbarLayout() {
                                 fluid
                                 className="flex-grow-1 py-3 ContainerCstyle overflow-auto"
                         >
-                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px'}}>
+                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px' }}>
                                         <Outlet />
                                 </div>
                         </Container>
