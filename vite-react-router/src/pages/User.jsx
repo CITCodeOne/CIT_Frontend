@@ -77,6 +77,7 @@ export default function User() {
                     );
                 }
 
+                enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time));
                 setRatedTitles(enrichedRatings);
 
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
@@ -144,7 +145,7 @@ export default function User() {
                         })
                     );
                 }
-
+                enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time));
                 setBookmarkedPages(enrichedBookmarks);
             } catch (err) {
                 setError(err.message);
