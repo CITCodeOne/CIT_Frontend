@@ -10,9 +10,9 @@ import { LoadingState } from '../components/PageStates';
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [individuals, setIndividuals] = useState([]);
+  const [individuals, setIndividuals] = useState(null);
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
-  const [topRatedTitles, setTopRatedTitles] = useState([]);
+  const [topRatedTitles, setTopRatedTitles] = useState(null);
 
   const { userId: authUserId, isSignedIn } = useAuthStatus();
 
@@ -147,7 +147,7 @@ function Home() {
       />
 
       {/* Top rated titles */}
-      {topRatedTitles.length > 0 && (
+      {topRatedTitles && topRatedTitles.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h3 style={{ margin: '0 0 12px 0' }}>Top rated titles</h3>
           {makeCarousel(topRatedTitles, '<media type>')}

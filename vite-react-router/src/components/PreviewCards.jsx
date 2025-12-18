@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Spinner } from 'react-bootstrap';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
 
@@ -106,6 +107,7 @@ const resolveYear = (item) => {
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);
+  const [loadingExtra, setLoadingExtra] = useState(false);
   const tmdbFallbackTriedRef = useRef(false);
 
   const cacheKey = cacheKeyForItem(item);
@@ -114,7 +116,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
   const title = resolveTitle(item);
   const subtitle = resolveSubtitle(item, extraData);
-  const description = truncateText(resolveDescription(item, extraData));
+  const description = loadingExtra ? 'Loading...' : truncateText(resolveDescription(item, extraData));
   const image = resolveImage(item, extraData);
   const year = resolveYear(item);
 
@@ -207,18 +209,24 @@ export default function PreviewCards({ item = {}, focusKey }) {
         return;
       }
 
-      tmdbApi.searchPerson(item.name).then(data => {
-        if (data.results && data.results.length > 0) {
-          // Default to the first result from TMDB and enrich with person details
-          const result = data.results[0];
+      let cancelled = false;
 
-          const knownForItem = result.known_for?.[0];
-          const knownForTitle = knownForItem?.title || knownForItem?.name || null;
-          const knownForOverview = knownForItem?.overview || null;
-          const knownForYear = (knownForItem?.release_date || knownForItem?.first_air_date || "").slice(0, 4) || null;
+      (async () => {
+        setLoadingExtra(true);
+        try {
+          const data = await tmdbApi.searchPerson(item.name);
+          if (cancelled) return;
+          if (data?.results && data.results.length > 0) {
+            // Default to the first result from TMDB and enrich with person details
+            const result = data.results[0];
 
-          // Fetch full person details
-          tmdbApi.getPerson(result.id).then(personData => {
+            const knownForItem = result.known_for?.[0];
+            const knownForTitle = knownForItem?.title || knownForItem?.name || null;
+            const knownForOverview = knownForItem?.overview || null;
+            const knownForYear = (knownForItem?.release_date || knownForItem?.first_air_date || "").slice(0, 4) || null;
+
+            const personData = await tmdbApi.getPerson(result.id);
+            if (cancelled) return;
 
             const topCredit = personData?.combined_credits?.cast?.[0] || null;
             const topCreditRole = topCredit?.character || null;
@@ -242,11 +250,19 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
             setExtraData(enriched);
             if (cacheKey) extraDataCache.set(cacheKey, enriched);
-          }).catch(err => console.error('Error fetching person details:', err));
+          }
+        } catch (err) {
+          console.error('Error fetching TMDB data:', err);
+        } finally {
+          if (!cancelled) setLoadingExtra(false);
         }
-      }).catch(err => console.error('Error fetching TMDB data:', err));
+      })();
+
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [item.name, item.mediaType, item.media_type]);
+  }, [item.name, item.mediaType, item.media_type, cacheKey]);
 
   const handleImageError = () => {
     if (!tmdbFallbackTriedRef.current) {
@@ -307,7 +323,14 @@ export default function PreviewCards({ item = {}, focusKey }) {
           <h5 className="card-title mb-1">{title}</h5>
           <p className="card-subtitle text-muted mb-1">{subtitle}</p>
 
-          {typeLine && <div className="mb-2">{typeLine}</div>}
+          {loadingExtra ? (
+            <div className="mb-2 d-flex align-items-center">
+              <Spinner animation="border" size="sm" />
+              <small className="text-muted ms-2">Loading</small>
+            </div>
+          ) : (
+            typeLine && <div className="mb-2">{typeLine}</div>
+          )}
 
           <p className="card-text small mb-0" style={{ whiteSpace: 'pre-line' }}>
             {truncateText(description, 150)}

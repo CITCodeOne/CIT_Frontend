@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Carousel from "react-bootstrap/Carousel";
 import PreviewCards from "./PreviewCards";
+import { LoadingState } from './PageStates';
 
 const DEFAULT_FOCUS_KEY = "title";
 const DEFAULT_CARD_COUNT = 3;
@@ -148,7 +149,12 @@ const CarouselRenderer = ({ items, focusKey, cardComponent }) => {
  * @param {string} focusKey - Hint about the card context (e.g., "actor" or "movie") that PreviewCards can display.
  * @param {Function} cardComponent - Component function to render each card, defaults to PreviewCards.
  */
-export default function makeCarousel(items = [], focusKey = DEFAULT_FOCUS_KEY, cardComponent = PreviewCards) {
+export default function makeCarousel(items = null, focusKey = DEFAULT_FOCUS_KEY, cardComponent = PreviewCards) {
+	// Treat `null` or `undefined` as a loading signal from the caller
+	if (items === null || items === undefined) {
+		return <LoadingState message="Loading content..." />;
+	}
+
 	const safeItems = Array.isArray(items) ? items : [];
 
 	if (!safeItems.length) {
