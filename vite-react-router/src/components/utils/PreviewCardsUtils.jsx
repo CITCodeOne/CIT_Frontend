@@ -99,8 +99,13 @@ export const findPosterForItem = async (item, cacheKey) => {
   try {
     let posterUrl = null;
 
-    if (item?.title) {
-      posterUrl = await getTitlePoster(item.title, item.mediaType || item.media_type, item.year || item.startYear);
+    // Try to resolve a human-friendly title/name and year from multiple possible fields
+    const titleName = item?.title || item?.name || item?.original_title || null;
+    const mediaType = item?.mediaType || item?.media_type || (item?.type === 'Title' ? 'movie' : null) || 'movie';
+    const titleYear = item?.year || item?.startYear || item?.releaseYear || item?.release_date || null;
+
+    if (titleName) {
+      posterUrl = await getTitlePoster(titleName, mediaType, titleYear);
     }
 
     if (!posterUrl && (item?.imdbId || item?.imdb_id)) {

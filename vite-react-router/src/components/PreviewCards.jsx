@@ -19,8 +19,6 @@ import {
 } from './utils/PreviewCardsUtils';
 import { getImageUrl } from '../business-logic-layer/TmdbIntegration';
 
-// helpers and caches are moved to `./utils/PreviewCardsUtils.jsx`
-
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);

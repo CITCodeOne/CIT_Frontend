@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
 import Home from '../pages/Home';
-import About from '../pages/About';
 import Navbar from '../components/Navbar';
 import NotFound from '../pages/NotFound';
 import User from '../pages/User';
@@ -37,8 +36,6 @@ function AppRoutes() {
         <Route path="/search" element={<Search />} />
         <Route path="/search/:query" element={<Search />} />
 
-        // Other minor pages
-        <Route path="/about" element={<About />} />
 
         <Route path="*" element={<NotFound />} />
         <Route path="test" element={<Test />} />
