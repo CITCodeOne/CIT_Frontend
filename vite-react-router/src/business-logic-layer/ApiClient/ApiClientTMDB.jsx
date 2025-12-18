@@ -24,7 +24,8 @@ const tmdbApi = {
 		if (!query || !query.trim()) {
 			return Promise.resolve({ results: [] });
 		}
-		return callTMDB("person", {
+		// backend exposes person search at `person/search`
+		return callTMDB("person/search", {
 			queryParams: { query, ...queryParams },
 			...options
 		});
@@ -67,11 +68,23 @@ const tmdbApi = {
 	 * @param {object} queryParams - Extra query params (e.g., page, year)
 	 * @param {object} options - fetchSimplified options (authToken, signal, etc.)
 	 */
+	// Search movies via backend proxy at `movie/search`
 	searchMovie: (query, queryParams = {}, options = {}) => {
 		if (!query || !query.trim()) {
 			return Promise.resolve({ results: [] });
 		}
-		return callTMDB("movie", {
+		return callTMDB("movie/search", {
+			queryParams: { query, ...queryParams },
+			...options
+		});
+	},
+
+	// Search TV shows via backend proxy at `tv/search`
+	searchTv: (query, queryParams = {}, options = {}) => {
+		if (!query || !query.trim()) {
+			return Promise.resolve({ results: [] });
+		}
+		return callTMDB("tv/search", {
 			queryParams: { query, ...queryParams },
 			...options
 		});
@@ -83,13 +96,40 @@ const tmdbApi = {
 	 * @param {object} queryParams - Optional params (append overrides default)
 	 * @param {object} options - fetchSimplified options
 	 */
-	getMovieByImdb: (imdbId, queryParams = {}, options = {}) => {
+	/**
+	 * Find by IMDb id via backend `find` endpoint and return first movie result
+	 */
+	getMovieByImdb: async (imdbId, queryParams = {}, options = {}) => {
 		if (!imdbId) return Promise.resolve(null);
 		const { append = tmdbDefaults.movieAppend, ...rest } = queryParams;
-		return callTMDB(`movie/imdb/${imdbId}`, {
-			queryParams: { append, ...rest },
+		// backend exposes `/api/v2/tmdb/find?imdbId=...`
+		const resp = await callTMDB(`find`, {
+			queryParams: { imdbId, ...rest },
 			...options
 		});
+		// Expect response shape similar to TMDB find: { movie_results: [...] }
+		if (!resp) return null;
+		return resp.movie_results?.[0] || null;
+	},
+
+	/**
+	 * Direct wrapper for backend `find` endpoint — returns full find response
+	 */
+	findByImdb: (imdbId, options = {}) => {
+		if (!imdbId) return Promise.resolve(null);
+		return callTMDB('find', { queryParams: { imdbId }, ...options });
+	},
+
+	// Movie similar titles via backend `movie/{id}/similar`
+	getMovieSimilar: (id, queryParams = {}, options = {}) => {
+		if (!id) return Promise.resolve({ results: [] });
+		return callTMDB(`movie/${id}/similar`, { queryParams: { ...queryParams }, ...options });
+	},
+
+	// TV similar titles via backend `tv/{id}/similar`
+	getTvSimilar: (id, queryParams = {}, options = {}) => {
+		if (!id) return Promise.resolve({ results: [] });
+		return callTMDB(`tv/${id}/similar`, { queryParams: { ...queryParams }, ...options });
 	},
 
 	/**

@@ -4,16 +4,14 @@ import { Spinner } from 'react-bootstrap';
 import { LoadingState } from './PageStates';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
+import { getImageUrl } from '../business-logic-layer/TmdbIntegration';
 
 // Cacheing to avoid redundant fetches
 const imageCache = new Map();
 const extraDataCache = new Map();
 const tmdbPosterCache = new Map();
 
-const buildTmdbImageUrl = (path, size = "w342") => {
-  if (!path) return null;
-  return `https://image.tmdb.org/t/p/${size}${path}`;
-};
+// use `getImageUrl` from TmdbIntegration for consistent image URL construction
 
 const fallbackImage = fallbackImageAsset;
 
@@ -79,7 +77,7 @@ const resolveDescription = (item, extraData) => {
 const resolveImage = (item, extraData) => {
   // For contributors, prefer TMDB profile image if available
   if (!item.mediaType && !item.media_type && extraData?.profile_path) {
-    return `https://image.tmdb.org/t/p/w185${extraData.profile_path}`;
+    return getImageUrl(extraData.profile_path, 'w185');
   }
 
   const raw = item?.image || item?.poster;
@@ -136,7 +134,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
       const posterFromMovie = async (moviePromise) => {
         const movie = await moviePromise;
-        return buildTmdbImageUrl(movie?.poster_path) || null;
+        return getImageUrl(movie?.poster_path) || null;
       };
 
       if (item?.tmdbId || item?.tmdb_id) {
@@ -150,13 +148,13 @@ export default function PreviewCards({ item = {}, focusKey }) {
       if (!posterUrl && item?.title) {
         const posters = await tmdbApi.getMoviePosters(item.title);
         if (Array.isArray(posters) && posters.length) {
-          posterUrl = posters[0].posterUrl || buildTmdbImageUrl(posters[0].poster_path);
+          posterUrl = posters[0].posterUrl || getImageUrl(posters[0].poster_path);
         }
 
         if (!posterUrl) {
           const search = await tmdbApi.searchMovie(item.title);
           const first = search?.results?.[0];
-          posterUrl = buildTmdbImageUrl(first?.poster_path);
+          posterUrl = getImageUrl(first?.poster_path);
         }
       }
 
@@ -196,7 +194,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
   // When extraData changes and provides a TMDB profile_path, update imageSrc and cache
   useEffect(() => {
     if (!item.mediaType && !item.media_type && extraData?.profile_path) {
-      const tmdbProfileUrl = `https://image.tmdb.org/t/p/w185${extraData.profile_path}`;
+      const tmdbProfileUrl = getImageUrl(extraData.profile_path, 'w185');
       setImageSrc(tmdbProfileUrl);
       if (cacheKey) imageCache.set(cacheKey, tmdbProfileUrl);
     }
