@@ -2,106 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Spinner } from 'react-bootstrap';
 import { LoadingState } from './PageStates';
-import fallbackImageAsset from '../pics/Image-not-found.png';
-import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
+import {
+  fallbackImage,
+  imageCache,
+  extraDataCache,
+  tmdbPosterCache,
+  cacheKeyForItem,
+  truncateText,
+  resolveTitle,
+  resolveSubtitle,
+  resolveDescription,
+  resolveImage,
+  resolveYear,
+  findPosterForItem,
+  fetchPersonExtraData
+} from './utils/PreviewCardsUtils';
 import { getImageUrl } from '../business-logic-layer/TmdbIntegration';
 
-// Cacheing to avoid redundant fetches
-const imageCache = new Map();
-const extraDataCache = new Map();
-const tmdbPosterCache = new Map();
-
-// use `getImageUrl` from TmdbIntegration for consistent image URL construction
-
-const fallbackImage = fallbackImageAsset;
-
-const cacheKeyForItem = (item) => {
-  return (
-    item?.pageId ||
-    item?.id ||
-    item?._id ||
-    item?.imdbId ||
-    item?.imdb_id ||
-    item?.tmdbId ||
-    item?.tmdb_id ||
-    item?.name ||
-    item?.title ||
-    "unknown"
-  );
-};
-
-const truncateText = (text, max = 500) => {
-  if (!text) return "";
-  const str = String(text);
-  if (str.length <= max) return str;
-  return `${str.slice(0, max - 3).trimEnd()}...`;
-};
-
-const resolveTitle = (item) => item?.title || item?.name || "Untitled";
-
-const resolveSubtitle = (item, extraData) => {
-  let sub = "";
-  if (!item.mediaType && !item.media_type) {
-    // Contributor - no subtitle
-    sub = "";
-  } else if (item.type === "Title" || item.mediaType) {
-    sub = item.subtitle || "";
-  } else {
-    // For items without type, assume Title and return subtitle or empty
-    sub = item.subtitle || "";
-  }
-  return sub;
-};
-
-const resolveDescription = (item, extraData) => {
-  if (!item.mediaType && !item.media_type) {
-    // For contributors, prioritize TMDB data
-    if (extraData?.biography) return `Biography: ${extraData.biography}`;
-    if (extraData?.known_for_title) {
-      const overview = extraData.known_for_overview ? `\n${extraData.known_for_overview}` : "";
-      return `Contributed to: ${extraData.known_for_title}${overview}`;
-    }
-    return "No data available for this entry.";
-  }
-  if (item?.description || item?.blurb || item?.bio || item?.plot) {
-    return item.description || item.blurb || item.bio || item.plot;
-  }
-  if (extraData?.biography) return `Biography: ${extraData.biography}`;
-  if (extraData?.known_for_title) {
-    const overview = extraData.known_for_overview ? `\n${extraData.known_for_overview}` : "";
-    return `Contributed to: ${extraData.known_for_title}${overview}`;
-  }
-  return "No data available for this entry.";
-};
-
-const resolveImage = (item, extraData) => {
-  // For contributors, prefer TMDB profile image if available
-  if (!item.mediaType && !item.media_type && extraData?.profile_path) {
-    return getImageUrl(extraData.profile_path, 'w185');
-  }
-
-  const raw = item?.image || item?.poster;
-  if (!raw) return null;
-
-  // Some API responses embed a dev-time path like "/src/pics/Image-not-found.png"; treat as missing
-  if (typeof raw === "string" && raw.includes("/src/pics/Image-not-found.png")) {
-    return null;
-  }
-
-  return raw;
-};
-
-const resolveYear = (item) => {
-  if (item.year && item.year !== "n/a") return item.year;
-  if (item.startYear && item.startYear !== "n/a") return item.startYear;
-  if (item.releaseDate && item.releaseDate !== "n/a") {
-    const date = new Date(item.releaseDate);
-    if (!isNaN(date.getTime())) {
-      return date.getFullYear();
-    }
-  }
-  return "n/a";
-};
+// helpers and caches are moved to `./utils/PreviewCardsUtils.jsx`
 
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
@@ -118,62 +36,6 @@ export default function PreviewCards({ item = {}, focusKey }) {
   const description = loadingExtra ? 'Loading...' : truncateText(resolveDescription(item, extraData));
   const image = resolveImage(item, extraData);
   const year = resolveYear(item);
-
-  const tryTmdbPosterFallback = async () => {
-    if (tmdbFallbackTriedRef.current) return;
-    tmdbFallbackTriedRef.current = true;
-
-    if (cacheKey && tmdbPosterCache.has(cacheKey)) {
-      const cachedPoster = tmdbPosterCache.get(cacheKey);
-      setImageSrc(cachedPoster);
-      return;
-    }
-
-    try {
-      let posterUrl = null;
-
-      const posterFromMovie = async (moviePromise) => {
-        const movie = await moviePromise;
-        return getImageUrl(movie?.poster_path) || null;
-      };
-
-      if (item?.tmdbId || item?.tmdb_id) {
-        posterUrl = await posterFromMovie(tmdbApi.getMovie(item.tmdbId || item.tmdb_id));
-      }
-
-      if (!posterUrl && (item?.imdbId || item?.imdb_id)) {
-        posterUrl = await posterFromMovie(tmdbApi.getMovieByImdb(item.imdbId || item.imdb_id));
-      }
-
-      if (!posterUrl && item?.title) {
-        const posters = await tmdbApi.getMoviePosters(item.title);
-        if (Array.isArray(posters) && posters.length) {
-          posterUrl = posters[0].posterUrl || getImageUrl(posters[0].poster_path);
-        }
-
-        if (!posterUrl) {
-          const search = await tmdbApi.searchMovie(item.title);
-          const first = search?.results?.[0];
-          posterUrl = getImageUrl(first?.poster_path);
-        }
-      }
-
-      if (posterUrl) {
-        setImageSrc(posterUrl);
-        if (cacheKey) {
-          imageCache.set(cacheKey, posterUrl);
-          tmdbPosterCache.set(cacheKey, posterUrl);
-        }
-        return;
-      }
-    } catch (err) {
-      console.error("TMDB poster fallback failed", err);
-    }
-
-    setImageSrc(fallbackImage);
-    if (cacheKey) imageCache.set(cacheKey, fallbackImage);
-  };
-
   useEffect(() => {
     const cachedImage = cacheKey ? imageCache.get(cacheKey) : null;
     if (cachedImage) {
@@ -186,10 +48,14 @@ export default function PreviewCards({ item = {}, focusKey }) {
     if (cacheKey) imageCache.set(cacheKey, next);
 
     if (!image) {
-      // If we have no primary image, immediately try TMDB fallback
-      tryTmdbPosterFallback();
+      // If we have no primary image, try TMDB poster lookup
+      (async () => {
+        tmdbFallbackTriedRef.current = true;
+        const poster = await findPosterForItem(item, cacheKey);
+        if (poster) setImageSrc(poster);
+      })();
     }
-  }, [cacheKey, image]);
+  }, [cacheKey, image, item]);
 
   // When extraData changes and provides a TMDB profile_path, update imageSrc and cache
   useEffect(() => {
@@ -201,54 +67,15 @@ export default function PreviewCards({ item = {}, focusKey }) {
   }, [extraData?.profile_path, item.mediaType, item.media_type, cacheKey]);
 
   useEffect(() => {
-    // Fetch TMDB data for contributors (items without mediaType but with name)
+    let cancelled = false;
     if (item.name && !item.mediaType && !item.media_type) {
-      if (cacheKey && extraDataCache.has(cacheKey)) {
-        setExtraData(extraDataCache.get(cacheKey));
-        return;
-      }
-
-      let cancelled = false;
-
       (async () => {
         setLoadingExtra(true);
         try {
-          const data = await tmdbApi.searchPerson(item.name);
+          const data = await fetchPersonExtraData(item.name, cacheKey);
           if (cancelled) return;
-          if (data?.results && data.results.length > 0) {
-            // Default to the first result from TMDB and enrich with person details
-            const result = data.results[0];
-
-            const knownForItem = result.known_for?.[0];
-            const knownForTitle = knownForItem?.title || knownForItem?.name || null;
-            const knownForOverview = knownForItem?.overview || null;
-            const knownForYear = (knownForItem?.release_date || knownForItem?.first_air_date || "").slice(0, 4) || null;
-
-            const personData = await tmdbApi.getPerson(result.id);
-            if (cancelled) return;
-
-            const topCredit = personData?.combined_credits?.cast?.[0] || null;
-            const topCreditRole = topCredit?.character || null;
-            const topCreditTitle = topCredit?.title || topCredit?.name || null;
-            const topCreditType = topCredit?.media_type || null;
-
-            const enriched = {
-              profile_path: result.profile_path,
-              popularity: result.popularity,
-              known_for_department: result.known_for_department,
-              biography: personData?.biography,
-              place_of_birth: personData?.place_of_birth,
-              also_known_as: personData?.also_known_as,
-              known_for_title: knownForTitle || topCreditTitle,
-              known_for_year: knownForYear,
-              known_for_overview: knownForOverview,
-              top_credit_role: topCreditRole,
-              top_credit_media_type: topCreditType,
-              known_for: result.known_for
-            };
-
-            setExtraData(enriched);
-            if (cacheKey) extraDataCache.set(cacheKey, enriched);
+          if (data) {
+            setExtraData(data);
           }
         } catch (err) {
           console.error('Error fetching TMDB data:', err);
@@ -256,16 +83,27 @@ export default function PreviewCards({ item = {}, focusKey }) {
           if (!cancelled) setLoadingExtra(false);
         }
       })();
-
-      return () => {
-        cancelled = true;
-      };
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [item.name, item.mediaType, item.media_type, cacheKey]);
 
   const handleImageError = () => {
     if (!tmdbFallbackTriedRef.current) {
-      tryTmdbPosterFallback();
+      tmdbFallbackTriedRef.current = true;
+      (async () => {
+        const poster = await findPosterForItem(item, cacheKey);
+        if (poster) {
+          setImageSrc(poster);
+          return;
+        }
+        if (imageSrc !== fallbackImage) {
+          setImageSrc(fallbackImage);
+          if (cacheKey) imageCache.set(cacheKey, fallbackImage);
+        }
+      })();
       return;
     }
 
