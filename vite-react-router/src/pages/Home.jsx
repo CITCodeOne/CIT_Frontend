@@ -155,10 +155,6 @@ function Home() {
         item={featuredTitle}
         image={tmdbPoster || featuredTitle?.image || placeholderImage}
         sections={sections}
-        bookmark={{
-          isBookmarked: isFeaturedBookmarked,
-          onToggle: handleToggleFeaturedBookmark,
-        }}
       />
 
       {/* Top rated titles */}
