@@ -23,7 +23,6 @@
     background-color: #1f90f3;
     margin-right: 5px;
     padding: 5px;
-    font-size: medium;
     transition: background-color 0.3s, border-radius 0.3s;
 }
 
