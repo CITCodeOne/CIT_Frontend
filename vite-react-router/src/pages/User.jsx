@@ -29,6 +29,8 @@ export default function User() {
 
     // dummy bookmarks as state
     const [bookmarkedPages, setBookmarkedPages] = useState([]);
+    const [removingRatingId, setRemovingRatingId] = useState(null);
+    const [removingBookmarkId, setRemovingBookmarkId] = useState(null);
 
     // Fetch user data on mount
     useEffect(() => {
@@ -289,8 +291,8 @@ export default function User() {
         navigate(`/user/${userId}/bookmarks`);
     };
 
-    // delete bookmark handler (using dummy auth)
-    const handleDeleteBookmark = (pageId) => {
+    // delete bookmark handler - calls API
+    const handleDeleteBookmark = async (pageId) => {
         if (!isSignedIn) {
             setShareMessage("You must be logged in to remove bookmarks.");
             setTimeout(() => setShareMessage(""), 2500);
@@ -303,13 +305,25 @@ export default function User() {
             return;
         }
 
-        setBookmarkedPages((prev) => prev.filter((b) => b.pageId !== pageId));
-        setShareMessage("Bookmark removed.");
-        setTimeout(() => setShareMessage(""), 2000);
+        setRemovingBookmarkId(pageId);
+        try {
+            const token = getStoredToken();
+            const authOptions = token ? { authToken: token } : undefined;
+
+            await mdb.apiv2.user.removeBookmark(userId, pageId, authOptions);
+
+            setBookmarkedPages((prev) => prev.filter((b) => b.pageId !== pageId));
+            setShareMessage("Bookmark removed.");
+        } catch (err) {
+            setShareMessage("Failed to remove bookmark: " + (err?.message ?? String(err)));
+        } finally {
+            setRemovingBookmarkId(null);
+            setTimeout(() => setShareMessage(""), 2000);
+        }
     };
 
-    // delete rating handler (using dummy auth)
-    const handleDeleteRating = (titleId) => {
+    // delete rating handler - calls API
+    const handleDeleteRating = async (titleId) => {
         if (!isSignedIn) {
             setShareMessage("You must be logged in to remove ratings.");
             setTimeout(() => setShareMessage(""), 2500);
@@ -322,9 +336,21 @@ export default function User() {
             return;
         }
 
-        setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
-        setShareMessage("Rating removed.");
-        setTimeout(() => setShareMessage(""), 2000);
+        setRemovingRatingId(titleId);
+        try {
+            const token = getStoredToken();
+            const authOptions = token ? { authToken: token } : undefined;
+
+            await mdb.apiv2.user.removeRating(userId, titleId, authOptions);
+
+            setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
+            setShareMessage("Rating removed.");
+        } catch (err) {
+            setShareMessage("Failed to remove rating: " + (err?.message ?? String(err)));
+        } finally {
+            setRemovingRatingId(null);
+            setTimeout(() => setShareMessage(""), 2000);
+        }
     };
 
     return (
@@ -421,8 +447,9 @@ export default function User() {
                                                     type="button"
                                                     className="btn btn-sm btn-outline-danger"
                                                     onClick={() => handleDeleteRating(item.titleId)}
+                                                    disabled={removingRatingId === item.titleId}
                                                 >
-                                                    Remove
+                                                        {removingRatingId === item.titleId ? 'Removing...' : 'Remove'}
                                                 </button>
                                             )}
                                         </div>
@@ -488,8 +515,9 @@ export default function User() {
                                                 type="button"
                                                 className="btn btn-sm btn-outline-danger ms-auto"
                                                 onClick={() => handleDeleteBookmark(item.pageId)}
+                                                disabled={removingBookmarkId === item.pageId}
                                             >
-                                                Remove
+                                                {removingBookmarkId === item.pageId ? 'Removing...' : 'Remove'}
                                             </button>
                                         )}
                                     </div>
