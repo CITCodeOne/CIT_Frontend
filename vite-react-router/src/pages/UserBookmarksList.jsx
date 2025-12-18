@@ -1,52 +1,23 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import RowComp from "../components/RowList";
-import ListManager from "../components/ListManager";
 import placeholderImage from "../pics/Image-not-found.png";
+import useAuthStatus from "../hooks/useAuthStatus";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
+import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import { LoadingState } from '../components/PageStates';
 
 export default function UserBookmarksList() {
     const { userId } = useParams();
 
-    // dummy auth
-    const loggedInUserId = "55";
-    const isOwnProfile = userId === loggedInUserId;
-    const isLoggedIn = isOwnProfile;
+    const { isSignedIn, userId: tokenUserId } = useAuthStatus();
+    const isOwnProfile = isSignedIn && String(tokenUserId) === String(userId);
+    const isLoggedIn = isSignedIn;
 
-    // ListManager state
-    const [showListModal, setShowListModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
-
-    // dummy bookmarks list
-    const [bookmarkedPages, setBookmarkedPages] = useState([
-        {
-            pageId: 2,
-            title: "Zootopia 2",
-            poster: placeholderImage,
-            time: "2025-12-05T12:26:13.960Z",
-            plotPre: "In a city of anthropomorph",
-        },
-        {
-            pageId: 5,
-            title: "Surf's Up",
-            poster: placeholderImage,
-            time: "2025-12-05T12:28:32.770Z",
-            plotPre: "A documentary-style look ",
-        },
-        {
-            pageId: 1,
-            title: "Breaking Bad",
-            poster: placeholderImage,
-            time: "2025-12-05T13:07:52.623Z",
-            plotPre: "A high school chemistry t",
-        },
-        {
-            pageId: 3,
-            title: "My Little Pony: The Movie",
-            poster: placeholderImage,
-            time: "2025-12-06T09:15:00.000Z",
-            plotPre: "When a dark force threate",
-        },
-    ]);
+    // bookmarks state
+    const [bookmarkedPages, setBookmarkedPages] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // helper to format plot preview strings with "..."
     const formatPlotPre = (s) => {
@@ -68,76 +39,147 @@ export default function UserBookmarksList() {
         setTimeout(() => setMessage(""), 1500);
     };
 
-    // Handle opening the list modal
-    const handleAddToList = (item) => {
-        setSelectedItem(item);
-        setShowListModal(true);
-    };
+    // Fetch bookmarks and enrich them like on the User page
+    useEffect(() => {
+        let cancelled = false;
 
-    // Handle success when added to list
-    const handleListSuccess = (result) => {
-        if (result.action === 'created') {
-            setMessage(`Created list "${result.listName}" and added ${result.itemName}!`);
-        } else {
-            setMessage(`Added ${result.itemName} to "${result.listName}"!`);
-        }
-        setTimeout(() => setMessage(""), 2000);
-    };
+        const fetchBookmarks = async () => {
+            try {
+                setLoading(true);
+                setError(null);
 
-    // Handle error when adding to list
-    const handleListError = (error) => {
-        setMessage(`Error: ${error}`);
-        setTimeout(() => setMessage(""), 2000);
-    };
+                const token = getStoredToken();
+                const authOptions = token ? { authToken: token } : undefined;
+
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
+
+                let enrichedBookmarks = [];
+                if (Array.isArray(bookmarks) && bookmarks.length > 0) {
+                    enrichedBookmarks = await Promise.all(
+                        bookmarks.map(async (b) => {
+                            try {
+                                const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
+
+                                const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
+                                const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+
+                                if (tconst) {
+                                    const title = await mdb.apiv2.titles.getById(tconst, authOptions);
+                                    return {
+                                        ...b,
+                                        kind: 'title',
+                                        title: title?.name ?? title?.title ?? 'Unknown',
+                                        poster: title?.image ?? placeholderImage,
+                                        plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                        mediaType: title?.mediaType ?? 'unknown',
+                                        pageId: b.pageId,
+                                    };
+                                }
+
+                                if (iconst) {
+                                    const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+                                    return {
+                                        ...b,
+                                        kind: 'individual',
+                                        title: individual?.name ?? 'Unknown',
+                                        poster: individual?.image ?? placeholderImage,
+                                        plotPre: individual?.bio ? String(individual.bio).slice(0, 200) : '',
+                                        mediaType: 'individual',
+                                        pageId: b.pageId,
+                                    };
+                                }
+
+                                return {
+                                    ...b,
+                                    kind: 'unknown',
+                                    title: pageRef?.name ?? pageRef?.title ?? 'Unknown',
+                                    poster: pageRef?.image ?? placeholderImage,
+                                    plotPre: pageRef?.plot ? String(pageRef.plot).slice(0, 200) : '',
+                                    mediaType: 'unknown',
+                                    pageId: b.pageId,
+                                };
+                            } catch (err) {
+                                return {
+                                    ...b,
+                                    kind: 'error',
+                                    title: 'Unknown',
+                                    poster: placeholderImage,
+                                    plotPre: '',
+                                    mediaType: 'unknown',
+                                    pageId: b.pageId,
+                                };
+                            }
+                        })
+                    );
+                }
+
+                enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time));
+                if (!cancelled) setBookmarkedPages(enrichedBookmarks);
+            } catch (err) {
+                if (!cancelled) setError(err?.message ?? String(err));
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        fetchBookmarks();
+
+        return () => { cancelled = true; };
+    }, [userId]);
 
     // returns a list of all the user's bookmarks
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">Bookmarks for user: {userId}</h2>
+            <h2 className="h4 mb-3">Your bookmarks</h2>
 
-            {bookmarkedPages.length === 0 ? (
-                <p className="text-muted">This user has not bookmarked any titles yet.</p>
-            ) : (
+            {loading && <LoadingState message="Loading bookmarks..." />}
+            {error && <p className="text-danger">Error: {error}</p>}
+
+            {!loading && !error && bookmarkedPages.length === 0 && (
+                <p className="text-muted">You have not bookmarked any titles yet.</p>
+            )}
+
+            {!loading && !error && bookmarkedPages.length > 0 && (
                 <RowComp
                     variant="list"
                     items={bookmarkedPages}
                     renderItem={(item) => (
                         <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">
+                            <Link
+                                to={`/page/${item.pageId ?? ""}`}
+                                className="d-flex align-items-center gap-3 text-decoration-none text-reset"
+                                style={{ flex: 1 }}
+                            >
+                                {/* Poster image */}
+                                <img
+                                    src={item.poster || placeholderImage}
+                                    alt={item.title}
+                                    className="img-fluid object-fit-cover"
+                                    style={{ width: "80px", height: "120px", objectFit: "cover" }}
+                                    onError={(e) => {
+                                        try {
+                                            if (e?.target?.src && e.target.src !== placeholderImage) {
+                                                e.target.src = placeholderImage;
+                                            }
+                                        } catch (err) { }
+                                    }}
+                                />
 
-                            {/* Poster image */}
-                            <img
-                            
-                                src={item.poster}
-                                alt={item.title}
-                                className="img-fluid object-fit-cover"
-                                style={{ width: "80px", height: "120px", objectFit: "cover" }}
-                            />
-
-                            {/* Title, added on {date} & plot preview */}
-                            <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
-                                <h3 className="h5 mb-1">{item.title}</h3>
-                                <p className="text-muted small mb-0">
-                                    {formatPlotPre(item.plotPre)}
-                                </p>
-                                <div className="text-muted small mt-2">
-                                    Added on: {new Date(item.time).toLocaleDateString()}
+                                {/* Title, added on {date} & plot preview */}
+                                <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
+                                    <h3 className="h5 mb-1">{item.title}</h3>
+                                    <p className="text-muted small mb-0">
+                                        {formatPlotPre(item.plotPre)}
+                                    </p>
+                                    <div className="text-muted small mt-2">
+                                        Added on: {new Date(item.time).toLocaleDateString()}
+                                    </div>
                                 </div>
-                            </div>
+                            </Link>
 
                             {/* Delete button */}
-                            {isLoggedIn && (
+                            {isOwnProfile && (
                                 <div className="p-3 ms-auto d-flex gap-2">
-                                    <button
-                                        type="button"
-                                        className="btn btn-sm btn-outline-primary"
-                                        onClick={() => handleAddToList({
-                                            id: `tt${item.pageId}`,
-                                            name: item.title,
-                                            type: 'title'
-                                        })}
-                                    >
-                                        📋 Add to List
-                                    </button>
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
@@ -153,18 +195,7 @@ export default function UserBookmarksList() {
             )}
 
             {/* ListManager Modal */}
-            {selectedItem && (
-                <ListManager
-                    show={showListModal}
-                    onHide={() => setShowListModal(false)}
-                    itemType={selectedItem.type}
-                    itemId={selectedItem.id}
-                    itemName={selectedItem.name}
-                    userId={loggedInUserId}
-                    onSuccess={handleListSuccess}
-                    onError={handleListError}
-                />
-            )}
+            {/* ListManager removed */}
 
             {/* message popup */}
             {message && (

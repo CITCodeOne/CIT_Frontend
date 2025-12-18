@@ -171,7 +171,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of mapped title objects
 		 */
-		search: (parameters, options) => callV2('titles/search', {
+		search: (parameters, options) => callV2('titles', {
 			queryParams: parameters,
 			...options,
 		}).then(mapTitles),
@@ -289,19 +289,26 @@ const apiv2 = {
 			queryParams: { name: actorName },
 			...options,
 		}).then(mapIndividuals),
-		// GET: /individuals/search?name={name}
-		/**
-		 * Searches for individuals by name and returns their contributions to titles.
-		 * Performs case-insensitive partial matching. Returns all individuals if name is empty.
-		 *
-		 * @param {string} [name] - Name to search for (optional, returns all if empty)
-		 * @param {Object} options - Additional fetch options
-		 * @returns {Promise<Array>} Array of individual search results with contributions
-		 */
-		search: (name, options) => callV2('individuals/search', {
-			queryParams: name ? { name } : {},
-			...options,
-		}).then(mapIndividuals),
+		   // GET: /individuals/search
+		   /**
+			* Searches for individuals with flexible filters and sorting.
+			* Supports filtering by name (case-insensitive, partial match), birth year range, and sorting by name, birth year, rating, or popularity.
+			*
+			* @param {Object} parameters - Search parameters
+			* @param {string} [parameters.name] - Name to search for (partial, case-insensitive)
+			* @param {number} [parameters.minBirthYear] - Minimum birth year
+			* @param {number} [parameters.maxBirthYear] - Maximum birth year
+			* @param {string} [parameters.sortBy] - Sort field ('name', 'birthYear', 'rating', or default 'popularity')
+			* @param {boolean} [parameters.sortDescending] - Sort direction (true for descending)
+			* @param {number} [parameters.page] - Page number (default: 1)
+			* @param {number} [parameters.pageSize] - Items per page (default: 20)
+			* @param {Object} options - Additional fetch options
+			* @returns {Promise<Array>} Array of individual reference objects (not co-actors)
+			*/
+		   search: (parameters = {}, options) => callV2('individuals', {
+			   queryParams: parameters,
+			   ...options,
+		   }).then(mapIndividuals),
 	},
 
 	/**
@@ -509,10 +516,10 @@ const apiv2 = {
 		 * Returns the base64-encoded image data for the user's avatar.
 		 *
 		 * @param {string|number} userId - The unique identifier of the user
-		 * @param {Object} options - Additional fetch options
-		 * @returns {Promise<Object>} Response containing image data
+		 * @param {Object} options - Additional fetch options (authToken if needed)
+		 * @returns {Promise<Object|null>} Object like { userId, profileImage } or null
 		 */
-		//getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
+		getProfileImage: (userId, options) => callV2(`users/${userId}/profile-image`, options),
 
 		// PUT: /users/{userId}/profile-image
 		/**
@@ -529,6 +536,34 @@ const apiv2 = {
 			body: { imageBase64 },
 			...options,
 		}),
+
+		// VISITS
+		// POST: /users/{userId}/visits
+		/**
+		 * Adds a visited page record for a user.
+		 * Creates a visit entry linking the user to a page they visited.
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {string|number} pageId - The identifier of the page that was visited
+		 * @param {Object} options - Additional fetch options (authToken, etc.)
+		 * @returns {Promise<Object>} Response containing the created visit
+		 */
+		addVisit: (userId, pageId, options) => callV2(`users/${userId}/visits`, {
+			method: 'POST',
+			body: { pageId },
+			...options,
+		}),
+
+		// GET: /users/{userId}/visits
+		/**
+		 * Retrieves the list of visited pages for a user.
+		 * Returns an array of visited page DTOs (may be empty).
+		 *
+		 * @param {string|number} userId - The unique identifier of the user
+		 * @param {Object} options - Additional fetch options (authToken, etc.)
+		 * @returns {Promise<Array>} Array of visited page DTOs
+		 */
+		getVisits: (userId, options) => callV2(`users/${userId}/visits`, options),
 	}
 
 

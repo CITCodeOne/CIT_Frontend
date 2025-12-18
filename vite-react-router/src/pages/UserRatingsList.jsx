@@ -1,68 +1,26 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
 import RowComp from "../components/RowList";
-import ListManager from "../components/ListManager";
 import Rating from "../components/Rating";
 import placeholderImage from "../pics/Image-not-found.png";
+import useAuthStatus from "../hooks/useAuthStatus";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
+import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import { LoadingState } from '../components/PageStates';
 
 export default function UserRatingsList() {
     const { userId } = useParams();
+    const { isSignedIn, userId: tokenUserId } = useAuthStatus();
+    const isOwnProfile = isSignedIn && String(tokenUserId) === String(userId);
+    const isLoggedIn = isSignedIn;
 
-    // dummy auth
-    const loggedInUserId = "55";
-    const isOwnProfile = userId === loggedInUserId;
-    const isLoggedIn = isOwnProfile;
+    const [ratedTitles, setRatedTitles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // ListManager state
-    const [showListModal, setShowListModal] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
-
-    // dummy ratings list
-    const [ratedTitles, setRatedTitles] = useState([
-        {
-            titleId: "tt10052520",
-            title: "Zootopia 2",
-            rating: 5,
-            startYear: 2025,
-            mediaType: "movie",
-            poster: placeholderImage,
-        },
-        {
-            titleId: "tt7366338",
-            title: "Surf's Up",
-            rating: 10,
-            startYear: 2019,
-            mediaType: "movie",
-            poster: placeholderImage,
-        },
-        {
-            titleId: "tt0903747",
-            title: "Breaking Bad",
-            rating: 10,
-            startYear: 2008,
-            mediaType: "tvSeries",
-            poster: placeholderImage,
-        },
-        {
-            titleId: "tt1234567",
-            title: "My Little Pony: The Movie",
-            rating: 1,
-            startYear: 2020,
-            mediaType: "movie",
-            poster: placeholderImage,
-        },
-        {
-            titleId: "tt1233567",
-            title: "Shawshank Redemption",
-            rating: 3,
-            startYear: 1994,
-            mediaType: "movie",
-            poster: placeholderImage,
-        },
-    ]);
-
-    // local rating deletion handler
+    // message for local UI actions
     const [message, setMessage] = useState("");
+
     const handleRemoveRating = (titleId) => {
         if (!isLoggedIn || !isOwnProfile) {
             setMessage("You must be the profile owner to remove ratings.");
@@ -74,58 +32,113 @@ export default function UserRatingsList() {
         setTimeout(() => setMessage(""), 1500);
     };
 
-    // Handle opening the list modal
-    const handleAddToList = (item) => {
-        setSelectedItem(item);
-        setShowListModal(true);
-    };
+    useEffect(() => {
+        let cancelled = false;
 
-    // Handle success when added to list
-    const handleListSuccess = (result) => {
-        if (result.action === 'created') {
-            setMessage(`Created list "${result.listName}" and added ${result.itemName}!`);
-        } else {
-            setMessage(`Added ${result.itemName} to "${result.listName}"!`);
-        }
-        setTimeout(() => setMessage(""), 2000);
-    };
+        const fetchRatings = async () => {
+            try {
+                setLoading(true);
+                setError(null);
 
-    // Handle error when adding to list
-    const handleListError = (error) => {
-        setMessage(`Error: ${error}`);
-        setTimeout(() => setMessage(""), 2000);
-    };
+                const token = getStoredToken();
+                const authOptions = token ? { authToken: token } : undefined;
+
+                const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
+
+                let enrichedRatings = [];
+                if (Array.isArray(ratings) && ratings.length > 0) {
+                    enrichedRatings = await Promise.all(
+                        ratings.map(async (r) => {
+                            try {
+                                const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                                return {
+                                    ...r,
+                                    title: title?.name ?? title?.title ?? 'Unknown',
+                                    poster: title?.image ?? placeholderImage,
+                                    startYear: title?.startYear ?? title?.releaseDate ?? null,
+                                    mediaType: title?.mediaType ?? 'unknown',
+                                    plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                    pageId: title?.pageId ?? null,
+                                };
+                            } catch (err) {
+                                return {
+                                    ...r,
+                                    title: 'Unknown',
+                                    poster: placeholderImage,
+                                    startYear: null,
+                                    mediaType: 'unknown',
+                                    plotPre: '',
+                                    pageId: null,
+                                };
+                            }
+                        })
+                    );
+                }
+
+                enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time));
+                if (!cancelled) setRatedTitles(enrichedRatings);
+            } catch (err) {
+                if (!cancelled) setError(err?.message ?? String(err));
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+
+        fetchRatings();
+
+        return () => { cancelled = true; };
+    }, [userId]);
 
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">Ratings by user: {userId}</h2>
+            <h2 className="h4 mb-3">Your reviews:</h2>
 
-            {ratedTitles.length === 0 ? (
-                <p className="text-muted">This user has not rated any titles yet.</p>
-            ) : (
+            {loading && <LoadingState message="Loading ratings..." />}
+            {error && <p className="text-danger">Error: {error}</p>}
+
+            {!loading && !error && ratedTitles.length === 0 && (
+                <p className="text-muted">You have not rated any titles yet.</p>
+            )}
+
+            {!loading && !error && ratedTitles.length > 0 && (
                 <RowComp
                     variant="list"
                     items={ratedTitles}
                     renderItem={(item) => (
                         <div className="d-flex w-100 h-100 bg-white rounded-4 overflow-hidden align-items-center">
-                            {/* Poster image */}
-                            <img
-                                src={item.poster}
-                                alt={item.title}
-                                className="img-fluid object-fit-cover"
-                                style={{ width: "80px", height: "120px", objectFit: "cover" }}
-                            />
+                            <Link
+                                to={`/page/${item.pageId ?? ""}`}
+                                className="d-flex align-items-center gap-3 text-decoration-none text-reset"
+                                style={{ flex: 1 }}
+                            >
+                                {/* Poster image */}
+                                <img
+                                    src={item.poster || placeholderImage}
+                                    alt={item.title}
+                                    className="img-fluid object-fit-cover"
+                                    style={{ width: "80px", height: "120px", objectFit: "cover" }}
+                                    onError={(e) => {
+                                        try {
+                                            if (e?.target?.src && e.target.src !== placeholderImage) {
+                                                e.target.src = placeholderImage;
+                                            }
+                                        } catch (err) {
+                                            /* ignore */
+                                        }
+                                    }}
+                                />
 
-                            {/* Title, year & media type */}
-                            <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
-                                <h3 className="mb-1 fs-5">
-                                    {item.title}{" "}
-                                    {item.startYear && (
-                                        <span className="text-muted">({item.startYear})</span>
-                                    )}
-                                </h3>
-                                <p className="mb-1 text-muted small">{item.mediaType}</p>
-                            </div>
+                                {/* Title, year & media type */}
+                                <div className="p-3 d-flex flex-column justify-content-center flex-grow-1">
+                                    <h3 className="mb-1 fs-5">
+                                        {item.title}{" "}
+                                        {item.startYear && (
+                                            <span className="text-muted">({item.startYear})</span>
+                                        )}
+                                    </h3>
+                                    <p className="mb-1 text-muted small">{item.mediaType}</p>
+                                </div>
+                            </Link>
 
                             {/* Rating and Remove button */}
                             <div
@@ -141,17 +154,6 @@ export default function UserRatingsList() {
                                     <>
                                         <button
                                             type="button"
-                                            className="btn btn-sm btn-outline-primary ms-2"
-                                            onClick={() => handleAddToList({
-                                                id: item.titleId,
-                                                name: item.title,
-                                                type: 'title'
-                                            })}
-                                        >
-                                            📋
-                                        </button>
-                                        <button
-                                            type="button"
                                             className="btn btn-sm btn-outline-danger ms-2"
                                             onClick={() => handleRemoveRating(item.titleId)}
                                         >
@@ -162,20 +164,6 @@ export default function UserRatingsList() {
                             </div>
                         </div>
                     )}
-                />
-            )}
-
-            {/* ListManager Modal */}
-            {selectedItem && (
-                <ListManager
-                    show={showListModal}
-                    onHide={() => setShowListModal(false)}
-                    itemType={selectedItem.type}
-                    itemId={selectedItem.id}
-                    itemName={selectedItem.name}
-                    userId={loggedInUserId}
-                    onSuccess={handleListSuccess}
-                    onError={handleListError}
                 />
             )}
 

@@ -2,30 +2,41 @@ import React, { useState, useEffect } from 'react';
 import MainDisplay from '../components/MainDisplay';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import tmdb from '../business-logic-layer/TmdbIntegration';
+import placeholderImage from '../pics/Image-not-found.png';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import useAuthStatus from '../hooks/useAuthStatus';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
+import { LoadingState } from '../components/PageStates';
 
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [individuals, setIndividuals] = useState([]);
+  const [individuals, setIndividuals] = useState(null);
+  const [tmdbPoster, setTmdbPoster] = useState(null);
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
-  const [topRatedTitles, setTopRatedTitles] = useState([]);
+  const [topRatedTitles, setTopRatedTitles] = useState(null);
+
+  const { userId: authUserId, isSignedIn } = useAuthStatus();
 
   // Toggle bookmark for featured title using ApiClient
   const handleToggleFeaturedBookmark = async () => {
     if (!featuredTitle) return;
 
-    //Gets userId from auth status
-    const { userId: authUserId } = useAuthStatus();
     const userId = authUserId ? Number(authUserId) : null;
+    if (!userId || !isSignedIn) {
+      alert('Please log in to bookmark');
+      return;
+    }
+
     const pageId = Number(featuredTitle.id);
+    const token = getStoredToken();
 
     try {
       if (!isFeaturedBookmarked) {
-        await mdb.apiv2.user.addBookmark(userId, pageId);
+        await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
       } else {
-        await mdb.apiv2.user.removeBookmark(userId, pageId);
+        await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
       }
       setIsFeaturedBookmarked((prev) => !prev);
     } catch (err) {
@@ -43,6 +54,17 @@ function Home() {
         if (cancelled) return;
 
         setFeaturedTitle(title);
+          console.log('Home: fetched featuredTitle', title);
+        // Try to fetch TMDB poster for featured title (mirror Title page behavior)
+        try {
+          if (title?.name && title?.mediaType) {
+            const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
+            if (posterUrl) setTmdbPoster(posterUrl);
+            console.log('Home: tmdb poster for featured', posterUrl);
+          }
+        } catch (err) {
+          console.error('Home: error fetching TMDB poster for featured', err);
+        }
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to load featured title', err);
@@ -111,13 +133,7 @@ function Home() {
   }, []);
 
   // Show loading state
-  if (loading) {
-    return (
-      <div style={{ padding: '1rem' }}>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
 // If no featured title found
   if (!featuredTitle) {
     return (
@@ -137,15 +153,12 @@ function Home() {
 
       <MainDisplay
         item={featuredTitle}
+        image={tmdbPoster || featuredTitle?.image || placeholderImage}
         sections={sections}
-        bookmark={{
-          isBookmarked: isFeaturedBookmarked,
-          onToggle: handleToggleFeaturedBookmark,
-        }}
       />
 
       {/* Top rated titles */}
-      {topRatedTitles.length > 0 && (
+      {topRatedTitles && topRatedTitles.length > 0 && (
         <div style={{ marginTop: 24 }}>
           <h3 style={{ margin: '0 0 12px 0' }}>Top rated titles</h3>
           {makeCarousel(topRatedTitles, '<media type>')}

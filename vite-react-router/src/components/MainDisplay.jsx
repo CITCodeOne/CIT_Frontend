@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
-import Rating from './Rating';
-import BookmarkButton from './BookmarkButton';
+import { useEffect, useRef, useState } from 'react';
+import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import notFoundImage from '../pics/Image-not-found.png';
+import { findPosterForItem, cacheKeyForItem } from './utils/PreviewCardsUtils';
 
 /**
  * MainDisplay Component - Versatile layout for detail pages
@@ -33,7 +33,14 @@ function MainDisplay({
     children
 }) {
     // Prefer explicitly provided props but fall back to item fields when present
-    const resolvedImage = image ?? item?.image ?? item?.poster ?? item?.posterUrl ?? notFoundImage;
+    const resolvedImageProp = image ?? item?.image ?? item?.poster ?? item?.posterUrl ?? null;
+    // Normalize any local placeholder value to `null` so we treat it as missing
+    const providedImage = (typeof resolvedImageProp === 'string' && resolvedImageProp.includes('Image-not-found.png')) ? null : resolvedImageProp;
+    const [imageSrc, setImageSrc] = useState(providedImage || notFoundImage);
+    const tmdbFallbackTriedRef = useRef(false);
+
+    // cache key for lookups
+    const cacheKey = cacheKeyForItem(item);
     const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title';
     const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null;
 
@@ -43,6 +50,52 @@ function MainDisplay({
         const formattedDate = item.releaseDate ? new Date(item.releaseDate).toLocaleDateString('da-DK') : null;
         return [mediaType, formattedDate].filter(Boolean).join(' · ');
     })();
+
+    // When the provided image is missing, try TMDB lookup once (like PreviewCards)
+    useEffect(() => {
+        // if we already have a provided image, keep it
+        if (providedImage) {
+            setImageSrc(providedImage);
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                if (!tmdbFallbackTriedRef.current) tmdbFallbackTriedRef.current = true;
+                const poster = await findPosterForItem(item, cacheKey);
+                if (cancelled) return;
+                if (poster) setImageSrc(poster);
+            } catch (err) {
+                console.error('Failed to fetch TMDB poster for MainDisplay', err);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [providedImage, item, cacheKey]);
+
+    const handleImageError = async (e) => {
+        // If we haven't tried TMDB fallback yet, try it
+        if (!tmdbFallbackTriedRef.current) {
+            tmdbFallbackTriedRef.current = true;
+            try {
+                const poster = await findPosterForItem(item, cacheKey);
+                if (poster) {
+                    setImageSrc(poster);
+                    return;
+                }
+            } catch (err) {
+                console.error('TMDB fallback failed on image error', err);
+            }
+        }
+
+        // Final fallback to local notFoundImage
+        if (e && e.target) e.target.src = notFoundImage;
+        setImageSrc(notFoundImage);
+    };
+
+    // Treat objects without a mediaType as individuals/contributors
+    const isIndividual = !!(item && !item.mediaType && !item.media_type);
 
     const content = (
         <div className="title-page-background">
@@ -80,7 +133,7 @@ function MainDisplay({
                                         {customAction.label}
                                     </Button>
                                 </div>
-                            ) : resolvedRating !== undefined && resolvedRating !== null ? (
+                            ) : (!isIndividual && resolvedRating !== undefined && resolvedRating !== null) ? (
                                 <div className="text-end">
                                     <div className="d-flex align-items-center gap-2 mb-2">
                                         <span className="rating-star">★</span>
@@ -106,18 +159,20 @@ function MainDisplay({
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="text-end">
-                                    <Button
-                                        variant="primary"
-                                        size="sm"
-                                        onClick={() => {
-                                            const reviewsSection = document.getElementById('reviews-section');
-                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                        }}
-                                    >
-                                        ★ Rate
-                                    </Button>
-                                </div>
+                                !isIndividual ? (
+                                    <div className="text-end">
+                                        <Button
+                                            variant="primary"
+                                            size="sm"
+                                            onClick={() => {
+                                                const reviewsSection = document.getElementById('reviews-section');
+                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }}
+                                        >
+                                            ★ Rate
+                                        </Button>
+                                    </div>
+                                ) : null
                             )}
                         </div>
 
@@ -126,10 +181,10 @@ function MainDisplay({
                             <Col md={4} className="text-center">
                                 <div style={{ position: 'relative' }}>
                                     <img
-                                        src={resolvedImage}
+                                        src={imageSrc}
                                         alt={resolvedTitle || 'Image'}
                                         className="img-fluid rounded poster-image"
-                                        onError={(e) => { e.target.src = notFoundImage; }}
+                                        onError={handleImageError}
                                     />
 
                                     {/* Bookmark Button */}
@@ -162,7 +217,7 @@ function MainDisplay({
                             <Col md={8}>
                                 {/* Sections excluding Genres */}
                                 {sections.filter(section => section.title !== 'Genres').map((section, index) => (
-                                    <div key={index} className="mb-3">
+                                    <div key={index} className="mb-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                                         {section.title && <h5>{section.title}</h5>}
                                         {section.content}
                                     </div>
@@ -178,13 +233,18 @@ function MainDisplay({
         </div>
     );
 
-    return item?.pageId ? (
-        <Link to={`/page/${item.pageId}`} className="text-decoration-none">
-            {content}
-        </Link>
-    ) : (
-        content
-    );
+    // Only wrap with a Link for non-individual items that have a pageId.
+    // Wrapping Individual pages causes their children (which may have their own
+    // navigation handlers) to trigger double navigation.
+    if (item?.pageId && !isIndividual) {
+        return (
+            <Link to={`/page/${item.pageId}`} className="text-decoration-none">
+                {content}
+            </Link>
+        );
+    }
+
+    return content;
 }
 
 export default MainDisplay;

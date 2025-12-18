@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Card, Spinner, Carousel, Row, Col } from 'react-bootstrap';
 import MainDisplay from '../components/MainDisplay';
-import ListManager from '../components/ListManager';
 import ToggleButton from '../components/ToggleButton';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
 import useAuthStatus from '../hooks/useAuthStatus';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
@@ -26,7 +26,6 @@ function Individual() {
     const { isSignedIn, userId } = useAuthStatus();
 
     // State management
-    const [showListModal, setShowListModal] = useState(false);
     const [tmdbImages, setTmdbImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
     const [tmdbProfilePicture, setTmdbProfilePicture] = useState(null);
@@ -99,7 +98,7 @@ function Individual() {
         }
     }, [individual]);
 
-    // Check bookmark status for Known For titles
+    // Check bookmark status for Known For titles (fetch all bookmarks once)
     useEffect(() => {
         const checkTitleBookmarks = async () => {
             if (!isSignedIn || !userId || knownForTitles.length === 0) {
@@ -108,25 +107,25 @@ function Individual() {
             }
 
             try {
-                const bookmarkChecks = await Promise.all(
-                    knownForTitles.map(async (title) => {
-                        try {
-                            const bookmark = await mdb.apiv2.user.getBookmark(userId, title.id);
-                            return { id: title.id, isBookmarked: !!bookmark };
-                        } catch (err) {
-                            console.error(`Failed to check bookmark for title ${title.id}:`, err);
-                            return { id: title.id, isBookmarked: false };
-                        }
-                    })
-                );
+                const token = getStoredToken();
+                // Fetch all bookmarks for the user in a single call
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+
+                // Build a lookup set for quick checks
+                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
-                bookmarkChecks.forEach(({ id, isBookmarked }) => {
-                    bookmarkMap[id] = isBookmarked;
+                knownForTitles.forEach(title => {
+                    const pageRef = title.pageId || null;
+                    if (pageRef) {
+                        bookmarkMap[pageRef] = bookmarkedSet.has(String(pageRef));
+                    }
                 });
+
                 setTitleBookmarks(bookmarkMap);
             } catch (err) {
                 console.error('Failed to check title bookmarks:', err);
+                setTitleBookmarks({});
             }
         };
 
@@ -134,21 +133,28 @@ function Individual() {
     }, [knownForTitles, userId, isSignedIn]);
 
     // Toggle bookmark for a title
-    const toggleTitleBookmark = async (titleId, titleName) => {
+    const toggleTitleBookmark = async (pageId, titleId, titleName) => {
         if (!isSignedIn || !userId) {
             alert('Please log in to bookmark titles');
             return;
         }
 
+        if (!pageId) {
+            console.warn('No pageId available for title, cannot bookmark');
+            alert('Unable to bookmark this title');
+            return;
+        }
+
         try {
-            const isCurrentlyBookmarked = titleBookmarks[titleId];
+            const token = getStoredToken();
+            const isCurrentlyBookmarked = titleBookmarks[pageId];
             
             if (isCurrentlyBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, titleId);
-                setTitleBookmarks(prev => ({ ...prev, [titleId]: false }));
+                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: false }));
             } else {
-                await mdb.apiv2.user.addBookmark(userId, titleId);
-                setTitleBookmarks(prev => ({ ...prev, [titleId]: true }));
+                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: true }));
             }
         } catch (err) {
             console.error('Failed to toggle title bookmark:', err);
@@ -165,18 +171,7 @@ function Individual() {
         navigate(`/page/${targetPageId}/title/${targetTitleId}`, { replace: true });
     };
 
-    // List modal handlers
-    const handleAddToList = () => {
-        setShowListModal(true);
-    };
-
-    const handleListSuccess = (result) => {
-        console.log(`Successfully added ${result.itemName} to list "${result.listName}"`);
-    };
-
-    const handleListError = (error) => {
-        console.error('List operation failed:', error);
-    };
+    // (List functionality removed) 
 
     if (loading) return <LoadingState />;
     if (error) return <ErrorState error={error} />;
@@ -216,6 +211,7 @@ function Individual() {
     return (
         <>
             <MainDisplay
+                item={individual}
                 image={tmdbProfilePicture || individual.image || placeholderImage}
                 title={customName}
                 subtitle={null}
@@ -226,12 +222,7 @@ function Individual() {
                     isBookmarked: isBookmarked,
                     onToggle: toggleBookmark
                 } : null}
-                customAction={{
-                    label: 'Add to List',
-                    variant: 'primary',
-                    icon: '📋',
-                    onClick: handleAddToList
-                }}
+                
             >
             {/* Photo Gallery */}
             <Container className="mt-4">
@@ -284,6 +275,7 @@ function Individual() {
                                                                     borderRadius: '8px',
                                                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                                                 }}
+                                                                onError={(e) => { e.target.src = placeholderImage; }}
                                                             />
                                                         </div>
                                                     ))}
@@ -322,25 +314,26 @@ function Individual() {
                                                     src={title.image || title.poster || placeholderImage}
                                                     alt={title.name}
                                                     className="known-for-poster"
+                                                    onError={(e) => { e.target.src = placeholderImage; }}
                                                 />
                                                 
                                                 {/* Bookmark button */}
                                                 <ToggleButton
-                                                    itemId={title.id}
-                                                    isActive={titleBookmarks[title.id]}
-                                                    onToggle={(id, newState) => {
+                                                    itemId={title.pageId || title.id}
+                                                    isActive={titleBookmarks[title.pageId]}
+                                                    onToggle={() => {
                                                         if (!isSignedIn) {
                                                             alert('Please log in to bookmark titles');
                                                             return;
                                                         }
-                                                        toggleTitleBookmark(id, title.name);
+                                                        toggleTitleBookmark(title.pageId, title.id, title.name);
                                                     }}
                                                     activeLabel="Remove bookmark"
                                                     inactiveLabel="Add bookmark"
-                                                    className={`known-for-bookmark ${titleBookmarks[title.id] ? 'bookmarked' : ''}`}
+                                                    className={`known-for-bookmark ${titleBookmarks[title.pageId] ? 'bookmarked' : ''}`}
                                                 >
                                                     <span className="known-for-bookmark-icon">
-                                                        {titleBookmarks[title.id] ? '✓' : '+'}
+                                                        {titleBookmarks[title.pageId] ? '✓' : '+'}
                                                     </span>
                                                 </ToggleButton>
                                             </div>
@@ -381,6 +374,7 @@ function Individual() {
                                             src={title.image || title.poster || placeholderImage}
                                             alt={title.name}
                                             className="filmography-thumbnail me-3"
+                                            onError={(e) => { e.target.src = placeholderImage; }}
                                         />
                                         <div>
                                             <h6 className="mb-0">{title.name}</h6>
@@ -397,17 +391,7 @@ function Individual() {
             </Container>
         </MainDisplay>
 
-        {/* List Manager Modal */}
-        <ListManager
-            show={showListModal}
-            onHide={() => setShowListModal(false)}
-            itemName={individual?.name}
-            itemId={individualId}
-            itemType="individual"
-            userId={userId}
-            onSuccess={handleListSuccess}
-            onError={handleListError}
-        />
+        {/* List functionality removed */}
     </>
     );
 }

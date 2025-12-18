@@ -1,20 +1,10 @@
 /**
- * TMDB Integration Abstraction Layer
- * 
- * Centralizes all TMDB-related logic for easy switching between:
- * - Direct TMDB API calls (current workaround)
- * - Backend proxy endpoints (when fixed)
- * 
- * TO SWITCH BACK TO BACKEND:
- * 1. Change USE_DIRECT_TMDB to false
- * 2. Ensure backend endpoints are working
+ * TMDB Integration Abstraction Layer (proxy-only)
+ *
+ * Centralizes TMDB-related logic to use the backend proxy under `/api/v2/tmdb`.
  */
 
-import tmdbDirect from './ApiClient/TmdbDirectClient';
 import mdb from './ApiClient/ApiClient';
-
-// Set to false when backend TMDB endpoints are fixed
-const USE_DIRECT_TMDB = true;
 
 /**
  * Determines if a mediaType represents a TV show
@@ -24,23 +14,24 @@ export const isTvShow = (mediaType) => {
 };
 
 /**
- * Search for a title (movie or TV show) in TMDB
+ * Search for a title (movie or TV show) in TMDB via backend proxy
  */
 export const searchTitle = async (name, mediaType, year) => {
-    if (USE_DIRECT_TMDB) {
-        const searchParams = {};
-        if (year) {
-            searchParams[isTvShow(mediaType) ? 'first_air_date_year' : 'year'] = year;
-        }
-        return isTvShow(mediaType)
-            ? await tmdbDirect.searchTv(name, searchParams)
-            : await tmdbDirect.searchMovie(name, searchParams);
-    } else {
-        const endpoint = isTvShow(mediaType) ? 'tv' : 'movie';
-        const params = year ? { query: name, year } : { query: name };
-        return await mdb.apiv2.tmdb[endpoint].search(params);
+    const searchParams = {};
+    if (year) {
+        searchParams[isTvShow(mediaType) ? 'first_air_date_year' : 'year'] = year;
     }
+    return isTvShow(mediaType)
+        ? await mdb.tmdb.searchTv(name, searchParams)
+        : await mdb.tmdb.searchMovie(name, searchParams);
 };
+
+/**
+ * Helper: build TMDB image URL for a given poster/profile path
+ */
+export function getImageUrl(path, size = 'w500') {
+    return path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
+}
 
 /**
  * Get poster URL for a title
@@ -49,12 +40,10 @@ export const getTitlePoster = async (name, mediaType, year) => {
     try {
         const searchResults = await searchTitle(name, mediaType, year);
         const posterPath = searchResults?.results?.[0]?.poster_path;
-        
+
         if (!posterPath) return null;
-        
-        return USE_DIRECT_TMDB 
-            ? tmdbDirect.getImageUrl(posterPath)
-            : posterPath;
+
+        return getImageUrl(posterPath);
     } catch (err) {
         console.error('Error fetching title poster:', err);
         return null;
@@ -66,16 +55,12 @@ export const getTitlePoster = async (name, mediaType, year) => {
  */
 export const getPersonPhoto = async (name) => {
     try {
-        const results = USE_DIRECT_TMDB
-            ? await tmdbDirect.searchPerson(name)
-            : await mdb.apiv2.tmdb.person.search({ query: name });
-        
+        const results = await mdb.tmdb.searchPerson(name, { page: 1 });
+
         const profilePath = results?.results?.[0]?.profile_path;
         if (!profilePath) return null;
-        
-        return USE_DIRECT_TMDB 
-            ? tmdbDirect.getImageUrl(profilePath)
-            : profilePath;
+
+        return getImageUrl(profilePath);
     } catch (err) {
         console.error(`Error fetching photo for ${name}:`, err);
         return null;
@@ -93,7 +78,7 @@ export const getMultiplePersonPhotos = async (names, limit = 20) => {
         const photoUrl = await getPersonPhoto(name);
         return photoUrl ? { name, photoUrl } : null;
     });
-    
+
     const results = await Promise.all(photoPromises);
     return Object.fromEntries(
         results.filter(r => r).map(r => [r.name, r.photoUrl])
@@ -107,28 +92,24 @@ export const getSimilarTitles = async (name, mediaType, year, limit = 20) => {
     try {
         const searchResults = await searchTitle(name, mediaType, year);
         if (!searchResults?.results?.length) return [];
-        
+
         const tmdbId = searchResults.results[0].id;
-        
-        const similarResults = USE_DIRECT_TMDB
-            ? (isTvShow(mediaType) 
-                ? await tmdbDirect.getSimilarTv(tmdbId)
-                : await tmdbDirect.getSimilarMovies(tmdbId))
-            : await mdb.apiv2.tmdb[isTvShow(mediaType) ? 'tv' : 'movie'].similar(tmdbId);
-        
+
+        const similarResults = isTvShow(mediaType)
+            ? await mdb.tmdb.getTvSimilar(tmdbId)
+            : await mdb.tmdb.getMovieSimilar(tmdbId);
+
         if (!similarResults?.results?.length) return [];
-        
+
         return similarResults.results.slice(0, limit).map(item => {
-            const posterPath = item.poster_path 
-                ? (USE_DIRECT_TMDB ? tmdbDirect.getImageUrl(item.poster_path) : item.poster_path)
-                : null;
-            
-            const year = item.first_air_date 
+            const posterPath = item.poster_path ? getImageUrl(item.poster_path) : null;
+
+            const year = item.first_air_date
                 ? new Date(item.first_air_date).getFullYear()
-                : item.release_date 
+                : item.release_date
                     ? new Date(item.release_date).getFullYear()
                     : null;
-            
+
             return {
                 id: `tmdb-${item.id}`,
                 name: item.name || item.title || 'Unknown',

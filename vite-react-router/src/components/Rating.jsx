@@ -20,66 +20,83 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
     // State for hover effect when editable
     const [hoverRating, setHoverRating] = useState(0);
 
-    // Convert 0-10 rating to 0-5 stars
-    const convertToStars = (ratingValue) => Math.round(ratingValue / 2);
-    
-    // Convert star number (1-5) to rating value (2-10)
-    const convertFromStars = (starNumber) => starNumber * 2;
+    // We represent ratings internally as integers 0..10.
+    // The UI shows 5 visual stars but supports half-star precision
+    // (i.e. steps of 1 on the 0..10 scale). We'll detect clicks on the
+    // left/right half of each star to decide whether to select the
+    // odd (left) or even (right) value for that star.
 
-    // Handle rating click (only if editable)
-    const handleClick = (starValue) => {
-        if (editable) {
-            // Convert star value (2, 4, 6, 8, 10) back to 0-10 rating
-            const newRating = rating === starValue ? 0 : starValue;
-            setRating(newRating);
-            // Call callback function if provided
-            if (onRatingChange) {
-                onRatingChange(newRating);
-            }
-        }
+    // Handle click on a star element. We inspect the click position
+    // relative to the element to decide whether the user clicked the
+    // left half (half-star) or right half (full-star).
+    const handleStarClick = (starIndex, e) => {
+        if (!editable) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickedRight = (e.clientX - rect.left) >= rect.width / 2;
+        const value = clickedRight ? starIndex * 2 : (starIndex * 2 - 1);
+        const newRating = rating === value ? 0 : value; // toggle when clicking same value
+        setRating(newRating);
+        if (onRatingChange) onRatingChange(newRating);
     };
 
-    // Handle mouse hover (only if editable)
-    const handleMouseEnter = (starValue) => {
-        if (editable) {
-            setHoverRating(starValue);
-        }
+    // Handle mouse move over a star to show a preview (half/full) while hovering
+    const handleStarMove = (starIndex, e) => {
+        if (!editable) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const onRight = (e.clientX - rect.left) >= rect.width / 2;
+        const value = onRight ? starIndex * 2 : (starIndex * 2 - 1);
+        setHoverRating(value);
     };
 
-    // Reset hover state when mouse leaves
+    // Reset hover state
     const handleMouseLeave = () => {
-        if (editable) {
-            setHoverRating(0);
-        }
+        if (!editable) return;
+        setHoverRating(0);
     };
 
-    // Convert 0-10 rating to 0-5 stars (for display)
+    // Which rating to display: hover takes precedence
     const displayRating = hoverRating || rating;
-    const stars = convertToStars(displayRating);
 
     return (
         <div className="d-flex align-items-center gap-2">
-            {/* Star display - 5 stars representing 0-10 scale */}
-            <div 
+            {/* Star display - 5 stars representing 0-10 scale. Each star supports
+                half precision by inspecting pointer position (left half = odd,
+                right half = even on the 0..10 scale). */}
+            <div
                 className="d-flex gap-1"
                 style={{ cursor: editable ? 'pointer' : 'default' }}
                 onMouseLeave={handleMouseLeave}
             >
                 {[1, 2, 3, 4, 5].map((star) => {
-                    const starRatingValue = convertFromStars(star); // Convert to 0-10 scale
+                    const fullThreshold = star * 2; // e.g. star 3 -> 6
+                    const halfThreshold = star * 2 - 1; // e.g. star 3 -> 5
+
+                    // Decide visual state for this star based on displayRating
+                    let fillType = 'empty';
+                    if (displayRating >= fullThreshold) fillType = 'full';
+                    else if (displayRating >= halfThreshold) fillType = 'half';
+
+                    // Use the same accent color for full/half but reduce opacity
+                    // for half to visually differentiate without extra assets.
+                    const color = fillType === 'empty' ? '#ccc' : 'var(--accent-color, #1f90f3)';
+                    const opacity = fillType === 'half' ? 0.6 : 1;
+
                     return (
                         <span
                             key={star}
-                            onClick={() => handleClick(starRatingValue)}
-                            onMouseEnter={() => handleMouseEnter(starRatingValue)}
+                            onClick={(e) => handleStarClick(star, e)}
+                            onMouseMove={(e) => handleStarMove(star, e)}
                             style={{
                                 fontSize: '1.5rem',
-                                color: star <= stars ? 'var(--accent-color, #1f90f3)' : '#ccc',
-                                transition: 'color 0.2s',
+                                color,
+                                opacity,
+                                transition: 'color 0.2s, opacity 0.15s',
                                 userSelect: 'none'
                             }}
+                            aria-hidden={!editable}
+                            title={`Rate ${fullThreshold - 1}/10 or ${fullThreshold}/10`}
                         >
-                            {star <= stars ? '★' : '☆'}
+                            {fillType === 'empty' ? '☆' : '★'}
                         </span>
                     );
                 })}
@@ -87,15 +104,15 @@ function Rating({ initialRating = 0, editable = false, onRatingChange, showNumbe
 
             {/* Numeric rating display (0-10 scale) using Bootstrap Badge */}
             {showNumber && (
-                <Badge 
-                    bg="primary" 
-                    style={{ 
+                <Badge
+                    bg="primary"
+                    style={{
                         fontSize: '0.9rem',
                         fontWeight: 'normal',
                         backgroundColor: 'var(--accent-color, #1f90f3)'
                     }}
                 >
-                    {displayRating.toFixed(1)}/10
+                    {displayRating}/10
                 </Badge>
             )}
         </div>

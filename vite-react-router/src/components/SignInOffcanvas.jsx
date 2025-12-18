@@ -2,32 +2,11 @@ import Offcanvas from 'react-bootstrap/Offcanvas';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import { useState } from 'react';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:5001';
+import mdb from '../business-logic-layer/ApiClient/ApiClient';
 const INITIAL_FORM = { username: '', email: '', password: '', confirm: '' };
 
-/**
- * Helper function to make auth API calls and handle responses
- */
-async function makeAuthRequest(endpoint, body) {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-
-  const contentType = response.headers.get('content-type') ?? '';
-  const payload = contentType.includes('application/json')
-    ? await response.json()
-    : await response.text();
-
-  if (!response.ok) {
-    const message = typeof payload === 'string' ? payload : payload?.message ?? 'Request failed';
-    throw new Error(message);
-  }
-
-  return payload;
-}
+// Use the centralized ApiClient for auth operations (`signup` and `login`).
+// This keeps API versioning, error handling, and fetch logic in one place.
 
 function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
   const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
@@ -64,7 +43,7 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
         }
 
         // Make signup request
-        const payload = await makeAuthRequest('/api/v2/auth/signup', {
+        const payload = await mdb.apiv2.auth.signup({
           name: form.username.trim(),
           username: form.username.trim(),
           email: form.email.trim(),
@@ -82,7 +61,7 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
         }
 
         // Make signin request
-        const payload = await makeAuthRequest('/api/v2/auth/login', {
+        const payload = await mdb.apiv2.auth.login({
           username: form.username.trim(),
           password: form.password
         });
@@ -102,7 +81,11 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
         onClose?.();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Unable to ${mode === 'signin' ? 'sign in' : 'sign up'}`);
+      if (mode === 'signin') {
+        setError('The username or password is wrong');
+      } else {
+        setError('Something went wrong');
+      }
     } finally {
       setSubmitting(false);
     }

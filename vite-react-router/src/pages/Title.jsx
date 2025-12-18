@@ -7,7 +7,7 @@ import ToggleButton from '../components/ToggleButton';
 import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import SignInOffcanvas from '../components/SignInOffcanvas';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
@@ -157,7 +157,7 @@ function Title() {
         fetchSimilarPosters();
     }, [mdbSimilarTitles]);
 
-    // Check bookmark status for similar titles
+    // Check bookmark status for similar titles (fetch bookmarks once)
     useEffect(() => {
         const checkSimilarBookmarks = async () => {
             if (!isSignedIn || !userId || mdbSimilarTitles.length === 0) {
@@ -167,24 +167,20 @@ function Title() {
 
             try {
                 const token = getStoredToken();
-                const bookmarkChecks = await Promise.all(
-                    mdbSimilarTitles.map(async (similar) => {
-                        try {
-                            const isBookmarked = await mdb.apiv2.user.getBookmark(userId, similar.pageId, { authToken: token });
-                            return { id: similar.pageId, isBookmarked };
-                        } catch (err) {
-                            return { id: similar.pageId, isBookmarked: false };
-                        }
-                    })
-                );
+                // Fetch all bookmarks for the user in one call
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+
+                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
-                bookmarkChecks.forEach(({ id, isBookmarked }) => {
-                    bookmarkMap[id] = isBookmarked;
+                mdbSimilarTitles.forEach(similar => {
+                    if (similar.pageId) bookmarkMap[similar.pageId] = bookmarkedSet.has(String(similar.pageId));
                 });
+
                 setSimilarBookmarks(bookmarkMap);
             } catch (err) {
                 console.error('Error checking similar title bookmarks:', err);
+                setSimilarBookmarks({});
             }
         };
 
@@ -294,9 +290,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Top Cast</h4>
                         {loadingCast ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading cast..." />
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
@@ -329,9 +323,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Cast</h4>
                         {loadingCast ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading cast..." />
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
@@ -365,9 +357,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Similar Titles</h4>
                         {loadingSimilar ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading similar titles..." />
                         ) : mdbSimilarTitles.length === 0 ? (
                             <p className="text-muted">No similar titles available.</p>
                         ) : (
@@ -436,9 +426,7 @@ function Title() {
                                 </Card.Body>
                             </Card>
                         ) : loadingUserRating ? (
-                            <div className="text-center py-3">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading your rating..." />
                         ) : (
                             <>
                                 {submitStatus === 'success' && (
@@ -487,9 +475,7 @@ function Title() {
                         )}
 
                         {loadingReviews ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading reviews..." />
                         ) : reviews.length === 0 ? (
                             <p className="text-muted">No reviews available yet.</p>
                         ) : (
