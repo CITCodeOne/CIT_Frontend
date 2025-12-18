@@ -101,6 +101,7 @@ export default function NavbarLayout() {
                                 searchPath += `?title_name=${encodeURIComponent(query)}&individual_name=${encodeURIComponent(query)}`;
                                 break;
                 }
+                setShowDropdown(false); // Close dropdown on search
                 navigate(searchPath);
         };
 
@@ -147,7 +148,7 @@ export default function NavbarLayout() {
                                                                                 variant="outline-secondary Cbutton"
                                                                                 title={searchEntity}
                                                                                 id="input-group-dropdown-1"
-                                                                                onToggle={(next) => setShowDropdown(!next)} // Close quicksearch dropdown when selecting entity type
+                                                                                onToggle={() => setShowDropdown(false)} // Close quicksearch dropdown when selecting entity type
                                                                         >
                                                                                 <Dropdown.Header>Search In</Dropdown.Header>
                                                                                 <Dropdown.Item onClick={() => setSearchEntity('All')}>All</Dropdown.Item>
