@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import placeholderImage from '../pics/Image-not-found.png';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 
 /**
  * useIndividualData Hook

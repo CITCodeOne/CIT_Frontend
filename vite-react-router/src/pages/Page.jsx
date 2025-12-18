@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Outlet, useParams } from 'react-router-dom';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import useAuthStatus from '../hooks/useAuthStatus';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 
 function Page() {
         const pageId = useParams().pageId; // Get pageId from route params

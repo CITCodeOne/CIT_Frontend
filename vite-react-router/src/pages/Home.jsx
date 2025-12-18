@@ -4,7 +4,7 @@ import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import useAuthStatus from '../hooks/useAuthStatus';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);

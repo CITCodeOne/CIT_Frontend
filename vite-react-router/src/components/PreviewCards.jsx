@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
 
-// Caches to avoid refetching when cards are remounted due to carousel layout changes
+// Cacheing to avoid redundant fetches
 const imageCache = new Map();
 const extraDataCache = new Map();
 const tmdbPosterCache = new Map();

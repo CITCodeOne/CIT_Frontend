@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import useAuthStatus from '../hooks/useAuthStatus';
-import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/ExtractJwtData';
+import { getStoredToken, TOKEN_STORAGE_KEY } from '../components/utils/ExtractJwtData';
 import UserBanner from '../components/UserBanner';
 
 // Utility to render the latest result/error for quick inspection.

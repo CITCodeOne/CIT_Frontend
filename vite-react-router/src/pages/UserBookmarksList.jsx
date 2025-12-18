@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import RowComp from "../components/RowList";
 import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
-import { getStoredToken } from "../components/ExtractJwtData";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 
 export default function UserBookmarksList() {

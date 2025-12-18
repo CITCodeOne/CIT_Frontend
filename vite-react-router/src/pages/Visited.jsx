@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import useAuthStatus from "../hooks/useAuthStatus";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
-import { getStoredToken } from "../components/ExtractJwtData";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
 
 export default function Visited() {
 	const { userId: paramUserId } = useParams();

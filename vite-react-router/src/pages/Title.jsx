@@ -7,7 +7,7 @@ import ToggleButton from '../components/ToggleButton';
 import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import SignInOffcanvas from '../components/SignInOffcanvas';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';

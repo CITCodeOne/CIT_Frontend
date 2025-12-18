@@ -6,7 +6,7 @@ import ToggleButton from '../components/ToggleButton';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import useIndividualData from '../hooks/useIndividualData';
 import useAuthStatus from '../hooks/useAuthStatus';
-import { getStoredToken } from '../components/ExtractJwtData';
+import { getStoredToken } from '../components/utils/ExtractJwtData';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';

@@ -5,7 +5,7 @@ import {
         deriveUsername,
         getStoredToken,
         parseJwtClaims,
-} from '../components/ExtractJwtData';
+} from '../components/utils/ExtractJwtData';
 
 /**
  * Tracks JWT authentication state sourced from localStorage.

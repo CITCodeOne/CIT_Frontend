@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import UserBanner from "../components/UserBanner";
 import Rating from "../components/Rating";
 import useAuthStatus from "../hooks/useAuthStatus";
-import { getStoredToken } from "../components/ExtractJwtData";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";

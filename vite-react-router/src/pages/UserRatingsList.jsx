@@ -4,7 +4,7 @@ import RowComp from "../components/RowList";
 import Rating from "../components/Rating";
 import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
-import { getStoredToken } from "../components/ExtractJwtData";
+import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 
 export default function UserRatingsList() {
