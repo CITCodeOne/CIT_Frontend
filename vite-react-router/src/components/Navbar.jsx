@@ -106,6 +106,7 @@ export default function NavbarLayout() {
                                                                         onFocus={() => {
                                                                                 if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
                                                                         }}
+                                                                        autocomplete="off"
                                                                 />
                                                                 {/* Dropdown for search results
                                                                         The Menu is shown dependent on the showDropdown state
