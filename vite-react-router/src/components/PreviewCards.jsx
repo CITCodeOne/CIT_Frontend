@@ -48,11 +48,14 @@ export default function PreviewCards({ item = {}, focusKey }) {
     if (cacheKey) imageCache.set(cacheKey, next);
 
     if (!image) {
-      // If we have no primary image, try TMDB poster lookup
+      // If we have no primary image, try TMDB poster lookup and enrich the item
       (async () => {
         tmdbFallbackTriedRef.current = true;
         const poster = await findPosterForItem(item, cacheKey);
-        if (poster) setImageSrc(poster);
+        if (poster) {
+          // update local image state and cache (do not mutate incoming props)
+          setImageSrc(poster);
+        }
       })();
     }
   }, [cacheKey, image, item]);
