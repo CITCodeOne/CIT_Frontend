@@ -81,7 +81,11 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
         onClose?.();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : `Unable to ${mode === 'signin' ? 'sign in' : 'sign up'}`);
+      if (mode === 'signin') {
+        setError('The username or password is wrong');
+      } else {
+        setError('Something went wrong');
+      }
     } finally {
       setSubmitting(false);
     }
