@@ -4,6 +4,7 @@ import useAuthStatus from "../hooks/useAuthStatus";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import RowComp from "../components/RowList";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
+import { LoadingState } from '../components/PageStates';
 
 export default function Visited() {
 	const { userId: paramUserId } = useParams();
@@ -114,7 +115,7 @@ export default function Visited() {
 		<main className="container py-4">
 			<h2 className="h4 mb-3">Your visited pages:</h2>
 
-			{loading && <p className="text-muted">Loading visits…</p>}
+			{loading && <LoadingState message="Loading visits..." />}
 			{error && <p className="text-danger">{error}</p>}
 
 			{!loading && !error && visits.length === 0 && (

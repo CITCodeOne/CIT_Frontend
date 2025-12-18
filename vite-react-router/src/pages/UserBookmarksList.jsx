@@ -5,6 +5,7 @@ import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import { LoadingState } from '../components/PageStates';
 
 export default function UserBookmarksList() {
     const { userId } = useParams();
@@ -131,7 +132,7 @@ export default function UserBookmarksList() {
         <main className="container py-4">
             <h2 className="h4 mb-3">Your bookmarks</h2>
 
-            {loading && <p>Loading bookmarks...</p>}
+            {loading && <LoadingState message="Loading bookmarks..." />}
             {error && <p className="text-danger">Error: {error}</p>}
 
             {!loading && !error && bookmarkedPages.length === 0 && (

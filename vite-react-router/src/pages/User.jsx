@@ -8,6 +8,7 @@ import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";
 import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils";
+import { LoadingState } from '../components/PageStates';
 
 export default function User() {
     const { userId } = useParams();
@@ -328,7 +329,7 @@ export default function User() {
 
     return (
         <main className="container py-4">
-            {loading && <p>Loading user data...</p>}
+            {loading && <LoadingState message="Loading user data..." />}
             {error && <p className="text-danger">Error: {error}</p>}
             {!loading && !error && userData && (
                 <>

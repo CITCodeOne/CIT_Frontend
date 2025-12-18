@@ -6,6 +6,7 @@ import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import { LoadingState } from '../components/PageStates';
 
 export default function UserRatingsList() {
     const { userId } = useParams();
@@ -92,7 +93,7 @@ export default function UserRatingsList() {
         <main className="container py-4">
             <h2 className="h4 mb-3">Your reviews:</h2>
 
-            {loading && <p>Loading ratings...</p>}
+            {loading && <LoadingState message="Loading ratings..." />}
             {error && <p className="text-danger">Error: {error}</p>}
 
             {!loading && !error && ratedTitles.length === 0 && (

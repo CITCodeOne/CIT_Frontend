@@ -5,6 +5,7 @@ import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken } from '../components/utils/ExtractJwtData';
+import { LoadingState } from '../components/PageStates';
 
 function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
@@ -118,13 +119,7 @@ function Home() {
   }, []);
 
   // Show loading state
-  if (loading) {
-    return (
-      <div style={{ padding: '1rem' }}>
-        <p>Loading...</p>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
 // If no featured title found
   if (!featuredTitle) {
     return (
