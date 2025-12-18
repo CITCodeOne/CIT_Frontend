@@ -422,58 +422,86 @@ function Home() {
         sections={sections}
       />
 
+      {/* Intro / blurb under featured */}
+      <div style={{ marginTop: 16, marginBottom: 8, color: '#495057' }}>
+        <p style={{ margin: 0 }}>
+          Discover more great movies and shows below - curated categories, trending
+          picks, and your own bookmarks and reviews when signed in.
+        </p>
+      </div>
+      <hr style={{ borderColor: '#e9ecef', marginTop: 12 }} />
+
       {/* Top rated titles */}
       {topRatedTitles && topRatedTitles.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Top rated titles</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Top rated titles</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Highly-rated movies picked by our community.</p>
           {makeCarousel(topRatedTitles, '<media type>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* Action movies */}
       {actionMovies && actionMovies.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Recent action picks</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Recent action picks</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Fast-paced adventures and blockbuster thrills.</p>
           {makeCarousel(actionMovies, '<media type>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* Top TV series */}
       {topTvSeriesList && topTvSeriesList.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Highly rated TV series</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Highly rated TV series</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Binge-worthy shows with top ratings.</p>
           {makeCarousel(topTvSeriesList, '<media type>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* Classic movies */}
       {classicMovies && classicMovies.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Classic favourites</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Classic favourites</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Timeless films from past decades.</p>
           {makeCarousel(classicMovies, '<media type>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* Family picks */}
       {familyPicks && familyPicks.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Family-friendly picks</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Family-friendly picks</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Feel-good movies for family viewing.</p>
           {makeCarousel(familyPicks, '<media type>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* User bookmarks (signed-in only) */}
       {isSignedIn && userBookmarks && userBookmarks.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Your bookmarks</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Your bookmarks</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Quick access to pages you've saved.</p>
           {makeCarousel(userBookmarks, '<bookmark>')}
         </div>
       )}
 
+      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
+
       {/* User reviews/ratings (signed-in only) */}
       {isSignedIn && userRatings && userRatings.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 12px 0' }}>Your recent reviews</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Your recent reviews</h3>
+          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>With great taste comes great reviews - here are your latest thoughts.</p>
           {makeCarousel(userRatings, '<your review>')}
         </div>
       )}

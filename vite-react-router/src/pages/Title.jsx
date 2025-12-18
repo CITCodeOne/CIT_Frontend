@@ -127,9 +127,12 @@ function Title() {
             try {
                 const posterPromises = mdbSimilarTitles.map(async (similar) => {
                     try {
+                        // Use pageId as the canonical key for similar titles
+                        const key = similar.pageId || similar.id || null;
+
                         // If the similar title already has a poster from MDB API, use it
                         if (similar.poster) {
-                            return { id: similar.id, poster: similar.poster };
+                            return { key, poster: similar.poster };
                         }
 
                         // Otherwise, fetch it from TMDB
@@ -138,17 +141,17 @@ function Title() {
                             similar.mediaType || 'movie',
                             similar.startYear
                         );
-                        return { id: similar.id, poster: posterUrl };
+                        return { key, poster: posterUrl };
                     } catch (err) {
                         console.error(`Error fetching poster for ${similar.name}:`, err);
-                        return { id: similar.id, poster: null };
+                        return { key: similar.pageId || similar.id || null, poster: null };
                     }
                 });
 
                 const posterResults = await Promise.all(posterPromises);
                 const posterMap = {};
-                posterResults.forEach(({ id, poster }) => {
-                    if (poster) posterMap[id] = poster;
+                posterResults.forEach(({ key, poster }) => {
+                    if (key && poster) posterMap[String(key)] = poster;
                 });
                 setSimilarPosters(posterMap);
             } catch (err) {
