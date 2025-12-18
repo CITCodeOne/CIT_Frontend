@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Spinner } from 'react-bootstrap';
+import { LoadingState } from './PageStates';
 import fallbackImageAsset from '../pics/Image-not-found.png';
 import tmdbApi from '../business-logic-layer/ApiClient/ApiClientTMDB';
 
@@ -324,9 +325,10 @@ export default function PreviewCards({ item = {}, focusKey }) {
           <p className="card-subtitle text-muted mb-1">{subtitle}</p>
 
           {loadingExtra ? (
-            <div className="mb-2 d-flex align-items-center">
-              <Spinner animation="border" size="sm" />
-              <small className="text-muted ms-2">Loading</small>
+            <div className="mb-2" style={{ height: 28, display: 'flex', alignItems: 'center' }}>
+              <div style={{ width: '100%' }}>
+                <LoadingState message={null} />
+              </div>
             </div>
           ) : (
             typeLine && <div className="mb-2">{typeLine}</div>
