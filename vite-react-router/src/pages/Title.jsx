@@ -395,7 +395,7 @@ function Title() {
                                     'title',
                                     ({ item }) => (
                                         <div className="similar-title-card">
-                                            
+
                                             <div
                                                 className="similar-poster-container"
                                                 onClick={() => navigate(`/page/${item.pageId}`)}
