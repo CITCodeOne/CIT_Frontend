@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../style/Cstyle.css';
@@ -15,6 +15,8 @@ import Stack from 'react-bootstrap/Stack';
 import SignInOffcanvas from './SignInOffcanvas';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
+import { normalizeDataUrl } from './utils/profileImageUtils';
+import defaultProfilePic from '../pics/DefaultProfilePicture.jpg';
 
 export default function NavbarLayout() {
         // State to control SignInOffcanvas visibility
@@ -101,6 +103,29 @@ export default function NavbarLayout() {
                 }
                 navigate(searchPath);
         };
+
+        // Avatar state for dropdown
+        const [avatar, setAvatar] = useState(defaultProfilePic);
+
+        useEffect(() => {
+                const fetchAvatar = async () => {
+                        if (!isSignedIn || !userId) {
+                                setAvatar(defaultProfilePic);
+                                return;
+                        }
+
+                        try {
+                                const user = await mdb.apiv2.user.get(userId);
+                                const img = user && user.image ? normalizeDataUrl(user.image) : defaultProfilePic;
+                                setAvatar(img);
+                        } catch (err) {
+                                console.error('Failed to fetch avatar in Navbar:', err);
+                                setAvatar(defaultProfilePic);
+                        }
+                };
+
+                fetchAvatar();
+        }, [isSignedIn, userId]);
 
         return (
                 <div className="min-vh-100 d-flex flex-column">
@@ -206,9 +231,11 @@ export default function NavbarLayout() {
                                                                         <NavDropdown
                                                                                 title={
                                                                                         <div className="d-flex align-items-center">
-                                                                                                <span className="profile-avatar">
-                                                                                                        {profileInitial}
-                                                                                                </span>
+                                                                                                <img
+                                                                                                        src={avatar}
+                                                                                                        alt={username || 'User'}
+                                                                                                        className="profile-avatar"
+                                                                                                />
                                                                                                 {username && (
                                                                                                         <span className="ms-2 fw-semibold text-dark">
                                                                                                                 {username}

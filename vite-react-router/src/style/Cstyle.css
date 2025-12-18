@@ -57,6 +57,9 @@
     font-weight: bold;
     color: #fff;
     font-size: 20px;
+    overflow: hidden;
+    object-fit: cover;
+    margin-left: 10px;
 }
 
 /* MainDisplay rating components */
