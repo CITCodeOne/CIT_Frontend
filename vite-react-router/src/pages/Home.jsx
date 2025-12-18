@@ -16,6 +16,12 @@ function Home() {
   const [tmdbPoster, setTmdbPoster] = useState(null);
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
   const [topRatedTitles, setTopRatedTitles] = useState(null);
+  const [actionMovies, setActionMovies] = useState(null);
+  const [classicMovies, setClassicMovies] = useState(null);
+  const [topTvSeriesList, setTopTvSeriesList] = useState(null);
+  const [familyPicks, setFamilyPicks] = useState(null);
+  const [userBookmarks, setUserBookmarks] = useState(null);
+  const [userRatings, setUserRatings] = useState(null);
 
   const { userId: authUserId, isSignedIn } = useAuthStatus();
 
@@ -85,8 +91,8 @@ function Home() {
 
     (async () => {
       try {
-        // GET /api/v2/titles/top/movie?page=1&pageSize=10
-        const list = await mdb.apiv2.titles.top('movie', { page: 1, pageSize: 10 });
+        // GET /api/v2/titles/top/movie?page=1&pageSize=25
+        const list = await mdb.apiv2.titles.top('movie', { page: 1, pageSize: 25 });
         if (cancelled) return;
 
         const top = list
@@ -109,14 +115,273 @@ function Home() {
     };
   }, [featuredTitle]);
 
+  // Fetch Action movies (recent-ish, well-rated)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const params = {
+          mediaType: 'movie',
+          genre: 'Action',
+          minRating: 6.5,
+          minYear: 2015,
+          page: 1,
+          pageSize: 25,
+        };
+
+        const list = await mdb.apiv2.titles.search(params);
+        if (cancelled) return;
+
+        const filtered = list.filter((t) =>
+          featuredTitle ? String(t.id) !== String(featuredTitle.id) : true
+        );
+
+        setActionMovies(filtered);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load action movies', err);
+        setActionMovies([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredTitle]);
+
+  // Fetch classic movies (older, notable)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const params = {
+          mediaType: 'movie',
+          maxYear: 1999,
+          minRating: 7.0,
+          page: 1,
+          pageSize: 25,
+        };
+
+        const list = await mdb.apiv2.titles.search(params);
+        if (cancelled) return;
+
+        setClassicMovies(list || []);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load classic movies', err);
+        setClassicMovies([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch highly rated TV series
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const params = {
+          mediaType: 'tvSeries',
+          minRating: 8.0,
+          page: 1,
+          pageSize: 25,
+        };
+
+        const list = await mdb.apiv2.titles.search(params);
+        if (cancelled) return;
+
+        setTopTvSeriesList(list || []);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load top TV series', err);
+        setTopTvSeriesList([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch family-friendly picks
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const params = {
+          mediaType: 'movie',
+          genre: 'Family',
+          isAdult: false,
+          minRating: 6.0,
+          page: 1,
+          pageSize: 25,
+        };
+
+        const list = await mdb.apiv2.titles.search(params);
+        if (cancelled) return;
+
+        setFamilyPicks(list || []);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load family picks', err);
+        setFamilyPicks([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch signed-in user's bookmarks and ratings (if any)
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (!isSignedIn || !authUserId) {
+          // Not signed in: set to empty arrays to avoid loading state
+          setUserBookmarks([]);
+          setUserRatings([]);
+          return;
+        }
+
+        const token = getStoredToken();
+        const authOptions = token ? { authToken: token } : undefined;
+
+        // Bookmarks
+        try {
+          const bookmarks = await mdb.apiv2.user.getBookmarks(authUserId, { queryParams: { page: 1, pageSize: 25 }, ...(authOptions || {}) });
+
+          let enriched = [];
+          if (Array.isArray(bookmarks) && bookmarks.length > 0) {
+            enriched = await Promise.all(
+              bookmarks.map(async (b) => {
+                try {
+                  const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
+                  const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
+                  const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+
+                  if (tconst) {
+                    const title = await mdb.apiv2.titles.getById(tconst, authOptions);
+                    return {
+                      pageId: b.pageId,
+                      title: title?.name ?? title?.title ?? 'Unknown',
+                      image: title?.image || placeholderImage,
+                      plot: title?.plot ?? '',
+                      mediaType: title?.mediaType ?? 'movie',
+                    };
+                  }
+
+                  if (iconst) {
+                    const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+                    return {
+                      pageId: b.pageId,
+                      title: individual?.name ?? 'Unknown',
+                      image: individual?.image || placeholderImage,
+                      plot: individual?.bio ?? '',
+                      mediaType: 'individual',
+                    };
+                  }
+
+                  return {
+                    pageId: b.pageId,
+                    title: pageRef?.name ?? pageRef?.title ?? 'Unknown',
+                    image: pageRef?.image ?? placeholderImage,
+                    plot: pageRef?.plot ?? '',
+                    mediaType: pageRef?.mediaType ?? 'unknown',
+                  };
+                } catch (err) {
+                  return {
+                    pageId: b.pageId,
+                    title: 'Unknown',
+                    image: placeholderImage,
+                    plot: '',
+                    mediaType: 'unknown',
+                  };
+                }
+              })
+            );
+          }
+
+          if (!cancelled) setUserBookmarks(enriched);
+        } catch (err) {
+          if (!cancelled) setUserBookmarks([]);
+          console.error('Failed to load user bookmarks', err);
+        }
+
+        // Ratings / reviews
+        try {
+          const ratings = await mdb.apiv2.user.getRatings(authUserId, { queryParams: { page: 1, pageSize: 25 }, ...(authOptions || {}) });
+
+          let enrichedRatings = [];
+          if (Array.isArray(ratings) && ratings.length > 0) {
+            enrichedRatings = await Promise.all(
+              ratings.map(async (r) => {
+                try {
+                  const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                  return {
+                    titleId: r.titleId,
+                    pageId: title?.pageId ?? null,
+                    title: title?.name ?? title?.title ?? 'Unknown',
+                    image: title?.image ?? placeholderImage,
+                    plot: title?.plot ?? '',
+                    mediaType: title?.mediaType ?? 'movie',
+                    rating: r.rating,
+                    reviewText: r.reviewText ?? null,
+                    time: r.time ?? null,
+                  };
+                } catch (err) {
+                  return {
+                    titleId: r.titleId,
+                    pageId: null,
+                    title: 'Unknown',
+                    image: placeholderImage,
+                    plot: '',
+                    mediaType: 'unknown',
+                    rating: r.rating,
+                    reviewText: r.reviewText ?? null,
+                    time: r.time ?? null,
+                  };
+                }
+              })
+            );
+          }
+
+          if (!cancelled) setUserRatings(enrichedRatings);
+        } catch (err) {
+          if (!cancelled) setUserRatings([]);
+          console.error('Failed to load user ratings', err);
+        }
+      } catch (outerErr) {
+        if (!cancelled) {
+          setUserBookmarks([]);
+          setUserRatings([]);
+        }
+        console.error('Failed to load user data for homepage', outerErr);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignedIn, authUserId]);
+
   // Fetch individuals list via ApiClient - popular individuals
   useEffect(() => {
     let cancelled = false;
 
     (async () => {
       try {
-        // GET /api/v2/individuals/popular?page=1&pageSize=10
-        const list = await mdb.apiv2.individuals.popular({ page: 1, pageSize: 10 });
+        // GET /api/v2/individuals/popular?page=1&pageSize=25
+        const list = await mdb.apiv2.individuals.popular({ page: 1, pageSize: 25 });
         if (cancelled) return;
 
         setIndividuals(list || []);
@@ -165,6 +430,54 @@ function Home() {
         </div>
       )}
 
+      {/* Action movies */}
+      {actionMovies && actionMovies.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Recent action picks</h3>
+          {makeCarousel(actionMovies, '<media type>')}
+        </div>
+      )}
+
+      {/* Top TV series */}
+      {topTvSeriesList && topTvSeriesList.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Highly rated TV series</h3>
+          {makeCarousel(topTvSeriesList, '<media type>')}
+        </div>
+      )}
+
+      {/* Classic movies */}
+      {classicMovies && classicMovies.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Classic favourites</h3>
+          {makeCarousel(classicMovies, '<media type>')}
+        </div>
+      )}
+
+      {/* Family picks */}
+      {familyPicks && familyPicks.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Family-friendly picks</h3>
+          {makeCarousel(familyPicks, '<media type>')}
+        </div>
+      )}
+
+      {/* User bookmarks (signed-in only) */}
+      {isSignedIn && userBookmarks && userBookmarks.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Your bookmarks</h3>
+          {makeCarousel(userBookmarks, '<bookmark>')}
+        </div>
+      )}
+
+      {/* User reviews/ratings (signed-in only) */}
+      {isSignedIn && userRatings && userRatings.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ margin: '0 0 12px 0' }}>Your recent reviews</h3>
+          {makeCarousel(userRatings, '<your review>')}
+        </div>
+      )}
+
       {/* Individuals carousel */}
       <div style={{ marginTop: 24 }}>
         <h3 style={{ margin: '0 0 12px 0' }}>Most popular celebrities</h3>
@@ -172,6 +485,7 @@ function Home() {
       </div>
     </div>
   );
+  
 }
 
 export default Home;
