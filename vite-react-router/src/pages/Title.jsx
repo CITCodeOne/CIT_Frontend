@@ -290,9 +290,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Top Cast</h4>
                         {loadingCast ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading cast..." />
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
@@ -325,9 +323,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Cast</h4>
                         {loadingCast ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading cast..." />
                         ) : cast.length === 0 ? (
                             <p className="text-muted">No cast information available.</p>
                         ) : (
@@ -361,9 +357,7 @@ function Title() {
                     <Card.Body>
                         <h4 className="mb-4">Similar Titles</h4>
                         {loadingSimilar ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading similar titles..." />
                         ) : mdbSimilarTitles.length === 0 ? (
                             <p className="text-muted">No similar titles available.</p>
                         ) : (
@@ -432,9 +426,7 @@ function Title() {
                                 </Card.Body>
                             </Card>
                         ) : loadingUserRating ? (
-                            <div className="text-center py-3">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading your rating..." />
                         ) : (
                             <>
                                 {submitStatus === 'success' && (
@@ -483,9 +475,7 @@ function Title() {
                         )}
 
                         {loadingReviews ? (
-                            <div className="text-center py-4">
-                                <Spinner animation="border" size="sm" />
-                            </div>
+                            <LoadingState message="Loading reviews..." />
                         ) : reviews.length === 0 ? (
                             <p className="text-muted">No reviews available yet.</p>
                         ) : (

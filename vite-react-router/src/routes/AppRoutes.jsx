@@ -31,7 +31,6 @@ function AppRoutes() {
         <Route path="/page/:pageId" element={<Page />}>
           <Route path="/page/:pageId/title/:titleId" element={<Title />} />
           <Route path="/page/:pageId/individual/:individualId" element={<Individual />} />
-          <Route index element={<NotFound />} />
         </Route>
 
         // Search page
