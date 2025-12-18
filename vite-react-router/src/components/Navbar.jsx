@@ -88,6 +88,12 @@ export default function NavbarLayout() {
                 // Implement search submission logic here, e.g., navigate to search results page
                 console.log('Search submitted for query:', query);
                 let searchPath = '/search';
+                // if query is empty, just navigate to /search
+                if (query.trim().length === 0) {
+                        setShowDropdown(false); // Close dropdown on search
+                        navigate(searchPath);
+                        return;
+                }
                 // Append query parameters based on selected entity type
                 switch (searchEntity) {
                         case 'Titles':
