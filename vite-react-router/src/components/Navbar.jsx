@@ -142,40 +142,37 @@ export default function NavbarLayout() {
                                                 >
                                                 </Nav>
                                                 <div className="d-flex justify-content-between flex-grow-1">
-                                                        <Stack >
-                                                                <InputGroup >
-                                                                        <DropdownButton
-                                                                                variant="outline-secondary Cbutton"
-                                                                                title={searchEntity}
-                                                                                id="input-group-dropdown-1"
-                                                                                onToggle={() => setShowDropdown(false)} // Close quicksearch dropdown when selecting entity type
-                                                                        >
-                                                                                <Dropdown.Header>Search In</Dropdown.Header>
-                                                                                <Dropdown.Item onClick={() => setSearchEntity('All')}>All</Dropdown.Item>
-                                                                                <Dropdown.Item onClick={() => setSearchEntity('Titles')}>Titles</Dropdown.Item>
-                                                                                <Dropdown.Item onClick={() => setSearchEntity('Individuals')}>Individuals</Dropdown.Item>
-                                                                                <Dropdown.Divider />
-                                                                                <Dropdown.Item as={Link} to={'/search'}>Advanced Search</Dropdown.Item>
-                                                                        </DropdownButton>
-                                                                        <Form.Control
-                                                                                id="navbar-search"
-                                                                                name="search"
-                                                                                type="search"
-                                                                                placeholder="Search"
-                                                                                aria-label="Search"
-                                                                                onChange={(e) => handleSearchChange(e)}
-                                                                                onFocus={() => {
-                                                                                        if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
-                                                                                }}
-                                                                                onKeyDown={(e) => {
-                                                                                        if (e.key === 'Enter') {
-                                                                                                handleSearch();
-                                                                                        }
-                                                                                }}
-                                                                                autoComplete="off"
-                                                                        />
-                                                                        <Button variant="outline-success Cbutton" onClick={() => handleSearch()}>Search</Button>
-                                                                </InputGroup >
+                                                        <InputGroup >
+                                                                <DropdownButton
+                                                                        variant="outline-secondary Cbutton"
+                                                                        title={searchEntity}
+                                                                        id="input-group-dropdown-1"
+                                                                        onToggle={() => setShowDropdown(false)} // Close quicksearch dropdown when selecting entity type
+                                                                >
+                                                                        <Dropdown.Header>Search In</Dropdown.Header>
+                                                                        <Dropdown.Item onClick={() => setSearchEntity('All')}>All</Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => setSearchEntity('Titles')}>Titles</Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => setSearchEntity('Individuals')}>Individuals</Dropdown.Item>
+                                                                        <Dropdown.Divider />
+                                                                        <Dropdown.Item as={Link} to={'/search'}>Advanced Search</Dropdown.Item>
+                                                                </DropdownButton>
+                                                                <Form.Control
+                                                                        id="navbar-search"
+                                                                        name="search"
+                                                                        type="search"
+                                                                        placeholder="Search"
+                                                                        aria-label="Search"
+                                                                        onChange={(e) => handleSearchChange(e)}
+                                                                        onFocus={() => {
+                                                                                if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
+                                                                        }}
+                                                                        onKeyDown={(e) => {
+                                                                                if (e.key === 'Enter') {
+                                                                                        handleSearch();
+                                                                                }
+                                                                        }}
+                                                                        autoComplete="off"
+                                                                />
                                                                 {/* Dropdown for search results
                                                                         The Menu is shown dependent on the showDropdown state
                                                                         the rootCloseEvent is set to mousedown to close the dropdown when clicking outside
@@ -225,7 +222,8 @@ export default function NavbarLayout() {
                                                                                 )}
                                                                         </Dropdown.Menu>
                                                                 </Dropdown>
-                                                        </Stack>
+                                                                <Button variant="outline-success Cbutton" onClick={() => handleSearch()}>Search</Button>
+                                                        </InputGroup >
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
                                                                 {isSignedIn ? (
