@@ -1,4 +1,5 @@
 import { Card, Row, Col, Form, Button, Badge } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import Rating from './Rating';
 import defaultProfilePic from '../pics/DefaultProfilePicture.jpg';
 
@@ -58,15 +59,31 @@ export default function UserCard({
                 <Row className="align-items-center">
                     {/* Profile Picture (auto width) */}
                     <Col xs="auto" className="text-center pe-3">
-                        <div className="circular-image-80">
-                            <img src={avatar} alt={username} />
-                        </div>
+                        {userId ? (
+                            <Link to={`/user/${userId}`} aria-label={`Go to ${username} profile`}>
+                                <div className="circular-image-80">
+                                    <img src={avatar} alt={username} />
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="circular-image-80">
+                                <img src={avatar} alt={username} />
+                            </div>
+                        )}
                     </Col>
 
                     {/* Content (flexible) */}
                     <Col>
                         <div className="border rounded p-3 bg-white review-content-box">
-                            <div className="mb-2"><strong>{username}</strong></div>
+                            <div className="mb-2">
+                                {userId ? (
+                                    <Link to={`/user/${userId}`} className="text-decoration-none text-dark">
+                                        <strong>{username}</strong>
+                                    </Link>
+                                ) : (
+                                    <strong>{username}</strong>
+                                )}
+                            </div>
                             {editable ? (
                                 <Form.Control
                                     as="textarea"
