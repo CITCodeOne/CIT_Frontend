@@ -19,8 +19,6 @@ import {
 } from './utils/PreviewCardsUtils';
 import { getImageUrl } from '../business-logic-layer/TmdbIntegration';
 
-// helpers and caches are moved to `./utils/PreviewCardsUtils.jsx`
-
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
   const [extraData, setExtraData] = useState(null);
@@ -48,14 +46,11 @@ export default function PreviewCards({ item = {}, focusKey }) {
     if (cacheKey) imageCache.set(cacheKey, next);
 
     if (!image) {
-      // If we have no primary image, try TMDB poster lookup and enrich the item
+      // If we have no primary image, try TMDB poster lookup
       (async () => {
         tmdbFallbackTriedRef.current = true;
         const poster = await findPosterForItem(item, cacheKey);
-        if (poster) {
-          // update local image state and cache (do not mutate incoming props)
-          setImageSrc(poster);
-        }
+        if (poster) setImageSrc(poster);
       })();
     }
   }, [cacheKey, image, item]);
