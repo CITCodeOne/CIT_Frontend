@@ -6,7 +6,6 @@ import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
-import { LoadingState } from '../components/PageStates';
 
 export default function UserRatingsList() {
     const { userId } = useParams();
@@ -17,19 +16,34 @@ export default function UserRatingsList() {
     const [ratedTitles, setRatedTitles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [removingId, setRemovingId] = useState(null);
 
     // message for local UI actions
     const [message, setMessage] = useState("");
 
-    const handleRemoveRating = (titleId) => {
+    const handleRemoveRating = async (titleId) => {
         if (!isLoggedIn || !isOwnProfile) {
-            setMessage("You must be the profile owner to remove ratings.");
+            setMessage("You are not authorized to remove this rating.");
             setTimeout(() => setMessage(""), 2000);
             return;
         }
-        setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
-        setMessage("Rating removed.");
-        setTimeout(() => setMessage(""), 1500);
+
+        setRemovingId(titleId);
+        try {
+            const token = getStoredToken();
+            const authOptions = token ? { authToken: token } : undefined;
+
+            await mdb.apiv2.user.removeRating(userId, titleId, authOptions);
+
+            // Remove from local state on success
+            setRatedTitles((prev) => prev.filter((r) => r.titleId !== titleId));
+            setMessage("Rating removed.");
+        } catch (err) {
+            setMessage("Failed to remove rating: " + (err?.message ?? String(err)));
+        } finally {
+            setRemovingId(null);
+            setTimeout(() => setMessage(""), 1500);
+        }
     };
 
     useEffect(() => {
@@ -93,7 +107,7 @@ export default function UserRatingsList() {
         <main className="container py-4">
             <h2 className="h4 mb-3">Your reviews:</h2>
 
-            {loading && <LoadingState message="Loading ratings..." />}
+            {loading && <p>Loading ratings...</p>}
             {error && <p className="text-danger">Error: {error}</p>}
 
             {!loading && !error && ratedTitles.length === 0 && (
@@ -156,8 +170,9 @@ export default function UserRatingsList() {
                                             type="button"
                                             className="btn btn-sm btn-outline-danger ms-2"
                                             onClick={() => handleRemoveRating(item.titleId)}
+                                            disabled={removingId === item.titleId}
                                         >
-                                            Remove
+                                            {removingId === item.titleId ? 'Removing...' : 'Remove'}
                                         </button>
                                     </>
                                 )}
