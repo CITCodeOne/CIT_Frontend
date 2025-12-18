@@ -58,6 +58,7 @@ export const INDIVIDUAL_KEY_ALIASES = {
     knownfor: "knownFor",
     pageid: "pageId",
     pagelink: "pageId",
+    totalVotes: "totalVotes",
 };
 
 /**

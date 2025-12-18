@@ -28,15 +28,30 @@ export default function UserBookmarksList() {
 
     // local bookmark deletion handler
     const [message, setMessage] = useState("");
-    const handleRemoveBookmark = (pageId) => {
+    const [removingId, setRemovingId] = useState(null);
+
+    const handleRemoveBookmark = async (pageId) => {
         if (!isLoggedIn || !isOwnProfile) {
             setMessage("You must be the profile owner to remove bookmarks.");
             setTimeout(() => setMessage(""), 2000);
             return;
         }
-        setBookmarkedPages((prev) => prev.filter((b) => b.pageId !== pageId));
-        setMessage("Bookmark removed.");
-        setTimeout(() => setMessage(""), 1500);
+
+        setRemovingId(pageId);
+        try {
+            const token = getStoredToken();
+            const authOptions = token ? { authToken: token } : undefined;
+
+            await mdb.apiv2.user.removeBookmark(userId, pageId, authOptions);
+
+            setBookmarkedPages((prev) => prev.filter((b) => b.pageId !== pageId));
+            setMessage("Bookmark removed.");
+        } catch (err) {
+            setMessage("Failed to remove bookmark: " + (err?.message ?? String(err)));
+        } finally {
+            setRemovingId(null);
+            setTimeout(() => setMessage(""), 1500);
+        }
     };
 
     // Fetch bookmarks and enrich them like on the User page
@@ -184,8 +199,9 @@ export default function UserBookmarksList() {
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
                                         onClick={() => handleRemoveBookmark(item.pageId)}
+                                        disabled={removingId === item.pageId}
                                     >
-                                        Remove
+                                        {removingId === item.pageId ? 'Removing...' : 'Remove'}
                                     </button>
                                 </div>
                             )}
