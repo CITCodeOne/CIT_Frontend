@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import { getStoredToken } from '../components/utils/ExtractJwtData';
+import { normalizeDataUrl } from '../components/utils/profileImageUtils';
 import placeholderImage from '../pics/Image-not-found.png';
 
 /**
@@ -96,16 +97,31 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 setLoadingReviews(true);
                 const ratingsData = await mdb.apiv2.titles.getRatings(titleId);
 
+                // Get unique user IDs from ratings
+                const userIds = [...new Set(ratingsData.map(r => r.userId).filter(id => id))];
+
+                // Fetch user data for profile images and names
+                let userMap = new Map();
+                if (userIds.length > 0) {
+                    const userPromises = userIds.map(id => mdb.apiv2.user.get(id));
+                    const users = await Promise.all(userPromises);
+                    userMap = new Map(users.map(u => [u.id, u]));
+                }
+
                 // Map to format expected by UserCard component
-                const formattedReviews = Array.isArray(ratingsData) ? ratingsData.map((rating, index) => ({
-                    id: rating.userId || index,
-                    userId: rating.userId,
-                    author: rating.userId || 'Anonymous',
-                    rating: rating.rating || 'N/A',
-                    content: rating.reviewText || rating.content || 'No review content available.',
-                    authorAvatar: placeholderImage,
-                    time: rating.time
-                })) : [];
+                const formattedReviews = Array.isArray(ratingsData) ? ratingsData.map((rating, index) => {
+                    const user = userMap.get(rating.userId);
+                    const avatar = user && user.image ? normalizeDataUrl(user.image) : placeholderImage;
+                    return {
+                        id: rating.userId || index,
+                        userId: rating.userId,
+                        author: user ? user.name : 'Anonymous',
+                        rating: rating.rating || 'N/A',
+                        content: rating.reviewText || rating.content || 'No review content available.',
+                        authorAvatar: avatar,
+                        time: rating.time
+                    };
+                }) : [];
 
                 setReviews(formattedReviews);
             } catch (err) {

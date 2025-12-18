@@ -8,6 +8,7 @@ import makeCarousel from '../components/MakeCarousel';
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
 import SignInOffcanvas from '../components/SignInOffcanvas';
 import { getStoredToken } from '../components/utils/ExtractJwtData';
+import { normalizeDataUrl } from '../components/utils/profileImageUtils';
 import useTitleData from '../hooks/useTitleData';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
@@ -53,6 +54,7 @@ function Title() {
     const [loadingSimilar, setLoadingSimilar] = useState(false);
     const [similarBookmarks, setSimilarBookmarks] = useState({});
     const [similarPosters, setSimilarPosters] = useState({});
+    const [userAvatar, setUserAvatar] = useState(placeholderImage);
 
     // Fetch TMDB poster
     useEffect(() => {
@@ -186,6 +188,26 @@ function Title() {
 
         checkSimilarBookmarks();
     }, [isSignedIn, userId, mdbSimilarTitles]);
+
+    // Fetch user avatar
+    useEffect(() => {
+        const fetchUserAvatar = async () => {
+            if (!isSignedIn || !userId) {
+                setUserAvatar(placeholderImage);
+                return;
+            }
+
+            try {
+                const user = await mdb.apiv2.user.get(userId);
+                setUserAvatar(user && user.image ? normalizeDataUrl(user.image) : placeholderImage);
+            } catch (err) {
+                console.error('Failed to fetch user avatar:', err);
+                setUserAvatar(placeholderImage);
+            }
+        };
+
+        fetchUserAvatar();
+    }, [isSignedIn, userId]);
 
     const handleSimilarTitleBookmark = async (similarTitleId, newState) => {
         if (!isSignedIn || !userId) {
@@ -447,7 +469,7 @@ function Title() {
                                 <UserCard
                                     userId={userId}
                                     username="You"
-                                    avatar={placeholderImage}
+                                    avatar={userAvatar}
                                     rating={tempRating || userRating}
                                     content={tempReviewText || userReview}
                                     editable={true}
