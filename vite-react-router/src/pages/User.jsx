@@ -361,7 +361,7 @@ export default function User() {
                     <section className="mt-4">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h3 className="h5 mb-0">Latest ratings</h3>
-                            {ratedTitles.length > 3 && (
+                            {ratedTitles.length > 0 && (
                                 <button
                                     type="button"
                                     className="btn btn-link p-0"
