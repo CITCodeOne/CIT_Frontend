@@ -1,4 +1,4 @@
-import { Card, Row, Col, Form, Button } from 'react-bootstrap';
+import { Card, Row, Col, Form, Button, Badge } from 'react-bootstrap';
 import Rating from './Rating';
 import defaultProfilePic from '../pics/DefaultProfilePicture.jpg';
 
@@ -56,37 +56,15 @@ export default function UserCard({
         <Card className="mb-3 shadow-sm">
             <Card.Body>
                 <Row className="align-items-center">
-                    {/* Profile Picture */}
-                    <Col xs={2} md={1} className="text-center">
+                    {/* Profile Picture (auto width) */}
+                    <Col xs="auto" className="text-center pe-3">
                         <div className="circular-image-80">
-                            <img
-                                src={avatar}
-                                alt={username}
-                            />
+                            <img src={avatar} alt={username} />
                         </div>
                     </Col>
 
-                    {/* Rating Box (read-only) */}
-                    {showRatingBox && (
-                        <Col xs={3} md={2} lg={1} className="text-center">
-                            <div className="review-rating-box">
-                                <div>
-                                    <strong className="review-rating-number">
-                                        {rating}
-                                    </strong>
-                                    <div className="review-rating-scale">/10</div>
-                                </div>
-                            </div>
-                        </Col>
-                    )}
-
-                    {/* Content Area */}
-                    <Col 
-                        xs={showRatingBox ? 12 : 10} 
-                        md={showRatingBox ? 8 : showEditableRating ? 7 : 9} 
-                        lg={showRatingBox ? 10 : showEditableRating ? 8 : 10} 
-                        className={showRatingBox ? "mt-3 mt-md-0" : ""}
-                    >
+                    {/* Content (flexible) */}
+                    <Col>
                         <div className="border rounded p-3 bg-white review-content-box">
                             <div className="mb-2"><strong>{username}</strong></div>
                             {editable ? (
@@ -105,30 +83,33 @@ export default function UserCard({
                         </div>
                     </Col>
 
-                    {/* Editable Rating (stars) */}
-                    {showEditableRating && (
-                        <Col xs={8} md={3} lg={2} className="text-center mt-3 mt-md-0">
-                            <Rating
-                                initialRating={rating}
-                                editable={true}
-                                onRatingChange={onRatingChange}
-                                showNumber={true}
-                            />
-                        </Col>
-                    )}
+                    {/* Actions (rating / delete) - fixed auto width, stacked vertically on small screens */}
+                    <Col xs="auto" className="text-center d-flex flex-column align-items-center gap-2">
+                        {showRatingBox && (
+                            <Badge bg="primary" style={{ fontSize: '0.95rem', padding: '0.6rem 0.75rem' }}>
+                                {rating}/10
+                            </Badge>
+                        )}
 
-                    {/* Delete Button */}
-                    {showDeleteButton && onDelete && (
-                        <Col xs={4} md={1} className="text-center mt-3 mt-md-0">
-                            <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={onDelete}
-                            >
-                                Delete
-                            </Button>
-                        </Col>
-                    )}
+                        {showEditableRating && (
+                            <div className="d-flex align-items-center">
+                                <Rating
+                                    initialRating={rating}
+                                    editable={true}
+                                    onRatingChange={onRatingChange}
+                                    showNumber={true}
+                                />
+                            </div>
+                        )}
+
+                        {showDeleteButton && onDelete && (
+                            <div>
+                                <Button variant="outline-danger" size="sm" onClick={onDelete}>
+                                    Delete
+                                </Button>
+                            </div>
+                        )}
+                    </Col>
                 </Row>
             </Card.Body>
         </Card>
