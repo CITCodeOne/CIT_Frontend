@@ -17,7 +17,9 @@ import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
 
 export default function NavbarLayout() {
+        // State to control SignInOffcanvas visibility
         const [showSignIn, setShowSignIn] = useState(false);
+        // Custom hook to get authentication status and user info
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
         const [query, setQuery] = useState('');
         const [searchTitlesResult, setSearchTitlesResult] = useState(null);
