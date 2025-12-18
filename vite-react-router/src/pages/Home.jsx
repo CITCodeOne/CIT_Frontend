@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import MainDisplay from '../components/MainDisplay';
 import makeCarousel from '../components/MakeCarousel';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+import tmdb from '../business-logic-layer/TmdbIntegration';
+import placeholderImage from '../pics/Image-not-found.png';
 import { formatPlotPre } from '../components/utils/PlotPreFormatter';
 import useAuthStatus from '../hooks/useAuthStatus';
 import { getStoredToken } from '../components/utils/ExtractJwtData';
@@ -11,6 +13,7 @@ function Home() {
   const [featuredTitle, setFeaturedTitle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [individuals, setIndividuals] = useState(null);
+  const [tmdbPoster, setTmdbPoster] = useState(null);
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
   const [topRatedTitles, setTopRatedTitles] = useState(null);
 
@@ -51,6 +54,17 @@ function Home() {
         if (cancelled) return;
 
         setFeaturedTitle(title);
+          console.log('Home: fetched featuredTitle', title);
+        // Try to fetch TMDB poster for featured title (mirror Title page behavior)
+        try {
+          if (title?.name && title?.mediaType) {
+            const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
+            if (posterUrl) setTmdbPoster(posterUrl);
+            console.log('Home: tmdb poster for featured', posterUrl);
+          }
+        } catch (err) {
+          console.error('Home: error fetching TMDB poster for featured', err);
+        }
       } catch (err) {
         if (cancelled) return;
         console.error('Failed to load featured title', err);
@@ -139,6 +153,7 @@ function Home() {
 
       <MainDisplay
         item={featuredTitle}
+        image={tmdbPoster || featuredTitle?.image || placeholderImage}
         sections={sections}
         bookmark={{
           isBookmarked: isFeaturedBookmarked,
