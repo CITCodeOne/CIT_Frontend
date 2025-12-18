@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../style/Cstyle.css';
-import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
+import InputGroup from 'react-bootstrap/InputGroup';
 import Form from 'react-bootstrap/Form';
+import Button from 'react-bootstrap/Button';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import NavDropdown from 'react-bootstrap/NavDropdown';
-import Stack from 'react-bootstrap/Stack';
 import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Stack from 'react-bootstrap/Stack';
 import SignInOffcanvas from './SignInOffcanvas';
 import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
@@ -17,12 +19,16 @@ import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
 export default function NavbarLayout() {
         const [showSignIn, setShowSignIn] = useState(false);
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
+        const [query, setQuery] = useState('');
         const [searchTitlesResult, setSearchTitlesResult] = useState(null);
         const [searchIndividualsResult, setSearchIndividualsResult] = useState(null);
         const [showDropdown, setShowDropdown] = useState(false);
+        const [searchEntity, setSearchEntity] = useState('All');
+        const navigate = useNavigate();
 
         const handleSearchChange = async (e) => {
                 const query = e.target.value;
+                setQuery(query);
                 if (query.length === 0) {
                         setSearchTitlesResult(null);
                         setSearchIndividualsResult(null);
@@ -74,6 +80,26 @@ export default function NavbarLayout() {
                 }
         };
 
+        const handleSearch = async () => {
+                // Implement search submission logic here, e.g., navigate to search results page
+                console.log('Search submitted for query:', query);
+                let searchPath = '/search';
+                // Append query parameters based on selected entity type
+                switch (searchEntity) {
+                        case 'Titles':
+                                searchPath += `?title_name=${encodeURIComponent(query)}`;
+                                break;
+                        case 'Individuals':
+                                searchPath += `?individual_name=${encodeURIComponent(query)}`;
+                                break;
+                        case 'All':
+                        default:
+                                searchPath += `?title_name=${encodeURIComponent(query)}&individual_name=${encodeURIComponent(query)}`;
+                                break;
+                }
+                navigate(searchPath);
+        };
+
         return (
                 <div className="min-vh-100 d-flex flex-column">
                         <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow">
@@ -87,32 +113,45 @@ export default function NavbarLayout() {
                                                         navbarScroll
                                                 >
                                                 </Nav>
-                                                <NavDropdown title=" ⋮⋮⋮ " id="navbarScrollingDropdown" className="no-caret Cmakescrollable">
-                                                        <NavDropdown.Item as={Link} to="/">Home</NavDropdown.Item>
-                                                        <NavDropdown.Item as={Link} to="/search">Search</NavDropdown.Item>
-                                                        <NavDropdown.Divider />
-                                                        <NavDropdown.Item as={Link} to="/about">About</NavDropdown.Item>
-                                                </NavDropdown>
                                                 <div className="d-flex justify-content-between flex-grow-1">
-                                                        <Stack>
-                                                                <Form.Control
-                                                                        id="navbar-search"
-                                                                        name="search"
-                                                                        type="search"
-                                                                        placeholder="Search"
-                                                                        className="me-2"
-                                                                        aria-label="Search"
-                                                                        onChange={(e) => handleSearchChange(e)}
-                                                                        onFocus={() => {
-                                                                                if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
-                                                                        }}
-                                                                        autocomplete="off"
-                                                                />
+                                                        <Stack >
+                                                                <InputGroup >
+                                                                        <DropdownButton
+                                                                                variant="outline-secondary Cbutton"
+                                                                                title={searchEntity}
+                                                                                id="input-group-dropdown-1"
+                                                                                onToggle={(next) => setShowDropdown(!next)} // Close quicksearch dropdown when selecting entity type
+                                                                        >
+                                                                                <Dropdown.Header>Search In</Dropdown.Header>
+                                                                                <Dropdown.Item onClick={() => setSearchEntity('All')}>All</Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => setSearchEntity('Titles')}>Titles</Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => setSearchEntity('Individuals')}>Individuals</Dropdown.Item>
+                                                                                <Dropdown.Divider />
+                                                                                <Dropdown.Item as={Link} to={'/search'}>Advanced Search</Dropdown.Item>
+                                                                        </DropdownButton>
+                                                                        <Form.Control
+                                                                                id="navbar-search"
+                                                                                name="search"
+                                                                                type="search"
+                                                                                placeholder="Search"
+                                                                                aria-label="Search"
+                                                                                onChange={(e) => handleSearchChange(e)}
+                                                                                onFocus={() => {
+                                                                                        if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
+                                                                                }}
+                                                                                onKeyDown={(e) => {
+                                                                                        if (e.key === 'Enter') {
+                                                                                                handleSearch();
+                                                                                        }
+                                                                                }}
+                                                                                autoComplete="off"
+                                                                        />
+                                                                        <Button variant="outline-success Cbutton" onClick={() => handleSearch()}>Search</Button>
+                                                                </InputGroup >
                                                                 {/* Dropdown for search results
                                                                         The Menu is shown dependent on the showDropdown state
                                                                         the rootCloseEvent is set to mousedown to close the dropdown when clicking outside
-                                                                        the onToggle updates the showDropdown state and is required for rootCloseEvent to work when controlling visibility manually
-                                                                */}
+                                                                        the onToggle updates the showDropdown state and is required for rootCloseEvent to work when controlling visibility manually*/}
                                                                 <Dropdown
                                                                         show={showDropdown && ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0))} // NOTE: Control visibility via state
                                                                         onToggle={(next) => setShowDropdown(next)} // NOTE: Use show and onToggle to control visibility
@@ -159,7 +198,6 @@ export default function NavbarLayout() {
                                                                         </Dropdown.Menu>
                                                                 </Dropdown>
                                                         </Stack>
-                                                        <Button variant="outline-success Cbutton">Search</Button>
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
                                                                 {/* Profile*/}
                                                                 {isSignedIn ? (
