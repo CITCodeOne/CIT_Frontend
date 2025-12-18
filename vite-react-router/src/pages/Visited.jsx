@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import useAuthStatus from "../hooks/useAuthStatus";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import RowComp from "../components/RowList";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
 
 export default function Visited() {
@@ -121,12 +122,16 @@ export default function Visited() {
 			)}
 
 			{!loading && visits.length > 0 && (
-				<ul className="list-group">
-					{visits.map((v, idx) => {
+				<RowComp
+					variant="list"
+					items={visits}
+					itemClassName="list-group-item d-flex justify-content-between align-items-center"
+					emptyMessage="No visited pages found."
+					renderItem={(v, idx) => {
 						const pageId = v.pageId || v.page?.id || v.pageId?.toString() || v.id || v.pageRef || '';
 						const name = v.displayName || v.title || v.pageTitle || v.name || pageId || `Page ${idx + 1}`;
 						return (
-							<li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+							<>
 								<div>
 									{pageId ? (
 										<Link to={`/page/${pageId}`}>{name}</Link>
@@ -136,10 +141,10 @@ export default function Visited() {
 									<div className="text-muted small">Page ID: {pageId || 'N/A'}</div>
 								</div>
 								<div className="text-muted small">{renderTime(v)}</div>
-							</li>
+							</>
 						);
-					})}
-				</ul>
+					}}
+				/>
 			)}
 		</main>
 	);
