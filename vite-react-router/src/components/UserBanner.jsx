@@ -1,5 +1,5 @@
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
-import { normalizeDataUrl } from "./GetOrSetProfilePicture";
+import { normalizeDataUrl } from "./utils/profileImageUtils";
 
 export default function UserBanner({
   user_name,
