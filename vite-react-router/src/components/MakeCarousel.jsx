@@ -7,7 +7,7 @@ const DEFAULT_FOCUS_KEY = "title";
 const DEFAULT_CARD_COUNT = 3;
 const TARGET_CARD_WIDTH = 220; 
 const CARD_GAP = 16;
-const CONTROL_RESERVED_SPACE = 200; 
+const CONTROL_RESERVED_SPACE = 400; 
 const FALLBACK_MESSAGE = "No items were given to make the carousel.";
 
 const chunkItems = (items, size) => {
@@ -53,7 +53,14 @@ const CarouselRenderer = ({ items, focusKey, cardComponent }) => {
 
 		const updateLayout = (width) => {
 			const measuredWidth = Number.isFinite(width) && width > 0 ? width : getWindowWidth();
-			const usableWidth = Math.max(measuredWidth - CONTROL_RESERVED_SPACE, TARGET_CARD_WIDTH);
+
+			// Arrows overlapped with cards in ealier implementation. 
+			// To prevent that, we reserve space for controls in the layout calculation.
+			// Smaller screens reserve less space (200), medium screens a bit more (300),
+			// and large screens use the original CONTROL_RESERVED_SPACE (400).
+			const reserved = measuredWidth < 600 ? 200 : measuredWidth < 1200 ? 300 : CONTROL_RESERVED_SPACE;
+
+			const usableWidth = Math.max(measuredWidth - reserved, TARGET_CARD_WIDTH);
 			setLayout({
 				width: measuredWidth,
 				usableWidth,
