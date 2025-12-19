@@ -17,7 +17,6 @@ function Home() {
   const [isFeaturedBookmarked, setIsFeaturedBookmarked] = useState(false);
   const [topRatedTitles, setTopRatedTitles] = useState(null);
   const [actionMovies, setActionMovies] = useState(null);
-  const [classicMovies, setClassicMovies] = useState(null);
   const [topTvSeriesList, setTopTvSeriesList] = useState(null);
   const [familyPicks, setFamilyPicks] = useState(null);
   const [userBookmarks, setUserBookmarks] = useState(null);
@@ -149,36 +148,6 @@ function Home() {
       cancelled = true;
     };
   }, [featuredTitle]);
-
-  // Fetch classic movies (older, notable)
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const params = {
-          mediaType: 'movie',
-          maxYear: 1999,
-          minRating: 7.0,
-          page: 1,
-          pageSize: 25,
-        };
-
-        const list = await mdb.apiv2.titles.search(params);
-        if (cancelled) return;
-
-        setClassicMovies(list || []);
-      } catch (err) {
-        if (cancelled) return;
-        console.error('Failed to load classic movies', err);
-        setClassicMovies([]);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Fetch highly rated TV series
   useEffect(() => {
@@ -471,17 +440,6 @@ function Home() {
 
       <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
 
-      {/* Classic movies */}
-      {classicMovies && classicMovies.length > 0 && (
-        <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 6px 0' }}>Classic favourites</h3>
-          <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>Timeless films from past decades.</p>
-          {makeCarousel(classicMovies, '<media type>')}
-        </div>
-      )}
-
-      <hr style={{ borderColor: '#f1f3f5', marginTop: 24 }} />
-
       {/* Family picks */}
       {familyPicks && familyPicks.length > 0 && (
         <div style={{ marginTop: 24 }}>
@@ -507,7 +465,7 @@ function Home() {
       {/* User reviews/ratings (signed-in only) */}
       {isSignedIn && userRatings && userRatings.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3 style={{ margin: '0 0 6px 0' }}>Your recent reviews</h3>
+          <h3 style={{ margin: '0 0 6px 0' }}>Your reviews</h3>
           <p style={{ margin: '0 0 12px 0', color: '#6c757d' }}>With great taste comes great reviews - here are your latest thoughts.</p>
           {makeCarousel(userRatings, '<your review>')}
         </div>
