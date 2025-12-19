@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import PreviewCards from '../components/PreviewCards';
+import { LoadingState } from '../components/PageStates';
 import Stack from 'react-bootstrap/Stack';
+import NoSearch from '../pics/NoSearch.png';
 
 export default function SearchTitle() {
   const navigate = useNavigate();
@@ -15,10 +17,12 @@ export default function SearchTitle() {
   const [titleParams, setTitleParams] = useState({});
   const [titles, setTitles] = useState([]);
   const [loadingTitles, setLoadingTitles] = useState(false);
+  const [loadedTitles, setLoadedTitles] = useState(false);
 
   const [individualParams, setIndividualParams] = useState({});
   const [individuals, setIndividuals] = useState([]);
   const [loadingIndividuals, setLoadingIndividuals] = useState(false);
+  const [loadedIndividuals, setLoadedIndividuals] = useState(false);
 
   useEffect(() => {
     setPage(parseInt(params.get('page')) || 1);
@@ -43,6 +47,8 @@ export default function SearchTitle() {
 
     setTitleParams(titleParams);
     setIndividualParams(individualParams);
+    setLoadedTitles(false);
+    setLoadedIndividuals(false);
     console.log('Parsed title params:', titleParams);
     console.log('Parsed individual params:', individualParams);
   }
@@ -69,7 +75,10 @@ export default function SearchTitle() {
         console.error('Search failed:', err);
         if (!cancelled) setResults([]);
       } finally {
-        if (!cancelled) setLoadingTitles(false);
+        if (!cancelled) {
+          setLoadingTitles(false);
+          setLoadedTitles(true);
+        }
       }
     })();
 
@@ -99,7 +108,10 @@ export default function SearchTitle() {
         console.error('Search failed:', err);
         if (!cancelled) setIndividuals([]);
       } finally {
-        if (!cancelled) setLoadingIndividuals(false);
+        if (!cancelled) {
+          setLoadingIndividuals(false);
+          setLoadedIndividuals(true);
+        }
       }
     })();
 
@@ -114,14 +126,11 @@ export default function SearchTitle() {
   return (
     <div className="p-3">
       <Stack gap={4}>
-        <h2>Search titles for “{titleParams.name}”</h2>
-
-        {loadingTitles ? (
-          <div>Loading Titles...</div>
-        ) : (
+        {(loadingTitles || titles.length > 0) && (
           <>
-            {titles.length === 0 ? (
-              <div>No results</div>
+            <h2>Search titles for “{titleParams.name}”</h2>
+            {loadingTitles ? (
+              <LoadingState message="Loading Titles..." />
             ) : (
               <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                 {titles.map((t) => (
@@ -134,14 +143,11 @@ export default function SearchTitle() {
           </>
         )}
 
-        <h2>Search individuals for “{individualParams.name}”</h2>
-
-        {loadingIndividuals ? (
-          <div>Loading Individuals...</div>
-        ) : (
+        {(loadingIndividuals || individuals.length > 0) && (
           <>
-            {individuals.length === 0 ? (
-              <div>No results</div>
+            <h2>Search individuals for “{individualParams.name}”</h2>
+            {loadingIndividuals ? (
+              <LoadingState message="Loading Individuals..." />
             ) : (
               <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
                 {individuals.map((ind) => (
@@ -155,31 +161,41 @@ export default function SearchTitle() {
         )}
       </Stack>
 
-      <div className="mt-3 d-flex align-items-center gap-2">
-        <button
-          className="btn btn-sm btn-secondary"
-          onClick={() => {
-            const newPage = Math.max(1, (parseInt(params.get('page')) || 1) - 1);
-            params.set('page', newPage);
-            navigate(`/search?${params.toString()}`);
-          }}
-          disabled={page <= 1}
-        >
-          Prev
-        </button>
-        <span>Page {page}</span>
-        <button
-          className="btn btn-sm btn-secondary"
-          onClick={() => {
-            const newPage = (parseInt(params.get('page')) || 1) + 1;
-            params.set('page', newPage);
-            navigate(`/search?${params.toString()}`);
-          }}
-          disabled={titles.length < pageSize}
-        >
-          Next
-        </button>
-      </div>
+      {(Object.keys(titleParams).length > 0 || Object.keys(individualParams).length > 0) && loadedTitles && loadedIndividuals && titles.length === 0 && individuals.length === 0 && (
+        <div className="text-center mt-4">
+          <h2 className="text-danger">Uh-oh! </h2>
+          <h3>Film Flamingo searched everywhere, but couldn’t find what you were looking for.</h3>
+          <img src={NoSearch} alt="No search results" className="img-fluid mb-3" style={{ maxWidth: '300px' }} />
+        </div>
+      )}
+
+      {(titles.length > 0 || individuals.length > 0) && (
+        <div className="mt-3 d-flex align-items-center gap-2">
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => {
+              const newPage = Math.max(1, (parseInt(params.get('page')) || 1) - 1);
+              params.set('page', newPage);
+              navigate(`/search?${params.toString()}`);
+            }}
+            disabled={page <= 1}
+          >
+            Prev
+          </button>
+          <span>Page {page}</span>
+          <button
+            className="btn btn-sm btn-secondary"
+            onClick={() => {
+              const newPage = (parseInt(params.get('page')) || 1) + 1;
+              params.set('page', newPage);
+              navigate(`/search?${params.toString()}`);
+            }}
+            disabled={titles.length < pageSize && individuals.length < pageSize}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
