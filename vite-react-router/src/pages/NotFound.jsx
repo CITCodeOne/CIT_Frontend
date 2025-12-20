@@ -34,7 +34,7 @@ function NotFound() {
                                 {asciiArt}
                         </pre>
                         <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Page Not Found</h2>
-                        <p style={{ fontSize: '1.1rem', color: '#666' }}>The page you are looking for does not exist.</p>
+                        <p style={{ fontSize: '1.1rem', color: '#666' }}>Film Flamingo searched the entire movie library, but this page isn'’'t in the collection.</p>
                         <img src={flamingoImage} alt="404 Error" style={{ maxWidth: '100%', width: '600px', marginTop: '2rem' }} />
                 </div>
         );
