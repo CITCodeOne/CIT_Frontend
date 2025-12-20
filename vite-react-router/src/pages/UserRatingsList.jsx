@@ -59,35 +59,32 @@ export default function UserRatingsList() {
 
                 const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
 
-                let enrichedRatings = [];
-                if (Array.isArray(ratings) && ratings.length > 0) {
-                    enrichedRatings = await Promise.all(
-                        ratings.map(async (r) => {
-                            try {
-                                const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
-                                return {
-                                    ...r,
-                                    title: title?.name ?? title?.title ?? 'Unknown',
-                                    poster: title?.image ?? placeholderImage,
-                                    startYear: title?.startYear ?? title?.releaseDate ?? null,
-                                    mediaType: title?.mediaType ?? 'unknown',
-                                    plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
-                                    pageId: title?.pageId ?? null,
-                                };
-                            } catch (err) {
-                                return {
-                                    ...r,
-                                    title: 'Unknown',
-                                    poster: placeholderImage,
-                                    startYear: null,
-                                    mediaType: 'unknown',
-                                    plotPre: '',
-                                    pageId: null,
-                                };
-                            }
-                        })
-                    );
-                }
+                const enrichedRatings = await Promise.all(
+                    ratings.map(async (r) => {
+                        try {
+                            const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                            return {
+                                ...r,
+                                title: title?.name ?? title?.title ?? 'Unknown',
+                                poster: title?.image ?? placeholderImage,
+                                startYear: title?.startYear ?? title?.releaseDate ?? null,
+                                mediaType: title?.mediaType ?? 'unknown',
+                                plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                pageId: title?.pageId ?? null,
+                            };
+                        } catch (err) {
+                            return {
+                                ...r,
+                                title: 'Unknown',
+                                poster: placeholderImage,
+                                startYear: null,
+                                mediaType: 'unknown',
+                                plotPre: '',
+                                pageId: null,
+                            };
+                        }
+                    })
+                );
 
                 enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time));
                 if (!cancelled) setRatedTitles(enrichedRatings);

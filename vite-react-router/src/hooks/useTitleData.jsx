@@ -68,13 +68,13 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 const castData = await mdb.apiv2.titles.getIndividuals(titleId);
 
                 // Map to format expected by MediaCard component
-                const formattedCast = Array.isArray(castData) ? castData.map(person => ({
+                const formattedCast = castData.map(person => ({
                     id: person.id,
                     pageId: person.pageId,
                     name: person.name || 'Unknown',
                     character: person.character || null,
                     profilePath: person.profilePath || placeholderImage
-                })) : [];
+                }));
 
                 setCast(formattedCast);
             } catch (err) {
@@ -109,7 +109,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 }
 
                 // Map to format expected by UserCard component
-                const formattedReviews = Array.isArray(ratingsData) ? ratingsData.map((rating, index) => {
+                const formattedReviews = ratingsData.map((rating, index) => {
                     const user = userMap.get(rating.userId);
                     const avatar = user && user.image ? normalizeDataUrl(user.image) : placeholderImage;
                     return {
@@ -121,7 +121,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                         authorAvatar: avatar,
                         time: rating.time
                     };
-                }) : [];
+                });
 
                 setReviews(formattedReviews);
             } catch (err) {
@@ -149,7 +149,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                 const token = getStoredToken();
                 // Fetch user's bookmarks and check if this pageId is present
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
-                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
+                const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId)));
                 setIsBookmarked(bookmarkedSet.has(String(pageId)));
             } catch (err) {
                 console.error('Failed to check bookmark status:', err);

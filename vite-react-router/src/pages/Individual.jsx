@@ -112,7 +112,7 @@ function Individual() {
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
 
                 // Build a lookup set for quick checks
-                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
+                const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
                 knownForTitles.forEach(title => {

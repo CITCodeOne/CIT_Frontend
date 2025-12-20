@@ -70,7 +70,7 @@ export default function SearchTitle() {
         });
         console.log('Search titles payload:', payload);
         if (cancelled) return;
-        setTitles(Array.isArray(payload) ? payload : (payload ? [payload] : []));
+        setTitles(payload);
       } catch (err) {
         console.error('Search failed:', err);
         if (!cancelled) setResults([]);
@@ -103,7 +103,7 @@ export default function SearchTitle() {
         });
         console.log('Search individuals payload:', payload);
         if (cancelled) return;
-        setIndividuals(Array.isArray(payload) ? payload : (payload ? [payload] : []));
+        setIndividuals(payload);
       } catch (err) {
         console.error('Search failed:', err);
         if (!cancelled) setIndividuals([]);

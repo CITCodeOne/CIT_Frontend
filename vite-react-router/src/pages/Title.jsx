@@ -175,7 +175,7 @@ function Title() {
                 // Fetch all bookmarks for the user in one call
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
 
-                const bookmarkedSet = new Set((Array.isArray(bookmarks) ? bookmarks : []).map(b => String(b.pageId)));
+                const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId)));
 
                 const bookmarkMap = {};
                 mdbSimilarTitles.forEach(similar => {

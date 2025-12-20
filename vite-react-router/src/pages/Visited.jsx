@@ -22,7 +22,6 @@ export default function Visited() {
 			setError("");
 			try {
 				const token = getStoredToken();
-				// endpoint is protected - require a token
 				if (!token) {
 					setError('Authentication required to view visits');
 					setVisits([]);
@@ -30,7 +29,7 @@ export default function Visited() {
 					return;
 				}
 				const res = await mdb.apiv2.user.getVisits(targetUserId, { authToken: token });
-				const raw = Array.isArray(res) ? res.slice() : [];
+				const raw = res.slice();
 
 				const authOptions = token ? { authToken: token } : undefined;
 
@@ -38,7 +37,6 @@ export default function Visited() {
 				const enriched = await Promise.all(
 					raw.map(async (v) => {
 						try {
-							// Visit may already contain pageId; normalize
 							const pageId = v.pageId || v.page?.id || v.id || null;
 							if (!pageId) return { ...v, displayName: v.title || v.name || 'Unknown', pageId: pageId };
 

@@ -73,17 +73,17 @@ export default function useIndividualData(individualId, userId = null, isLoggedI
             try {
                 setLoadingKnownFor(true);
                 const titlesData = await mdb.apiv2.individuals.getTitles(individualId);
-                
+
                 // Map to format expected by MediaCard component
-                const formattedTitles = Array.isArray(titlesData) ? titlesData.map(title => ({
+                const formattedTitles = titlesData.map(title => ({
                     id: title.id,
                     pageId: title.pageId,
                     name: title.name || title.title || 'Unknown',
                     image: title.image || title.poster || title.posterPath || placeholderImage,
                     startYear: title.startYear || title.releaseYear || title.year || null,
                     profession: title.profession || title.category || null
-                })) : [];
-                
+                }));
+
                 setKnownForTitles(formattedTitles);
             } catch (err) {
                 console.error('Failed to load known-for titles:', err);

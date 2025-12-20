@@ -11,7 +11,7 @@ const CONTROL_RESERVED_SPACE = 400;
 const FALLBACK_MESSAGE = "No items were given to make the carousel.";
 
 const chunkItems = (items, size) => {
-	if (!Array.isArray(items) || !items.length) {
+	if (!items || !items.length) {
 		return [];
 	}
 
@@ -162,7 +162,7 @@ export default function makeCarousel(items = null, focusKey = DEFAULT_FOCUS_KEY,
 		return <LoadingState message="Loading content..." />;
 	}
 
-	const safeItems = Array.isArray(items) ? items : [];
+	const safeItems = items;
 
 	if (!safeItems.length) {
 		return (

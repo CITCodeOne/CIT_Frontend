@@ -60,41 +60,37 @@ export default function User() {
                 setAvatarUrl(initialAvatar);
                 setOriginalAvatarUrl(initialAvatar);
 
-                // No persisted pending avatar: pending selection is kept only in-memory while on this page
 
                 // Fetch user ratings and bookmarks (use correct API signatures)
                 const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
 
                 // Enrich each rating with title data (poster, title name, year, mediaType, short plot)
-                let enrichedRatings = [];
-                if (Array.isArray(ratings) && ratings.length > 0) {
-                    enrichedRatings = await Promise.all(
-                                ratings.map(async (r) => {
-                            try {
-                                const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
-                                return {
-                                    ...r,
-                                            title: title?.name ?? title?.title ?? 'Unknown',
-                                            poster: title?.image ?? placeholderImage,
-                                            startYear: title?.startYear ?? title?.releaseDate ?? null,
-                                            mediaType: title?.mediaType ?? 'unknown',
-                                            plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
-                                            pageId: title?.pageId ?? null,
-                                };
-                            } catch (err) {
-                                return {
-                                    ...r,
-                                    title: 'Unknown',
-                                    poster: placeholderImage,
-                                    startYear: null,
-                                    mediaType: 'unknown',
-                                    plotPre: '',
-                                            pageId: null,
-                                };
-                            }
-                        })
-                    );
-                }
+                const enrichedRatings = await Promise.all(
+                    ratings.map(async (r) => {
+                        try {
+                            const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                            return {
+                                ...r,
+                                title: title?.name ?? title?.title ?? 'Unknown',
+                                poster: title?.image ?? placeholderImage,
+                                startYear: title?.startYear ?? title?.releaseDate ?? null,
+                                mediaType: title?.mediaType ?? 'unknown',
+                                plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                pageId: title?.pageId ?? null,
+                            };
+                        } catch (err) {
+                            return {
+                                ...r,
+                                title: 'Unknown',
+                                poster: placeholderImage,
+                                startYear: null,
+                                mediaType: 'unknown',
+                                plotPre: '',
+                                pageId: null,
+                            };
+                        }
+                    })
+                );
 
                 enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time));
                 setRatedTitles(enrichedRatings);
@@ -102,68 +98,66 @@ export default function User() {
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
 
                 // Enrich bookmarks: a bookmark references a pageId which may point to a title or an individual
-                let enrichedBookmarks = [];
-                if (Array.isArray(bookmarks) && bookmarks.length > 0) {
-                    enrichedBookmarks = await Promise.all(
-                        bookmarks.map(async (b) => {
-                            try {
-                                // resolve page to find whether it's a title or individual
-                                const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
+                const enrichedBookmarks = await Promise.all(
+                    bookmarks.map(async (b) => {
+                        try {
+                            // resolve page to find whether it's a title or individual
+                            const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
 
-                                // API returns { pageId, tconst, iconst }
-                                const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
-                                const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+                            // API returns { pageId, tconst, iconst }
+                            const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
+                            const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
 
-                                if (tconst) {
-                                    const title = await mdb.apiv2.titles.getById(tconst, authOptions);
-                                    return {
-                                        ...b,
-                                        kind: 'title',
-                                        title: title?.name ?? title?.title ?? 'Unknown',
-                                        poster: title?.image ?? placeholderImage,
-                                        plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
-                                        mediaType: title?.mediaType ?? 'unknown',
-                                        pageId: b.pageId,
-                                    };
-                                }
-
-                                if (iconst) {
-                                    const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
-                                    return {
-                                        ...b,
-                                        kind: 'individual',
-                                        title: individual?.name ?? 'Unknown',
-                                        poster: individual?.image ?? placeholderImage,
-                                        plotPre: individual?.bio ? String(individual.bio).slice(0, 200) : '',
-                                        mediaType: 'individual',
-                                        pageId: b.pageId,
-                                    };
-                                }
-
-                                // fallback when pageRef doesn't contain ids
+                            if (tconst) {
+                                const title = await mdb.apiv2.titles.getById(tconst, authOptions);
                                 return {
                                     ...b,
-                                    kind: 'unknown',
-                                    title: pageRef?.name ?? pageRef?.title ?? 'Unknown',
-                                    poster: pageRef?.image ?? placeholderImage,
-                                    plotPre: pageRef?.plot ? String(pageRef.plot).slice(0, 200) : '',
-                                    mediaType: 'unknown',
-                                    pageId: b.pageId,
-                                };
-                            } catch (err) {
-                                return {
-                                    ...b,
-                                    kind: 'error',
-                                    title: 'Unknown',
-                                    poster: placeholderImage,
-                                    plotPre: '',
-                                    mediaType: 'unknown',
+                                    kind: 'title',
+                                    title: title?.name ?? title?.title ?? 'Unknown',
+                                    poster: title?.image ?? placeholderImage,
+                                    plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
+                                    mediaType: title?.mediaType ?? 'unknown',
                                     pageId: b.pageId,
                                 };
                             }
-                        })
-                    );
-                }
+
+                            if (iconst) {
+                                const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+                                return {
+                                    ...b,
+                                    kind: 'individual',
+                                    title: individual?.name ?? 'Unknown',
+                                    poster: individual?.image ?? placeholderImage,
+                                    plotPre: individual?.bio ? String(individual.bio).slice(0, 200) : '',
+                                    mediaType: 'individual',
+                                    pageId: b.pageId,
+                                };
+                            }
+
+                            // fallback when pageRef doesn't contain ids
+                            return {
+                                ...b,
+                                kind: 'unknown',
+                                title: pageRef?.name ?? pageRef?.title ?? 'Unknown',
+                                poster: pageRef?.image ?? placeholderImage,
+                                plotPre: pageRef?.plot ? String(pageRef.plot).slice(0, 200) : '',
+                                mediaType: 'unknown',
+                                pageId: b.pageId,
+                            };
+                        } catch (err) {
+                            return {
+                                ...b,
+                                kind: 'error',
+                                title: 'Unknown',
+                                poster: placeholderImage,
+                                plotPre: '',
+                                mediaType: 'unknown',
+                                pageId: b.pageId,
+                            };
+                        }
+                    })
+                );
+
                 enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time));
                 setBookmarkedPages(enrichedBookmarks);
             } catch (err) {

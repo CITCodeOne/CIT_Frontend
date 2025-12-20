@@ -230,7 +230,7 @@ function Home() {
           const bookmarks = await mdb.apiv2.user.getBookmarks(authUserId, { queryParams: { page: 1, pageSize: 25 }, ...(authOptions || {}) });
 
           let enriched = [];
-          if (Array.isArray(bookmarks) && bookmarks.length > 0) {
+          if (bookmarks.length > 0) {
             enriched = await Promise.all(
               bookmarks.map(async (b) => {
                 try {
@@ -291,7 +291,7 @@ function Home() {
           const ratings = await mdb.apiv2.user.getRatings(authUserId, { queryParams: { page: 1, pageSize: 25 }, ...(authOptions || {}) });
 
           let enrichedRatings = [];
-          if (Array.isArray(ratings) && ratings.length > 0) {
+          if (ratings.length > 0) {
             enrichedRatings = await Promise.all(
               ratings.map(async (r) => {
                 try {

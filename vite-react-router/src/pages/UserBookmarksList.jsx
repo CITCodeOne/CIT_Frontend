@@ -68,10 +68,8 @@ export default function UserBookmarksList() {
 
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
 
-                let enrichedBookmarks = [];
-                if (Array.isArray(bookmarks) && bookmarks.length > 0) {
-                    enrichedBookmarks = await Promise.all(
-                        bookmarks.map(async (b) => {
+                const enrichedBookmarks = await Promise.all(
+                    bookmarks.map(async (b) => {
                             try {
                                 const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
 
@@ -126,7 +124,6 @@ export default function UserBookmarksList() {
                             }
                         })
                     );
-                }
 
                 enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time));
                 if (!cancelled) setBookmarkedPages(enrichedBookmarks);
