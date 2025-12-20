@@ -8,6 +8,7 @@ import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";
 import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils";
+import { formatPlotPre } from "../components/utils/PlotPreFormatter";
 import { LoadingState } from '../components/PageStates';
 
 export default function User() {
@@ -170,12 +171,7 @@ export default function User() {
         fetchUserData();
     }, [userId]);
 
-    // helper to format plot preview strings with "..."
-    const formatPlotPre = (s) => {
-        if (!s) return "";
-        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
-        return s.trim() + "...";
-    };
+    // Using shared `formatPlotPre` from utilities
 
     // get latest 3 bookmarks
     const latestBookmarks = bookmarkedPages.slice(0, 3);

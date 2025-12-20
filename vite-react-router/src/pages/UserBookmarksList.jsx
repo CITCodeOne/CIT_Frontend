@@ -4,6 +4,7 @@ import RowComp from "../components/RowList";
 import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
+import { formatPlotPre } from "../components/utils/PlotPreFormatter";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import { LoadingState } from '../components/PageStates';
 
@@ -19,12 +20,7 @@ export default function UserBookmarksList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // helper to format plot preview strings with "..."
-    const formatPlotPre = (s) => {
-        if (!s) return "";
-        if (/\u2026$|\.{3}$/.test(s.trim())) return s.trim();
-        return s.trim() + "...";
-    };
+    // Using shared `formatPlotPre` from utilities
 
     // local bookmark deletion handler
     const [message, setMessage] = useState("");
