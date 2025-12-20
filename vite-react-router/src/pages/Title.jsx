@@ -59,6 +59,25 @@ function Title() {
     // Fetch TMDB poster
     useEffect(() => {
         const fetchPoster = async () => {
+            // If backend already provided an image, verify it first and skip TMDB if valid
+            const backendImage = title?.image || title?.poster || null;
+            if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
+                try {
+                    const head = await fetch(backendImage, { method: 'HEAD' });
+                    if (head && head.ok) return; // backend image is valid, no TMDB call
+                } catch (e) {
+                    try {
+                        const getResp = await fetch(backendImage, { method: 'GET' });
+                        if (getResp && getResp.ok) return;
+                    } catch (_) {
+                        // fall through to TMDB lookup
+                    }
+                }
+            }
+
+            // Only call TMDB when backend provides an explicit external id
+            if (!(title?.tmdbId || title?.tmdb_id || title?.imdbId || title?.imdb_id)) return;
+
             if (title?.name && title?.mediaType) {
                 try {
                     const posterUrl = await tmdb.getTitlePoster(

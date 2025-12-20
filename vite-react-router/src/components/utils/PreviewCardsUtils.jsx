@@ -1,5 +1,5 @@
 import tmdbApi from '../../business-logic-layer/ApiClient/ApiClientTMDB';
-import { getImageUrl, getTitlePoster } from '../../business-logic-layer/TmdbIntegration';
+import { getImageUrl } from '../../business-logic-layer/TmdbIntegration';
 import fallbackImageAsset from '../../pics/Image-not-found.png';
 
 export const imageCache = new Map();
@@ -99,15 +99,27 @@ export const findPosterForItem = async (item, cacheKey) => {
   try {
     let posterUrl = null;
 
-    // Try to resolve a human-friendly title/name and year from multiple possible fields
-    const titleName = item?.title || item?.name || item?.original_title || null;
-    const mediaType = item?.mediaType || item?.media_type || (item?.type === 'Title' ? 'movie' : null) || 'movie';
-    const titleYear = item?.year || item?.startYear || item?.releaseYear || item?.release_date || null;
-
-    if (titleName) {
-      posterUrl = await getTitlePoster(titleName, mediaType, titleYear);
+    // First, prefer any image provided by the backend and verify it works
+    const backendImage = item?.image || item?.poster || null;
+    if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
+      try {
+        const headResp = await fetch(backendImage, { method: 'HEAD' });
+        if (headResp && headResp.ok) {
+          posterUrl = backendImage;
+        }
+      } catch (e) {
+        // HEAD may be blocked by CORS or not allowed — try a lightweight GET as fallback
+        try {
+          const getResp = await fetch(backendImage, { method: 'GET' });
+          if (getResp && getResp.ok) posterUrl = backendImage;
+        } catch (_) {
+          // ignore and continue to TMDB checks
+        }
+      }
     }
 
+    // Only query TMDB when the backend provides a clear external identifier
+    // (tmdb id or imdb id). Avoid free-text searches to reduce unnecessary API calls.
     if (!posterUrl && (item?.imdbId || item?.imdb_id)) {
       const movie = await tmdbApi.getMovieByImdb(item.imdbId || item.imdb_id);
       posterUrl = getImageUrl(movie?.poster_path) || null;
