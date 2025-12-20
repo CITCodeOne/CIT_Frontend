@@ -99,23 +99,14 @@ export const findPosterForItem = async (item, cacheKey) => {
   try {
     let posterUrl = null;
 
-    // First, prefer any image provided by the backend and verify it works
+    // Prefer any image provided by the backend — do NOT probe external hosts from
+    // the browser (that's what caused CORS errors). Simply accept the URL and
+    // let the <img onError> handler fall back if the resource is missing or
+    // blocked by CORS. This avoids client-side HEAD/GET probes to third-party
+    // hosts (e.g., m.media-amazon.com) which don't return CORS headers.
     const backendImage = item?.image || item?.poster || null;
     if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
-      try {
-        const headResp = await fetch(backendImage, { method: 'HEAD' });
-        if (headResp && headResp.ok) {
-          posterUrl = backendImage;
-        }
-      } catch (e) {
-        // HEAD may be blocked by CORS or not allowed — try a lightweight GET as fallback
-        try {
-          const getResp = await fetch(backendImage, { method: 'GET' });
-          if (getResp && getResp.ok) posterUrl = backendImage;
-        } catch (_) {
-          // ignore and continue to TMDB checks
-        }
-      }
+      posterUrl = backendImage;
     }
 
     // Only query TMDB when the backend provides a clear external identifier
