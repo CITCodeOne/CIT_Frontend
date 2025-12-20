@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Spinner } from 'react-bootstrap';
 import { LoadingState } from './PageStates';
 import {
   fallbackImage,
   imageCache,
-  extraDataCache,
-  tmdbPosterCache,
   cacheKeyForItem,
   truncateText,
   resolveTitle,
@@ -24,14 +21,19 @@ export default function PreviewCards({ item = {}, focusKey }) {
   const [extraData, setExtraData] = useState(null);
   const [loadingExtra, setLoadingExtra] = useState(false);
   const tmdbFallbackTriedRef = useRef(false);
-
   const cacheKey = cacheKeyForItem(item);
 
-  const displayFocusKey = (!item.mediaType && !item.media_type) ? (extraData?.known_for_department || "CONTRIBUTOR") : item.mediaType?.toUpperCase() || "TITLE";
+  const mediaType = item.mediaType || item.media_type;
+  const isContributor = !mediaType;
+
+  const displayFocusKey = isContributor
+    ? (extraData?.known_for_department || 'CONTRIBUTOR')
+    : (mediaType?.toUpperCase() || 'TITLE');
 
   const title = resolveTitle(item);
   const subtitle = resolveSubtitle(item, extraData);
-  const description = loadingExtra ? 'Loading...' : truncateText(resolveDescription(item, extraData));
+  const rawDescription = resolveDescription(item, extraData);
+  const description = loadingExtra ? 'Loading...' : rawDescription;
   const image = resolveImage(item, extraData);
   const year = resolveYear(item);
   useEffect(() => {
@@ -57,16 +59,16 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
   // When extraData changes and provides a TMDB profile_path, update imageSrc and cache
   useEffect(() => {
-    if (!item.mediaType && !item.media_type && extraData?.profile_path) {
+    if (isContributor && extraData?.profile_path) {
       const tmdbProfileUrl = getImageUrl(extraData.profile_path, 'w185');
       setImageSrc(tmdbProfileUrl);
       if (cacheKey) imageCache.set(cacheKey, tmdbProfileUrl);
     }
-  }, [extraData?.profile_path, item.mediaType, item.media_type, cacheKey]);
+  }, [extraData?.profile_path, isContributor, cacheKey]);
 
   useEffect(() => {
     let cancelled = false;
-    if (item.name && !item.mediaType && !item.media_type) {
+    if (item.name && isContributor) {
       (async () => {
         setLoadingExtra(true);
         try {
@@ -95,6 +97,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
         const poster = await findPosterForItem(item, cacheKey);
         if (poster) {
           setImageSrc(poster);
+          if (cacheKey) imageCache.set(cacheKey, poster);
           return;
         }
         if (imageSrc !== fallbackImage) {
@@ -113,30 +116,19 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
   // Check type to determine either mediaType or contributionType
   let typeLine = null;
-
-  if (!item.mediaType && !item.media_type) {
-    // Contributor
-    const knownForTitles = extraData?.known_for ? extraData.known_for.map(kf => kf.title || kf.name).filter(Boolean).join(', ') : "";
+  if (isContributor) {
+    const knownForTitles = extraData?.known_for ? extraData.known_for.map(kf => kf.title || kf.name).filter(Boolean).join(', ') : '';
     const truncatedKnownFor = truncateText(knownForTitles, 100);
     typeLine = (
       <span className="text-muted small">
-        {truncatedKnownFor || "No known works"}
-      </span>
-    );
-  } else if (item.type === "Title" || item.mediaType) {
-    const mediaType = item.mediaType || item.media_type || "Title";
-    typeLine = (
-      <span className="text-muted small">
-        {mediaType}
-        {year ? ` · ${year}` : null}
+        {truncatedKnownFor || 'No known works'}
       </span>
     );
   } else {
-    // Fallback
-    const mediaType = item.mediaType || item.media_type || "Title";
+    const mediaLabel = mediaType || 'Title';
     typeLine = (
       <span className="text-muted small">
-        {mediaType}
+        {mediaLabel}
         {year ? ` · ${year}` : null}
       </span>
     );
