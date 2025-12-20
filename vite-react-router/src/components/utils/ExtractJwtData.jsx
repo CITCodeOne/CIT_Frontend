@@ -1,4 +1,6 @@
-// localStorage key used to persist the JWT issued by the backend.
+// Utility helpers for extracting useful information from the JWT issued by the backend.
+// The token is stored in `localStorage` under the key below when the user signs in.
+// Only used to get the simplest data about the logged-in user (id, username) without making API calls.
 const TOKEN_STORAGE_KEY = "cit.jwt";
 
 /**
@@ -9,11 +11,11 @@ const TOKEN_STORAGE_KEY = "cit.jwt";
 const parsePayload = (token) => {
 	if (!token) return null;
 	const [, payload] = token.split(".");
-	if (!payload || typeof globalThis?.atob !== "function") return null;
+	if (!payload) return null;
 	const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
 	const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
 	try {
-		return JSON.parse(globalThis.atob(padded));
+		return JSON.parse(atob(padded));
 	} catch (error) {
 		console.warn("Failed to decode JWT", error);
 		return null;
@@ -35,6 +37,7 @@ export const deriveUserId = (claims) => claims?.uid ?? "";
  * @returns {string} Username or empty string when not provided.
  */
 export const deriveUsername = (claims) =>
+	// Try common claim names: a simple `username` field or the older WS-Federation claim URI
 	claims?.username ?? claims?.["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] ?? "";
 
 /**
@@ -42,8 +45,8 @@ export const deriveUsername = (claims) =>
  * @returns {string} JWT token string or an empty string when unavailable.
  */
 export const getStoredToken = () => {
-	if (typeof window === "undefined") return "";
-	return window.localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+	return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
 };
 
+// Export the storage key so callers can keep localStorage usage consistent across the app.
 export { TOKEN_STORAGE_KEY };
