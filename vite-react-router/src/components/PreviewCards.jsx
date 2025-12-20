@@ -68,12 +68,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
 
   useEffect(() => {
     let cancelled = false;
-    // Only fetch TMDB extra data when this is a contributor and the backend
-    // indicates an external id (tmdb/imdb) OR when no backend image exists.
-    const hasBackendImage = !!(item?.image || item?.profile || item?.poster);
-    const hasExternalId = !!(item?.tmdbId || item?.tmdb_id || item?.imdbId || item?.imdb_id);
-
-    if (item.name && isContributor && (hasExternalId || !hasBackendImage)) {
+    if (item.name && isContributor) {
       (async () => {
         setLoadingExtra(true);
         try {
@@ -93,7 +88,7 @@ export default function PreviewCards({ item = {}, focusKey }) {
     return () => {
       cancelled = true;
     };
-  }, [item.name, item.mediaType, item.media_type, cacheKey, item.tmdbId, item.imdbId, item.image]);
+  }, [item.name, item.mediaType, item.media_type, cacheKey]);
 
   const handleImageError = () => {
     if (!tmdbFallbackTriedRef.current) {

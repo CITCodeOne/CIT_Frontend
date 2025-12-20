@@ -60,36 +60,12 @@ function Home() {
 
         setFeaturedTitle(title);
           console.log('Home: fetched featuredTitle', title);
-        // Prefer backend image if present and valid; only call TMDB when backend
-        // exposes tmdb/imdb identifiers for the featured title.
+        // Try to fetch TMDB poster for featured title (mirror Title page behavior)
         try {
-          const backendImage = title?.image || title?.poster || null;
-          if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
-            try {
-              const head = await fetch(backendImage, { method: 'HEAD' });
-              if (head && head.ok) {
-                // backend image valid — skip TMDB
-              } else {
-                // fall through to TMDB check
-                if (title?.tmdbId || title?.tmdb_id || title?.imdbId || title?.imdb_id) {
-                  const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
-                  if (posterUrl) setTmdbPoster(posterUrl);
-                  console.log('Home: tmdb poster for featured', posterUrl);
-                }
-              }
-            } catch (e) {
-              if (title?.tmdbId || title?.tmdb_id || title?.imdbId || title?.imdb_id) {
-                const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
-                if (posterUrl) setTmdbPoster(posterUrl);
-                console.log('Home: tmdb poster for featured', posterUrl);
-              }
-            }
-          } else {
-            if (title?.tmdbId || title?.tmdb_id || title?.imdbId || title?.imdb_id) {
-              const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
-              if (posterUrl) setTmdbPoster(posterUrl);
-              console.log('Home: tmdb poster for featured', posterUrl);
-            }
+          if (title?.name && title?.mediaType) {
+            const posterUrl = await tmdb.getTitlePoster(title.name, title.mediaType, title.startYear);
+            if (posterUrl) setTmdbPoster(posterUrl);
+            console.log('Home: tmdb poster for featured', posterUrl);
           }
         } catch (err) {
           console.error('Home: error fetching TMDB poster for featured', err);

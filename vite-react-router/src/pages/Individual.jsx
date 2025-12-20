@@ -42,33 +42,15 @@ function Individual() {
         toggleBookmark
     } = useIndividualData(individualId, userId, isSignedIn, pageId);
 
-    // Fetch TMDB profile picture only when backend image is missing/invalid and tmdb id exists
+    // Fetch TMDB profile picture
     useEffect(() => {
         const fetchTmdbProfilePicture = async () => {
-            if (!individual) return;
+            if (!individual?.name) return;
 
-            const backendImage = individual.image || individual.profile || null;
-            if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
-                try {
-                    const head = await fetch(backendImage, { method: 'HEAD' });
-                    if (head && head.ok) return; // backend image works, skip TMDB
-                } catch (e) {
-                    try {
-                        const getResp = await fetch(backendImage, { method: 'GET' });
-                        if (getResp && getResp.ok) return;
-                    } catch (_) {
-                        // fall through
-                    }
-                }
-            }
-
-            // Only call TMDB when we have a tmdb id from backend
-            const tmdbId = individual?.tmdbId || individual?.tmdb_id || null;
             try {
-                if (tmdbId) {
-                    const personDetails = await mdb.tmdb.getPerson(tmdbId);
-                    const profilePath = personDetails?.profile_path;
-                    if (profilePath) setTmdbProfilePicture(`https://image.tmdb.org/t/p/w500${profilePath}`);
+                const photoUrl = await tmdb.getPersonPhoto(individual.name);
+                if (photoUrl) {
+                    setTmdbProfilePicture(photoUrl);
                 }
             } catch (err) {
                 console.error('Error fetching TMDB profile picture:', err);
@@ -86,30 +68,29 @@ function Individual() {
                 return;
             }
 
-                try {
-                    setLoadingImages(true);
-
-                    // Only fetch TMDB gallery when backend exposes a tmdb id for this person
-                    const tmdbId = individual?.tmdbId || individual?.tmdb_id || null;
-                    if (!tmdbId) {
-                        setTmdbImages([]);
-                        return;
-                    }
-
-                    const personDetails = await mdb.tmdb.getPerson(tmdbId);
+            try {
+                setLoadingImages(true);
+                
+                const searchResults = await mdb.tmdb.searchPerson(individual.name);
+                
+                if (searchResults?.results?.length > 0) {
+                    const personId = searchResults.results[0].id;
+                    const personDetails = await mdb.tmdb.getPerson(personId);
+                    
                     if (personDetails?.images?.profiles) {
                         const imageUrls = personDetails.images.profiles
                             .slice(0, 10)
                             .map(img => `https://image.tmdb.org/t/p/w500${img.file_path}`);
-
+                        
                         setTmdbImages(imageUrls);
                     }
-                } catch (err) {
-                    console.error('Error fetching TMDB images:', err);
-                    setTmdbImages([]);
-                } finally {
-                    setLoadingImages(false);
                 }
+            } catch (err) {
+                console.error('Error fetching TMDB images:', err);
+                setTmdbImages([]);
+            } finally {
+                setLoadingImages(false);
+            }
         };
 
         if (individual) {
