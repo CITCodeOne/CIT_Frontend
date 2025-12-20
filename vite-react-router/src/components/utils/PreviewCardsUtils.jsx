@@ -1,5 +1,5 @@
 import tmdbApi from '../../business-logic-layer/ApiClient/ApiClientTMDB';
-import { getImageUrl } from '../../business-logic-layer/TmdbIntegration';
+import { getImageUrl, getTitlePoster } from '../../business-logic-layer/TmdbIntegration';
 import fallbackImageAsset from '../../pics/Image-not-found.png';
 
 export const imageCache = new Map();
@@ -105,7 +105,12 @@ export const findPosterForItem = async (item, cacheKey) => {
     // blocked by CORS. This avoids client-side HEAD/GET probes to third-party
     // hosts (e.g., m.media-amazon.com) which don't return CORS headers.
     const backendImage = item?.image || item?.poster || null;
-    if (backendImage && typeof backendImage === 'string' && backendImage.startsWith('http')) {
+    // Ignore known problematic external hosts (e.g., Amazon's image CDN) because
+    // they frequently return 404s or are rate-limited for our client. Prefer
+    // TMDB lookups instead when possible so preview cards show reliable posters.
+    const isBackendHttpImage = backendImage && typeof backendImage === 'string' && backendImage.startsWith('http');
+
+    if (isBackendHttpImage && !isSkippedHost) {
       posterUrl = backendImage;
     }
 
@@ -119,6 +124,21 @@ export const findPosterForItem = async (item, cacheKey) => {
     if (!posterUrl && (item?.tmdbId || item?.tmdb_id)) {
       const movie = await tmdbApi.getMovie(item.tmdbId || item.tmdb_id);
       posterUrl = getImageUrl(movie?.poster_path) || null;
+    }
+
+    if (!posterUrl && (item?.title || item?.name)) {
+      try {
+        const name = item.title || item.name;
+        const year = item.startYear || item.year || (item.releaseDate ? new Date(item.releaseDate).getFullYear() : undefined);
+        // Prefer the same TMDB lookup used on the Title page for consistent results
+        const posterFromTitleSearch = await getTitlePoster(name, item.mediaType || item.media_type, year);
+        if (posterFromTitleSearch) {
+          posterUrl = posterFromTitleSearch;
+        } 
+      } catch (err) {
+        // Non-fatal: keep falling back to existing behavior
+        console.error('TMDB title search failed', err);
+      }
     }
 
     if (posterUrl) {

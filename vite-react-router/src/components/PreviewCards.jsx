@@ -14,10 +14,11 @@ import {
   findPosterForItem,
   fetchPersonExtraData
 } from './utils/PreviewCardsUtils';
-import { getImageUrl } from '../business-logic-layer/TmdbIntegration';
+import { getImageUrl, getTitlePoster } from '../business-logic-layer/TmdbIntegration';
 
 export default function PreviewCards({ item = {}, focusKey }) {
   const [imageSrc, setImageSrc] = useState(null);
+  const [tmdbPoster, setTmdbPoster] = useState(null);
   const [extraData, setExtraData] = useState(null);
   const [loadingExtra, setLoadingExtra] = useState(false);
   const tmdbFallbackTriedRef = useRef(false);
@@ -56,6 +57,31 @@ export default function PreviewCards({ item = {}, focusKey }) {
       })();
     }
   }, [cacheKey, image, item]);
+
+  // Fetch TMDB poster proactively and prefer it (align with Title page behavior)
+  // Skip this for contributors (individuals) to avoid using title posters
+  useEffect(() => {
+    let cancelled = false;
+    const name = item?.title || item?.name;
+    if (!name || isContributor) return;
+
+    (async () => {
+      try {
+        const year = item?.startYear || item?.year || (item?.releaseDate ? new Date(item.releaseDate).getFullYear() : undefined);
+        const poster = await getTitlePoster(name, item.mediaType || item.media_type, year);
+        if (cancelled) return;
+        if (poster) {
+          setTmdbPoster(poster);
+          setImageSrc(poster);
+          if (cacheKey) imageCache.set(cacheKey, poster);
+        }
+      } catch (err) {
+        console.error('TMDB poster fetch failed in PreviewCards', err);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [item.title, item.name, item.mediaType, item.media_type, item.startYear, item.year, item.releaseDate, cacheKey, isContributor]);
 
   // When extraData changes and provides a TMDB profile_path, update imageSrc and cache
   useEffect(() => {
