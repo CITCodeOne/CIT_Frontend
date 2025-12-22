@@ -14,6 +14,7 @@ import useAuthStatus from '../hooks/useAuthStatus';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
+import ToastConfirm from '../components/utils/ToastUtil';
 import '../style/CTitlePage.css';
 
 /**
@@ -55,6 +56,28 @@ function Title() {
     const [similarBookmarks, setSimilarBookmarks] = useState({});
     const [similarPosters, setSimilarPosters] = useState({});
     const [userAvatar, setUserAvatar] = useState(placeholderImage);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    const handleMainBookmarkClick = async () => {
+        if (!isSignedIn) {
+            setToastMessage('Please sign in to bookmark titles.');
+            setShowSignIn(true);
+            setTimeout(() => setToastMessage(''), 2500);
+            return;
+        }
+
+        const willBeBookmarked = !isBookmarked;
+        try {
+            await toggleBookmark();
+            setToastMessage(willBeBookmarked ? 'Bookmark added.' : 'Bookmark removed.');
+        } catch (err) {
+            console.error('Failed toggling bookmark:', err);
+            setToastMessage('Failed to update bookmark.');
+        } finally {
+            setTimeout(() => setToastMessage(''), 2500);
+        }
+    };
 
     // Fetch TMDB poster
     useEffect(() => {
@@ -214,7 +237,9 @@ function Title() {
 
     const handleSimilarTitleBookmark = async (similarTitleId, newState) => {
         if (!isSignedIn || !userId) {
-            alert('Please sign in to bookmark titles');
+            setToastMessage('Please sign in to bookmark titles');
+            setShowSignIn(true);
+            setTimeout(() => setToastMessage(''), 2500);
             return;
         }
 
@@ -226,8 +251,12 @@ function Title() {
                 await mdb.apiv2.user.removeBookmark(userId, similarTitleId, { authToken: token });
             }
             setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState }));
+            setToastMessage(newState ? 'Bookmark added.' : 'Bookmark removed.');
         } catch (err) {
             console.error('Error toggling similar title bookmark:', err);
+            setToastMessage('Failed to update bookmark.');
+        } finally {
+            setTimeout(() => setToastMessage(''), 2500);
         }
     };
 
@@ -306,7 +335,7 @@ function Title() {
             bookmark={{
                 itemId: title.pageId,
                 isBookmarked: isBookmarked,
-                onToggle: toggleBookmark
+                onToggle: handleMainBookmarkClick
             }}
         >
             {/* Top Cast */}
@@ -409,16 +438,18 @@ function Title() {
                                                     className="similar-poster-image"
                                                 />
                                                 <div className="similar-title-overlay">
-                                                    <ToggleButton
-                                                        itemId={item.pageId}
-                                                        isActive={item.isBookmarked}
-                                                        onToggle={item.onBookmark}
-                                                        activeLabel="Remove bookmark"
-                                                        inactiveLabel="Add bookmark"
-                                                        className="similar-bookmark-btn"
-                                                    >
-                                                        {item.isBookmarked ? '★' : '☆'}
-                                                    </ToggleButton>
+                                                    <div className="bookmark-overlay">
+                                                        <ToggleButton
+                                                            itemId={item.pageId}
+                                                            isActive={item.isBookmarked}
+                                                            onToggle={item.onBookmark}
+                                                            activeLabel="Remove bookmark"
+                                                            inactiveLabel="Add bookmark"
+                                                            className={`bookmark-btn ${item.isBookmarked ? 'bookmarked' : ''}`}
+                                                        >
+                                                            {item.isBookmarked ? '✓' : '+'}
+                                                        </ToggleButton>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="similar-title-info text-center mt-2">
@@ -479,7 +510,7 @@ function Title() {
                                     showRating={true}
                                     onRatingChange={(newRating) => setTempRating(newRating)}
                                     onContentChange={(text) => setTempReviewText(text)}
-                                    onDelete={deleteUserRating}
+                                    onDelete={() => setConfirmDelete(true)}
                                     showDeleteButton={userRating > 0}
                                     maxContentLength={0}
                                     placeholder="Write your review here... (optional)"
@@ -523,6 +554,27 @@ function Title() {
                     </Card.Body>
                 </Card>
             </Container>
+            <ToastConfirm
+                show={confirmDelete}
+                message="Delete your rating?"
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={async () => {
+                    try {
+                        await deleteUserRating();
+                        setToastMessage('Rating deleted.');
+                    } catch (err) {
+                        setToastMessage('Failed to delete rating.');
+                    }
+                }}
+                onCancel={() => setConfirmDelete(false)}
+            />
+
+            <ToastConfirm
+                show={!!toastMessage}
+                message={toastMessage}
+                onClose={() => setToastMessage('')}
+            />
+
             <SignInOffcanvas show={showSignIn} onClose={() => setShowSignIn(false)} />
         </MainDisplay>
     );

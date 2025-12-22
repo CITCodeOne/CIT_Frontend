@@ -7,6 +7,7 @@ import { getStoredToken } from "../components/utils/ExtractJwtData";
 import { formatPlotPre } from "../components/utils/PlotPreFormatter";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import { LoadingState } from '../components/PageStates';
+import ToastConfirm from '../components/utils/ToastUtil';
 
 export default function UserBookmarksList() {
     const { userId } = useParams();
@@ -25,6 +26,7 @@ export default function UserBookmarksList() {
     // local bookmark deletion handler
     const [message, setMessage] = useState("");
     const [removingId, setRemovingId] = useState(null);
+    const [confirmDeleteBookmarkId, setConfirmDeleteBookmarkId] = useState(null);
 
     const handleRemoveBookmark = async (pageId) => {
         if (!isLoggedIn || !isOwnProfile) {
@@ -191,7 +193,7 @@ export default function UserBookmarksList() {
                                     <button
                                         type="button"
                                         className="btn btn-sm btn-outline-danger"
-                                        onClick={() => handleRemoveBookmark(item.pageId)}
+                                        onClick={() => setConfirmDeleteBookmarkId(item.pageId)}
                                         disabled={removingId === item.pageId}
                                     >
                                         {removingId === item.pageId ? 'Removing...' : 'Remove'}
@@ -206,15 +208,26 @@ export default function UserBookmarksList() {
             {/* ListManager Modal */}
             {/* ListManager removed */}
 
-            {/* message popup */}
-            {message && (
-                <div
-                    className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-2 rounded-3 shadow"
-                    style={{ zIndex: 1080, marginBottom: "1.5rem" }}
-                >
-                    {message}
-                </div>
-            )}
+            <ToastConfirm
+                show={!!confirmDeleteBookmarkId}
+                message="Delete this bookmark?"
+                onClose={() => setConfirmDeleteBookmarkId(null)}
+                onConfirm={async () => {
+                    try {
+                        await handleRemoveBookmark(confirmDeleteBookmarkId);
+                    } catch (err) {
+                        setMessage('Failed to delete bookmark.');
+                        setTimeout(() => setMessage(''), 2000);
+                    }
+                }}
+                onCancel={() => setConfirmDeleteBookmarkId(null)}
+            />
+
+            <ToastConfirm
+                show={!!message}
+                message={message}
+                onClose={() => setMessage('')}
+            />
         </main>
     );
 }

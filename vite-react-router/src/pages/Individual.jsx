@@ -10,6 +10,8 @@ import { getStoredToken } from '../components/utils/ExtractJwtData';
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
 import tmdb from '../business-logic-layer/TmdbIntegration';
 import placeholderImage from '../pics/Image-not-found.png';
+import ToastConfirm from '../components/utils/ToastUtil';
+import SignInOffcanvas from '../components/SignInOffcanvas';
 import '../style/CTitlePage.css';
 import '../style/CIndividualPage.css';
 
@@ -162,6 +164,30 @@ function Individual() {
         }
     };
 
+    // Local UI state for individual bookmark toast/sign-in
+    const [showSignIn, setShowSignIn] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+
+    const handleMainBookmarkClick = async () => {
+        if (!isSignedIn) {
+            setToastMessage('Please sign in to bookmark individuals.');
+            setShowSignIn(true);
+            setTimeout(() => setToastMessage(''), 2500);
+            return;
+        }
+
+        const willBeBookmarked = !isBookmarked;
+        try {
+            await toggleBookmark();
+            setToastMessage(willBeBookmarked ? 'Bookmark added.' : 'Bookmark removed.');
+        } catch (err) {
+            console.error('Failed toggling bookmark:', err);
+            setToastMessage('Failed to update bookmark.');
+        } finally {
+            setTimeout(() => setToastMessage(''), 2500);
+        }
+    };
+
     const navigateToTitle = (title) => {
         const targetPageId = title.pageId && title.pageId !== 'n/a' ? title.pageId : null;
         const targetTitleId = title.id && title.id !== 'n/a' ? title.id : null;
@@ -217,11 +243,11 @@ function Individual() {
                 subtitle={null}
                 badges={badges}
                 sections={sections}
-                bookmark={isSignedIn ? {
+                bookmark={{
                     itemId: individualId,
                     isBookmarked: isBookmarked,
-                    onToggle: toggleBookmark
-                } : null}
+                    onToggle: handleMainBookmarkClick
+                }}
                 
             >
             {/* Photo Gallery */}
@@ -317,25 +343,36 @@ function Individual() {
                                                     onError={(e) => { e.target.src = placeholderImage; }}
                                                 />
                                                 
-                                                {/* Bookmark button */}
-                                                <ToggleButton
-                                                    itemId={title.pageId || title.id}
-                                                    isActive={titleBookmarks[title.pageId]}
-                                                    onToggle={() => {
-                                                        if (!isSignedIn) {
-                                                            alert('Please log in to bookmark titles');
-                                                            return;
-                                                        }
-                                                        toggleTitleBookmark(title.pageId, title.id, title.name);
-                                                    }}
-                                                    activeLabel="Remove bookmark"
-                                                    inactiveLabel="Add bookmark"
-                                                    className={`known-for-bookmark ${titleBookmarks[title.pageId] ? 'bookmarked' : ''}`}
-                                                >
-                                                    <span className="known-for-bookmark-icon">
+                                                <div className="bookmark-overlay">
+                                                    <ToggleButton
+                                                        itemId={title.pageId || title.id}
+                                                        isActive={titleBookmarks[title.pageId]}
+                                                        onToggle={async (pageId, newState) => {
+                                                            if (!pageId) return;
+                                                            if (!isSignedIn) {
+                                                                setToastMessage('Please sign in to bookmark titles');
+                                                                setShowSignIn(true);
+                                                                setTimeout(() => setToastMessage(''), 2500);
+                                                                return;
+                                                            }
+
+                                                            try {
+                                                                await toggleTitleBookmark(pageId, title.id, title.name);
+                                                                setToastMessage(newState ? 'Bookmark added.' : 'Bookmark removed.');
+                                                            } catch (err) {
+                                                                console.error('Failed toggling known-for bookmark:', err);
+                                                                setToastMessage('Failed to update bookmark.');
+                                                            } finally {
+                                                                setTimeout(() => setToastMessage(''), 2500);
+                                                            }
+                                                        }}
+                                                        activeLabel="Remove bookmark"
+                                                        inactiveLabel="Add bookmark"
+                                                        className={`bookmark-btn ${titleBookmarks[title.pageId] ? 'bookmarked' : ''}`}
+                                                    >
                                                         {titleBookmarks[title.pageId] ? '✓' : '+'}
-                                                    </span>
-                                                </ToggleButton>
+                                                    </ToggleButton>
+                                                </div>
                                             </div>
                                             <Card.Body className="text-center py-2">
                                                 <small className="text-muted">
@@ -392,6 +429,13 @@ function Individual() {
         </MainDisplay>
 
         {/* List functionality removed */}
+            <ToastConfirm
+                show={!!toastMessage}
+                message={toastMessage}
+                onClose={() => setToastMessage('')}
+            />
+
+            <SignInOffcanvas show={showSignIn} onClose={() => setShowSignIn(false)} />
     </>
     );
 }

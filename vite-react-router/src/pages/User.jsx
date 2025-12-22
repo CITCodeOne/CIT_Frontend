@@ -7,6 +7,7 @@ import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
 import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
 import placeholderImage from "../pics/Image-not-found.png";
+import ToastConfirm from '../components/utils/ToastUtil';
 import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils";
 import { formatPlotPre } from "../components/utils/PlotPreFormatter";
 import { LoadingState } from '../components/PageStates';
@@ -181,6 +182,8 @@ export default function User() {
     const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [shareMessage, setShareMessage] = useState("");
+    const [confirmDeleteRatingId, setConfirmDeleteRatingId] = useState(null);
+    const [confirmDeleteBookmarkId, setConfirmDeleteBookmarkId] = useState(null);
 
     // Consider tokenUserId or userId may be string/number — compare as strings for robustness
     const isOwnProfile = isSignedIn && String(tokenUserId) === String(userId);
@@ -436,7 +439,7 @@ export default function User() {
                                                 <button
                                                     type="button"
                                                     className="btn btn-sm btn-outline-danger"
-                                                    onClick={() => handleDeleteRating(item.titleId)}
+                                                    onClick={() => setConfirmDeleteRatingId(item.titleId)}
                                                     disabled={removingRatingId === item.titleId}
                                                 >
                                                         {removingRatingId === item.titleId ? 'Removing...' : 'Remove'}
@@ -504,7 +507,7 @@ export default function User() {
                                             <button
                                                 type="button"
                                                 className="btn btn-sm btn-outline-danger ms-auto"
-                                                onClick={() => handleDeleteBookmark(item.pageId)}
+                                                onClick={() => setConfirmDeleteBookmarkId(item.pageId)}
                                                 disabled={removingBookmarkId === item.pageId}
                                             >
                                                 {removingBookmarkId === item.pageId ? 'Removing...' : 'Remove'}
@@ -516,20 +519,41 @@ export default function User() {
                         )}
                     </section>
 
-                    {/* message popup */}
-                    {shareMessage && (
-                        <div
-                            className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-3 rounded-3 shadow"
-                            style={{
-                                zIndex: 1080,
-                                fontSize: "1rem",
-                                textAlign: "center",
-                                marginBottom: "2rem",
-                            }}
-                        >
-                            {shareMessage}
-                        </div>
-                    )}
+                    <ToastConfirm
+                        show={!!confirmDeleteRatingId}
+                        message="Delete this rating?"
+                        onClose={() => setConfirmDeleteRatingId(null)}
+                        onConfirm={async () => {
+                            try {
+                                await handleDeleteRating(confirmDeleteRatingId);
+                            } catch (err) {
+                                setShareMessage('Failed to delete rating.');
+                                setTimeout(() => setShareMessage(''), 2500);
+                            }
+                        }}
+                        onCancel={() => setConfirmDeleteRatingId(null)}
+                    />
+
+                    <ToastConfirm
+                        show={!!confirmDeleteBookmarkId}
+                        message="Delete this bookmark?"
+                        onClose={() => setConfirmDeleteBookmarkId(null)}
+                        onConfirm={async () => {
+                            try {
+                                await handleDeleteBookmark(confirmDeleteBookmarkId);
+                            } catch (err) {
+                                setShareMessage('Failed to delete bookmark.');
+                                setTimeout(() => setShareMessage(''), 2500);
+                            }
+                        }}
+                        onCancel={() => setConfirmDeleteBookmarkId(null)}
+                    />
+
+                    <ToastConfirm
+                        show={!!shareMessage}
+                        message={shareMessage}
+                        onClose={() => setShareMessage('')}
+                    />
                 </>
             )}
         </main>

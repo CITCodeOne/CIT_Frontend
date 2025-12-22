@@ -6,6 +6,7 @@ import placeholderImage from "../pics/Image-not-found.png";
 import useAuthStatus from "../hooks/useAuthStatus";
 import { getStoredToken } from "../components/utils/ExtractJwtData";
 import mdb from "../business-logic-layer/ApiClient/ApiClient";
+import ToastConfirm from '../components/utils/ToastUtil';
 
 export default function UserRatingsList() {
     const { userId } = useParams();
@@ -17,6 +18,7 @@ export default function UserRatingsList() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [removingId, setRemovingId] = useState(null);
+    const [confirmDeleteRatingId, setConfirmDeleteRatingId] = useState(null);
 
     // message for local UI actions
     const [message, setMessage] = useState("");
@@ -166,7 +168,7 @@ export default function UserRatingsList() {
                                         <button
                                             type="button"
                                             className="btn btn-sm btn-outline-danger ms-2"
-                                            onClick={() => handleRemoveRating(item.titleId)}
+                                            onClick={() => setConfirmDeleteRatingId(item.titleId)}
                                             disabled={removingId === item.titleId}
                                         >
                                             {removingId === item.titleId ? 'Removing...' : 'Remove'}
@@ -179,15 +181,26 @@ export default function UserRatingsList() {
                 />
             )}
 
-            {/* message popup*/}
-            {message && (
-                <div
-                    className="position-fixed bottom-0 start-50 translate-middle-x bg-dark text-light px-4 py-2 rounded-3 shadow"
-                    style={{ zIndex: 1080, marginBottom: "1.5rem" }}
-                >
-                    {message}
-                </div>
-            )}
+            <ToastConfirm
+                show={!!confirmDeleteRatingId}
+                message="Delete this rating?"
+                onClose={() => setConfirmDeleteRatingId(null)}
+                onConfirm={async () => {
+                    try {
+                        await handleRemoveRating(confirmDeleteRatingId);
+                    } catch (err) {
+                        setMessage('Failed to delete rating.');
+                        setTimeout(() => setMessage(''), 2000);
+                    }
+                }}
+                onCancel={() => setConfirmDeleteRatingId(null)}
+            />
+
+            <ToastConfirm
+                show={!!message}
+                message={message}
+                onClose={() => setMessage('')}
+            />
         </main>
     );
 }

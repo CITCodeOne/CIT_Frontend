@@ -240,15 +240,13 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
             alert('Please log in to delete ratings');
             return;
         }
-
-        if (!window.confirm('Are you sure you want to delete your rating?')) {
-            return;
-        }
+        // Confirmation is handled by the page UI (toast/confirm there). The hook only performs deletion.
 
         try {
             const token = getStoredToken();
             await mdb.apiv2.user.removeRating(userId, titleId, { authToken: token });
             setUserRating(0);
+            setUserReview('');
         } catch (err) {
             console.error('Failed to delete rating:', err);
             alert('Failed to delete rating. Please try again.');
