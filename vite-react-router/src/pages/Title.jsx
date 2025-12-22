@@ -277,11 +277,11 @@ function Title() {
 
         try {
             await updateUserRating(tempRating, tempReviewText);
-            setSubmitStatus('success');
-            setTimeout(() => setSubmitStatus(null), 3000);
+            setToastMessage('Your rating has been submitted.');
         } catch (err) {
-            setSubmitStatus('error');
-            setTimeout(() => setSubmitStatus(null), 3000);
+            setToastMessage('Failed to submit review. Please try again.');
+        } finally {
+            setTimeout(() => setToastMessage(''), 3000);
         }
     };
 
@@ -485,20 +485,7 @@ function Title() {
                             <LoadingState message="Loading your rating..." />
                         ) : (
                             <>
-                                {submitStatus === 'success' && (
-                                    <Card className="mb-3 border-success">
-                                        <Card.Body className="text-success">
-                                            ✓ Your review has been submitted successfully!
-                                        </Card.Body>
-                                    </Card>
-                                )}
-                                {submitStatus === 'error' && (
-                                    <Card className="mb-3 border-danger">
-                                        <Card.Body className="text-danger">
-                                            ✗ Failed to submit review. Please try again.
-                                        </Card.Body>
-                                    </Card>
-                                )}
+                                {/* Submission feedback is shown via ToastConfirm */}
 
                                 <UserCard
                                     userId={userId}
@@ -521,7 +508,7 @@ function Title() {
                                         <Button
                                             variant="primary"
                                             onClick={handleSubmitReview}
-                                            disabled={tempRating === 0}
+                                            disabled={(tempRating === 0) && (userRating === 0)}
                                         >
                                             Submit Review
                                         </Button>
