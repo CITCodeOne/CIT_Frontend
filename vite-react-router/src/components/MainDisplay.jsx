@@ -32,17 +32,17 @@ function MainDisplay({
     customAction,
     children
 }) {
-    // Prefer explicitly provided props but fall back to item fields when present
+    // Foretrak en eksplicit prop men fald tilbage til feltet paa item, saa komponenten kan bruges med faerre props
     const resolvedImageProp = image ?? item?.image ?? item?.poster ?? item?.posterUrl ?? null;
-    // Normalize any local placeholder value to `null` so we treat it as missing
+    // Normaliser lokale placeholders til null, saa vi kan udloese samme fallback-sti
     const providedImage = (typeof resolvedImageProp === 'string' && resolvedImageProp.includes('Image-not-found.png')) ? null : resolvedImageProp;
-    const [imageSrc, setImageSrc] = useState(providedImage || notFoundImage);
-    const tmdbFallbackTriedRef = useRef(false);
+    const [imageSrc, setImageSrc] = useState(providedImage || notFoundImage); // styret billede-kilde der kan skifte ved fejl
+    const tmdbFallbackTriedRef = useRef(false); // enkel bool der sikrer vi kun kalder TMDB fallback en gang per instans
 
     // cache key for lookups
-    const cacheKey = cacheKeyForItem(item);
-    const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title';
-    const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null;
+    const cacheKey = cacheKeyForItem(item); // stabil noegle til caching, saa vi ikke rammer API unodigt
+    const resolvedTitle = title ?? item?.name ?? item?.title ?? 'No Title'; // titlen prioriterer prop, derefter kendte felter
+    const resolvedRating = rating ?? item?.rating ?? item?.avgRating ?? item?.averageRating ?? null; // samme pattern for rating
 
     const resolvedSubtitle = subtitle ?? (() => {
         if (!item) return subtitle;
@@ -51,9 +51,9 @@ function MainDisplay({
         return [mediaType, formattedDate].filter(Boolean).join(' · ');
     })();
 
-    // When the provided image is missing, try TMDB lookup once (like PreviewCards)
+    // Naar vi mangler et billede, forsog at hente fra TMDB en enkelt gang (samme strategi som PreviewCards)
     useEffect(() => {
-        // if we already have a provided image, keep it
+        // Har vi allerede et billede (prop eller item-felt), behold det og skip kald
         if (providedImage) {
             setImageSrc(providedImage);
             return;
@@ -62,10 +62,10 @@ function MainDisplay({
         let cancelled = false;
         (async () => {
             try {
-                if (!tmdbFallbackTriedRef.current) tmdbFallbackTriedRef.current = true;
-                const poster = await findPosterForItem(item, cacheKey);
-                if (cancelled) return;
-                if (poster) setImageSrc(poster);
+                if (!tmdbFallbackTriedRef.current) tmdbFallbackTriedRef.current = true; // markering for at undgaa gentagne kald
+                const poster = await findPosterForItem(item, cacheKey); // slank helper der slaar op i cache/API
+                if (cancelled) return; // hvis hook afbrydes under async, undgaa setState
+                if (poster) setImageSrc(poster); // opdater visning med fundet plakat
             } catch (err) {
                 console.error('Failed to fetch TMDB poster for MainDisplay', err);
             }
@@ -75,13 +75,13 @@ function MainDisplay({
     }, [providedImage, item, cacheKey]);
 
     const handleImageError = async (e) => {
-        // If we haven't tried TMDB fallback yet, try it
+        // Hvis vi ikke har proevet TMDB fallback endnu, goer det nu
         if (!tmdbFallbackTriedRef.current) {
             tmdbFallbackTriedRef.current = true;
             try {
-                const poster = await findPosterForItem(item, cacheKey);
+                const poster = await findPosterForItem(item, cacheKey); // sekundart opslag naar billed-tag fejler
                 if (poster) {
-                    setImageSrc(poster);
+                    setImageSrc(poster); // opdater billedkilde, saa brugeren ser korrekt plakat
                     return;
                 }
             } catch (err) {
@@ -89,12 +89,12 @@ function MainDisplay({
             }
         }
 
-        // Final fallback to local notFoundImage
+        // Endeligt fallback er det lokale "billede ikke fundet"-asset, saa UI aldrig staar tomt
         if (e && e.target) e.target.src = notFoundImage;
         setImageSrc(notFoundImage);
     };
 
-    // Treat objects without a mediaType as individuals/contributors
+    // Hvis der ingen mediaType er, antag at det er en person/medvirkende, saa vi tilpasser layoutet
     const isIndividual = !!(item && !item.mediaType && !item.media_type);
 
     const content = (
@@ -152,7 +152,7 @@ function MainDisplay({
                                         size="sm"
                                         onClick={() => {
                                             const reviewsSection = document.getElementById('reviews-section');
-                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' }); // blid scroll ned til anmeldelser
                                         }}
                                     >
                                         Rate
@@ -166,7 +166,7 @@ function MainDisplay({
                                             size="sm"
                                             onClick={() => {
                                                 const reviewsSection = document.getElementById('reviews-section');
-                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                reviewsSection?.scrollIntoView({ behavior: 'smooth', block: 'center' }); // samme scroll for elementer uden rating endnu
                                             }}
                                         >
                                             ★ Rate
@@ -192,8 +192,8 @@ function MainDisplay({
                                         <div className="bookmark-overlay">
                                             <button
                                                 onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    bookmark.onToggle();
+                                                    e.stopPropagation(); // undgaa at klikket trigger navigations-linket
+                                                    bookmark.onToggle(); // deleger til logik-lag, saadan at stat lagres globalt
                                                 }}
                                                 className="bookmark-btn"
                                                 aria-label={bookmark.isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
@@ -208,7 +208,7 @@ function MainDisplay({
                                 {/* Genres below the image */}
                                 {sections.find(section => section.title === 'Genres') && (
                                     <div className="mt-3 text-start">
-                                        {sections.find(section => section.title === 'Genres').content}
+                                        {sections.find(section => section.title === 'Genres').content} {/* viser genrer foerst, saa bruger hurtigt ser kategori */}
                                     </div>
                                 )}
                             </Col>
@@ -219,7 +219,7 @@ function MainDisplay({
                                 {sections.filter(section => section.title !== 'Genres').map((section, index) => (
                                     <div key={index} className="mb-3" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                                         {section.title && <h5>{section.title}</h5>}
-                                        {section.content}
+                                        {section.content} {/* indhold leveres udefra, saa komponenten er fleksibel */}
                                     </div>
                                 ))}
                             </Col>
@@ -236,6 +236,7 @@ function MainDisplay({
     // Only wrap with a Link for non-individual items that have a pageId.
     // Wrapping Individual pages causes their children (which may have their own
     // navigation handlers) to trigger double navigation.
+    // Denne vagt sikrer at kun film/serier med pageId faar link, personer forbliver statiske, saa klik-maal ikke fordobles
     if (item?.pageId && !isIndividual) {
         return (
             <Link to={`/page/${item.pageId}`} className="text-decoration-none">

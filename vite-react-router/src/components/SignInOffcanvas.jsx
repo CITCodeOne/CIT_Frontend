@@ -1,34 +1,34 @@
-import Offcanvas from 'react-bootstrap/Offcanvas';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import { useState } from 'react';
-import mdb from '../business-logic-layer/ApiClient/ApiClient';
-const INITIAL_FORM = { username: '', email: '', password: '', confirm: '' };
+import Offcanvas from 'react-bootstrap/Offcanvas'; // Sidepanel der kan glide ind fra hoejre/venstre
+import Form from 'react-bootstrap/Form'; // Formular felter og grupper
+import Button from 'react-bootstrap/Button'; // Bootstrap knapper
+import { useState } from 'react'; // React hook til lokal state
+import mdb from '../business-logic-layer/ApiClient/ApiClient'; // Centralt API lag der haandterer auth kald
+const INITIAL_FORM = { username: '', email: '', password: '', confirm: '' }; // Startvaerdier for alle formularfelter
 
 // Use the centralized ApiClient for auth operations (`signup` and `login`).
 // This keeps API versioning, error handling, and fetch logic in one place.
 
 function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
-  const [form, setForm] = useState(INITIAL_FORM);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [mode, setMode] = useState('signin'); // Gemmer om vi er i login- eller opret-bruger-mode
+  const [form, setForm] = useState(INITIAL_FORM); // Formularens aktuelle felter
+  const [error, setError] = useState(''); // Fejlbeskeder der vises til brugeren
+  const [submitting, setSubmitting] = useState(false); // Laaser knapper mens der sendes request
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target; // Navn matcher feltnavn i state
+    setForm((prev) => ({ ...prev, [name]: value })); // Opdaterer kun det felt der blev aendret
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    if (submitting) return;
+    e.preventDefault(); // Stopper browserens default submit
+    setError(''); // Nulstiller tidligere fejl
+    if (submitting) return; // Undgaa dobbelt-kald hvis der allerede sendes
 
     try {
-      setSubmitting(true);
+      setSubmitting(true); // Laas knapper mens vi haandterer request
 
       if (mode === 'signup') {
-        // Validate signup fields
+        // Valider felter foer oprettelse
         if (!form.username.trim()) {
           setError('Please enter a username');
           return;
@@ -42,7 +42,7 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
           return;
         }
 
-        // Make signup request
+        // Send opret-bruger request
         const payload = await mdb.apiv2.auth.signup({
           name: form.username.trim(),
           username: form.username.trim(),
@@ -50,17 +50,17 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
           password: form.password
         });
 
-        onSignUp?.(payload);
-        setForm(INITIAL_FORM);
-        setMode('signin');
+        onSignUp?.(payload); // Informer foraelder om succes
+        setForm(INITIAL_FORM); // Ryd felter
+        setMode('signin'); // Skift tilbage til login-mode
       } else {
-        // Validate signin fields
+        // Valider login felter
         if (!form.username.trim()) {
           setError('Please enter your username');
           return;
         }
 
-        // Make signin request
+        // Send login request
         const payload = await mdb.apiv2.auth.login({
           username: form.username.trim(),
           password: form.password
@@ -70,40 +70,40 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
           throw new Error('Login response was not valid JSON');
         }
 
-        // Store JWT token
+        // Gem JWT token i localStorage for senere kald
         if (payload.token && typeof window !== 'undefined') {
           localStorage.setItem('cit.jwt', payload.token);
-          window.dispatchEvent(new StorageEvent('storage', { key: 'cit.jwt', newValue: payload.token }));
+          window.dispatchEvent(new StorageEvent('storage', { key: 'cit.jwt', newValue: payload.token })); // Informer andre tabs
         }
 
-        onSignIn?.(payload);
-        setForm(INITIAL_FORM);
-        onClose?.();
+        onSignIn?.(payload); // Callback til foraelder
+        setForm(INITIAL_FORM); // Ryd formularen
+        onClose?.(); // Luk panelet
       }
     } catch (err) {
       if (mode === 'signin') {
-        setError('The username or password is wrong');
+        setError('The username or password is wrong'); // Brugervenlig fejl til login
       } else {
-        setError('Something went wrong');
+        setError('Something went wrong'); // Generel fejl for signup
       }
     } finally {
-      setSubmitting(false);
+      setSubmitting(false); // Laas op igen uanset udfald
     }
   };
 
   const switchMode = () => {
-    setMode((m) => (m === 'signin' ? 'signup' : 'signin'));
-    setForm(INITIAL_FORM);
-    setError('');
+    setMode((m) => (m === 'signin' ? 'signup' : 'signin')); // Flip mellem login og signup
+    setForm(INITIAL_FORM); // Nulstil felter saa der ikke haenger gamle inputs
+    setError(''); // Fjern evt. fejlmeddelelser ved skift
   };
 
   return (
-    <Offcanvas show={show} onHide={onClose} placement="end">
+    <Offcanvas show={show} onHide={onClose} placement="end"> {/* Panel der skubbes ind fra hoejre */}
       <Offcanvas.Header closeButton>
-        <Offcanvas.Title>{mode === 'signin' ? 'Sign in' : 'Sign up'}</Offcanvas.Title>
+        <Offcanvas.Title>{mode === 'signin' ? 'Sign in' : 'Sign up'}</Offcanvas.Title> {/* Overskrift skifter efter mode */}
       </Offcanvas.Header>
       <Offcanvas.Body>
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit}> {/* Haandterer både login og signup afh mode */}
           <Form.Group className="mb-3" controlId="usernameField">
             <Form.Label>Username</Form.Label>
             <Form.Control
@@ -160,7 +160,7 @@ function SignInOffcanvas({ show, onClose, onSignIn, onSignUp }) {
             </Form.Group>
           )}
 
-          {error && <div className="text-danger mb-2">{error}</div>}
+          {error && <div className="text-danger mb-2">{error}</div>} {/* Viser fejl hvis noget gik galt */}
 
           <Button type="submit" variant="primary" className="w-100 mb-2" disabled={submitting}>
             {submitting && mode === 'signin'

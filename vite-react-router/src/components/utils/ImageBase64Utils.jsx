@@ -4,17 +4,17 @@
  * @returns {Promise<string>} Resolves with the Base64 data URL once reading completes.
  */
 export function encodeImageToBase64(file) {
-  return new Promise((resolve, reject) => { // create a Promise to handle async FileReader
-    if (!file) { // checks if file is null or undefined
-      reject(new Error("No file provided")); // reject the Promise if no file is given
-      return;
-    }
+	return new Promise((resolve, reject) => { // Promise goer async fil-laesning let at bruge med async/await
+		if (!file) { // ingen fil valgt af brugeren
+			reject(new Error("No file provided"));
+			return;
+		}
 
-    const reader = new FileReader(); // instantiate FileReader to read file contents
-    reader.onloadend = () => resolve(reader.result); // data URL already encoded as Base64
-    reader.onerror = () => reject(reader.error); // reject Promise on read error
-    reader.readAsDataURL(file); // start reading file as Base64 data URL
-  });
+		const reader = new FileReader(); // browser-vaerktoej der kan laese filer fra <input type="file">
+		reader.onloadend = () => resolve(reader.result); // reader.result er en data-URL med Base64, klar til upload
+		reader.onerror = () => reject(reader.error); // send teknisk fejl videre sa UI kan vise besked
+		reader.readAsDataURL(file); // starter laesning som data-URL (inkl. mime-type + Base64)
+	});
 }
 
 /**
@@ -27,17 +27,17 @@ export function decodeBase64Image(base64, fileName = "image.png") {
 	if (!base64) {
 		throw new Error("No Base64 string provided");
 	}
-	// Extract MIME type and data portion from data URL if present
+	// Finder mimetype og selve data-delen hvis teksten er en fuld data-URL
 	const [, mimeType = "application/octet-stream", data = base64] =
 		base64.match(/^data:(.+);base64,(.*)$/) || [];
 
-	const byteString = window.atob(data); // decode Base64 to binary string
-	const len = byteString.length; // get length of binary string
-	const bytes = new Uint8Array(len); // create byte array
+	const byteString = window.atob(data); // Base64 tilbage til binaer tekststreng
+	const len = byteString.length; // antal byte der skal skrives
+	const bytes = new Uint8Array(len); // buffer til at holde rigtige byte-vaerdier
 
-	for (let i = 0; i < len; i += 1) { // populate byte array
-		bytes[i] = byteString.charCodeAt(i); // get byte value at each position
+	for (let i = 0; i < len; i += 1) { // omsaet hvert tegn til tilsvarende byte
+		bytes[i] = byteString.charCodeAt(i);
 	}
 
-	return new File([bytes], fileName, { type: mimeType }); // create and return File object
+	return new File([bytes], fileName, { type: mimeType }); // lav et File-objekt der kan uploades eller bruges som blob
 }

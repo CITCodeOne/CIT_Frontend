@@ -1,7 +1,7 @@
-import { Card, Row, Col, Form, Button, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
-import Rating from './Rating';
-import defaultProfilePic from '../pics/DefaultProfilePicture.jpg';
+import { Card, Row, Col, Form, Button, Badge } from 'react-bootstrap'; // Bootstrap byggeklodser til kort, grid og knapper
+import { Link } from 'react-router-dom'; // Link til at navigere uden fuld reload
+import Rating from './Rating'; // Stjerne-rating komponent
+import defaultProfilePic from '../pics/DefaultProfilePicture.jpg'; // Fallback billede hvis ingen avatar findes
 
 /**
  * UserCard Component
@@ -44,12 +44,12 @@ export default function UserCard({
     maxContentLength = 250,
     placeholder = 'Write your review here...'
 }) {
-    // Truncate content if read-only and exceeds max length
+    // Afkort tekst hvis den er laesevisning og for lang til kortet
     const displayContent = !editable && maxContentLength > 0 && content.length > maxContentLength
         ? content.substring(0, maxContentLength) + '...'
         : content;
 
-    // Determine if we should show the yellow rating box (read-only) or editable stars
+    // Skal vi vise en fast rating-badge eller de redigerbare stjerner?
     const showRatingBox = showRating && !editable && rating > 0;
     const showEditableRating = showRating && editable;
 
@@ -57,7 +57,7 @@ export default function UserCard({
         <Card className="mb-3 shadow-sm">
             <Card.Body>
                 <Row className="align-items-center">
-                    {/* Profile Picture (auto width) */}
+                    {/* Profilbillede (auto bredde) */}
                     <Col xs="auto" className="text-center pe-3">
                         {userId ? (
                             <Link to={`/user/${userId}`} aria-label={`Go to ${username} profile`}>
@@ -72,7 +72,7 @@ export default function UserCard({
                         )}
                     </Col>
 
-                    {/* Content (flexible) */}
+                    {/* Indhold (fleksibel bredde) */}
                     <Col>
                         <div className="border rounded p-3 bg-white review-content-box">
                             <div className="mb-2">
@@ -89,7 +89,7 @@ export default function UserCard({
                                     as="textarea"
                                     rows={3}
                                     value={content}
-                                    onChange={(e) => onContentChange && onContentChange(e.target.value)}
+                                    onChange={(e) => onContentChange && onContentChange(e.target.value)} // Giver foraelder nyt tekstindhold
                                     placeholder={placeholder}
                                 />
                             ) : (
@@ -100,7 +100,7 @@ export default function UserCard({
                         </div>
                     </Col>
 
-                    {/* Actions (rating / delete) - fixed auto width, stacked vertically on small screens */}
+                    {/* Handlinger (rating/slet) - auto bredde, stabler lodret paa smaa skraerme */}
                     <Col xs="auto" className="text-center d-flex flex-column align-items-center gap-2">
                         {showRatingBox && (
                             <Badge bg="primary" style={{ fontSize: '0.95rem', padding: '0.6rem 0.75rem' }}>
@@ -113,7 +113,7 @@ export default function UserCard({
                                 <Rating
                                     initialRating={rating}
                                     editable={true}
-                                    onRatingChange={onRatingChange}
+                                    onRatingChange={onRatingChange} // Sender ny rating op naar foraelder
                                     showNumber={true}
                                 />
                             </div>

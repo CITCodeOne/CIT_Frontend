@@ -6,9 +6,12 @@ export const imageCache = new Map();
 export const extraDataCache = new Map();
 export const tmdbPosterCache = new Map();
 
+// Cache holder billed-URL'er og ekstra data, sa vi ikke henter det samme flere gange og belaster API'er unodigt
+
 export const fallbackImage = fallbackImageAsset;
 
 export const cacheKeyForItem = (item) => {
+  // Finder et stabilt noegle-felt pr. element; bruges til cache for at genkende samme post
   return (
     item?.pageId ||
     item?.id ||
@@ -23,6 +26,7 @@ export const cacheKeyForItem = (item) => {
   );
 };
 
+// Afkorter tekst sikkert, bevarer tre prikker som indikation for "mere indhold"
 export const truncateText = (text, max = 500) => {
   if (!text) return "";
   const str = String(text);
@@ -30,8 +34,10 @@ export const truncateText = (text, max = 500) => {
   return `${str.slice(0, max - 3).trimEnd()}...`;
 };
 
+// Finder bedste titel at vise uanset om API kalder det title eller name
 export const resolveTitle = (item) => item?.title || item?.name || "Untitled";
 
+// Undertitel bruges til at vise ekstra info (fx rolle), men kan mangle; her sikrer vi en streng
 export const resolveSubtitle = (item, extraData) => {
   let sub = "";
   if (!item.mediaType && !item.media_type) {
@@ -44,6 +50,7 @@ export const resolveSubtitle = (item, extraData) => {
   return sub;
 };
 
+// Viser beskrivelse efter hvad vi har: prioriterer item-data, ellers ekstra TMDB data eller standardtekst
 export const resolveDescription = (item, extraData) => {
   if (!item.mediaType && !item.media_type) {
     if (extraData?.biography) return `Biography: ${extraData.biography}`;
@@ -64,6 +71,7 @@ export const resolveDescription = (item, extraData) => {
   return "No data available for this entry.";
 };
 
+// Vaelger billede: for personer bruges TMDB profilbillede; ellers et billede fra backend hvis det findes
 export const resolveImage = (item, extraData) => {
   if (!item.mediaType && !item.media_type && extraData?.profile_path) {
     return getImageUrl(extraData.profile_path, 'w185');
@@ -79,6 +87,7 @@ export const resolveImage = (item, extraData) => {
   return raw;
 };
 
+// Proever at udlede aar fra flere felter; bruger "n/a" hvis intet kan laeses
 export const resolveYear = (item) => {
   if (item.year && item.year !== "n/a") return item.year;
   if (item.startYear && item.startYear !== "n/a") return item.startYear;
@@ -104,11 +113,11 @@ export const findPosterForItem = async (item, cacheKey) => {
     // let the <img onError> handler fall back if the resource is missing or
     // blocked by CORS. This avoids client-side HEAD/GET probes to third-party
     // hosts (e.g., m.media-amazon.com) which don't return CORS headers.
-    const backendImage = item?.image || item?.poster || null;
+    const backendImage = item?.image || item?.poster || null; // brug hvad backend sender foerst, hvis fornuftigt
     // Ignore known problematic external hosts (e.g., Amazon's image CDN) because
     // they frequently return 404s or are rate-limited for our client. Prefer
     // TMDB lookups instead when possible so preview cards show reliable posters.
-    const isBackendHttpImage = backendImage && typeof backendImage === 'string' && backendImage.startsWith('http');
+    const isBackendHttpImage = backendImage && typeof backendImage === 'string' && backendImage.startsWith('http'); // kun eksterne http/https
 
     if (isBackendHttpImage && !isSkippedHost) {
       posterUrl = backendImage;

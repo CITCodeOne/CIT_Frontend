@@ -1,38 +1,42 @@
-import { useState, useEffect } from 'react';
-import mdb from '../business-logic-layer/ApiClient/ApiClient';
-import { getStoredToken } from '../components/utils/ExtractJwtData';
-import { normalizeDataUrl } from '../components/utils/profileImageUtils';
-import placeholderImage from '../pics/Image-not-found.png';
+// Hook der samler alt data og alle handlinger for en titel-side (detaljevisning)
+import { useState, useEffect } from 'react'; // React hooks til tilstand og side-effekter
+import mdb from '../business-logic-layer/ApiClient/ApiClient'; // Egen backend klient til API kald
+import { getStoredToken } from '../components/utils/ExtractJwtData'; // Henter JWT token fra storage
+import { normalizeDataUrl } from '../components/utils/profileImageUtils'; // Sikrer at profilbilleder kan vises som data-URL
+import placeholderImage from '../pics/Image-not-found.png'; // Fallback billede hvis intet findes
 
 /**
  * useTitleData Hook
- * 
- * Manages all data fetching and state for a title detail page.
- * Handles title data, cast, reviews, bookmarks, and user ratings.
- * 
- * @param {string} titleId - ID of the title to load
- * @param {string} userId - ID of logged-in user (null if not logged in)
- * @param {boolean} isLoggedIn - Whether a user is currently logged in
- * @returns {object} Complete title data and interaction functions
+ *
+ * Dansk kort forklaring for ikke-kodere:
+ * Denne funktion henter alt indhold til en titel-side: selve titlen, skuespillere, brugeranmeldelser,
+ * bogmaerker og brugerens egen rating. Den giver ogsaa sma funktioner til at gemme/rette rating
+ * og til at til- eller fravolge bogmaerker.
+ *
+ * @param {string} titleId - Id for titlen vi skal hente
+ * @param {string} userId - Id for den loggede bruger (null hvis ikke logget ind)
+ * @param {boolean} isLoggedIn - Om brugeren er logget ind lige nu
+ * @param {string} pageId - Id for siden (bruges af bogmaerker)
+ * @returns {object} Alt data og alle handlinger siden behoever
  */
 export default function useTitleData(titleId, userId = null, isLoggedIn = false, pageId) {
-    // Main title data state
-    const [title, setTitle] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // Hovedtilstande for titel-siden
+    const [title, setTitle] = useState(null); // Selve titeldata (navn, aar, billeder mv.)
+    const [loading, setLoading] = useState(true); // Viser spinner mens vi henter titel
+    const [error, setError] = useState(null); // Fejltekst hvis noget gaar galt
 
-    // Cast data state
+    // Skuespillere/personer medvirkende
     const [cast, setCast] = useState([]);
     const [loadingCast, setLoadingCast] = useState(true);
 
-    // Reviews data state
+    // Bruger-anmeldelser og ratings fra andre
     const [reviews, setReviews] = useState([]);
     const [loadingReviews, setLoadingReviews] = useState(true);
 
-    // Bookmark state
+    // Bogmaerke status for den loggede bruger
     const [isBookmarked, setIsBookmarked] = useState(false);
 
-    // User rating state
+    // Brugerens egen rating og anmeldelse
     const [userRating, setUserRating] = useState(0);
     const [userReview, setUserReview] = useState('');
     const [loadingUserRating, setLoadingUserRating] = useState(true);
@@ -40,15 +44,15 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
     // 1. Fetch main title data
     useEffect(() => {
         const fetchTitleData = async () => {
-            if (!titleId) return;
+            if (!titleId) return; // Ingen id = intet at hente
 
             try {
                 setLoading(true);
-                const titleData = await mdb.apiv2.titles.getById(titleId);
+                const titleData = await mdb.apiv2.titles.getById(titleId); // Hent titel fra backend
                 setTitle(titleData);
                 setError(null);
             } catch (err) {
-                setError(err.message || 'Failed to load title');
+                setError(err.message || 'Failed to load title'); // Vis venlig fejl
                 setTitle(null);
             } finally {
                 setLoading(false);
@@ -61,13 +65,13 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
     // 2. Fetch cast/individuals data
     useEffect(() => {
         const fetchCast = async () => {
-            if (!titleId) return;
+            if (!titleId) return; // Intet id = ingen cast at hente
 
             try {
                 setLoadingCast(true);
-                const castData = await mdb.apiv2.titles.getIndividuals(titleId);
+                const castData = await mdb.apiv2.titles.getIndividuals(titleId); // Hent medvirkende
 
-                // Map to format expected by MediaCard component
+                // Format til MediaCard komponenten, saa UI kan vise navn og rolle
                 const formattedCast = castData.map(person => ({
                     id: person.id,
                     pageId: person.pageId,
@@ -91,16 +95,16 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
     // 3. Fetch reviews/ratings data
     useEffect(() => {
         const fetchReviews = async () => {
-            if (!titleId) return;
+            if (!titleId) return; // Stop hvis ingen titel
 
             try {
                 setLoadingReviews(true);
-                const ratingsData = await mdb.apiv2.titles.getRatings(titleId);
+                const ratingsData = await mdb.apiv2.titles.getRatings(titleId); // Hent alle ratings og anmeldelser
 
-                // Get unique user IDs from ratings
+                // Find unikke bruger-id'er, saa vi kan hente deres navne og profilbilleder
                 const userIds = [...new Set(ratingsData.map(r => r.userId).filter(id => id))];
 
-                // Fetch user data for profile images and names
+                // Hent brugerdata (navn, billede) for dem der har anmeldt
                 let userMap = new Map();
                 if (userIds.length > 0) {
                     const userPromises = userIds.map(id => mdb.apiv2.user.get(id));
@@ -108,7 +112,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
                     userMap = new Map(users.map(u => [u.id, u]));
                 }
 
-                // Map to format expected by UserCard component
+                // Formater til UserCard komponenten, saa UI kan vise navn, tekst og billede
                 const formattedReviews = ratingsData.map((rating, index) => {
                     const user = userMap.get(rating.userId);
                     const avatar = user && user.image ? normalizeDataUrl(user.image) : placeholderImage;
@@ -135,11 +139,11 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         fetchReviews();
     }, [titleId]);
 
-    // 4. Check if title is bookmarked (if user is logged in)
-    // TODO: Currently calls with titleId which is wrong. The correct call would be to check the bookmark by pageId
+    // 4. Tjek om titlen er bogmaerket (kun hvis bruger er logget ind)
+    // TODO: Kalder korrekt med pageId (ikke titleId) som API forventer
     useEffect(() => {
         const checkBookmarkStatus = async () => {
-            // require pageId for bookmark checks (API identifies bookmarks by pageId)
+            // Krav: pageId skal findes, da API genkender bogmaerker via pageId
             if (!isLoggedIn || !userId || !pageId) {
                 setIsBookmarked(false);
                 return;
@@ -160,7 +164,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         checkBookmarkStatus();
     }, [pageId, userId, isLoggedIn]);
 
-    // 5. Fetch user's rating for this title (if logged in)
+    // 5. Hent brugerens egen rating for titlen (kun hvis logget ind)
     useEffect(() => {
         const fetchUserRating = async () => {
             if (!isLoggedIn || !userId || !titleId) {
@@ -186,7 +190,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         fetchUserRating();
     }, [titleId, userId, isLoggedIn]);
 
-    // Bookmark toggle handler
+    // Skifter bogmaerke til/fra for logget bruger
     const toggleBookmark = async () => {
         if (!isLoggedIn || !userId) {
             alert('Please log in to bookmark titles');
@@ -208,7 +212,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         }
     };
 
-    // Rating change handler (add or update rating with optional review)
+    // Tilfoej eller opdater rating (med valgfri tekstanmeldelse)
     const updateUserRating = async (newRating, reviewText = '') => {
         if (!isLoggedIn || !userId) {
             alert('Please log in to rate titles');
@@ -234,7 +238,7 @@ export default function useTitleData(titleId, userId = null, isLoggedIn = false,
         }
     };
 
-    // Rating delete handler
+    // Slet brugerens rating
     const deleteUserRating = async () => {
         if (!isLoggedIn || !userId) {
             alert('Please log in to delete ratings');

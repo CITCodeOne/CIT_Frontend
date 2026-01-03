@@ -19,11 +19,14 @@ import {
  * }} Memoized auth snapshot plus helpers for resyncing/logging out.
  */
 export default function useAuthStatus() {
+        // Fortaeller UI om der er en bruger logget ind lige nu
         const [isSignedIn, setIsSignedIn] = useState(false);
+        // Viser det viste brugernavn; tom streng betyder ingen bruger fundet
         const [username, setUsername] = useState('');
+        // Unikt id for brugeren; bruges til backend-kald
         const [userId, setUserId] = useState('');
 
-        // Refresh all auth-derived state from the persisted token.
+        // Opdaterer al login-tilstand ud fra token gemt i browserens lager
         const syncAuthState = useCallback(() => {
                 if (typeof window === 'undefined') return;
                 const token = getStoredToken();
@@ -58,6 +61,7 @@ export default function useAuthStatus() {
         }, []);
 
         useEffect(() => {
+                // Koer straks ved indlaesning, sa siden ved om der er en bruger logget ind
                 syncAuthState();
         }, [syncAuthState]);
 
@@ -65,6 +69,7 @@ export default function useAuthStatus() {
                 if (typeof window === 'undefined') return undefined;
 
                 const handleStorageChange = (event) => {
+                        // Hvis token aendres i en anden fane, synkroniser her ogsaa
                         if (event.key === TOKEN_STORAGE_KEY) {
                                 syncAuthState();
                         }
@@ -74,7 +79,7 @@ export default function useAuthStatus() {
                 return () => window.removeEventListener('storage', handleStorageChange);
         }, [syncAuthState]);
 
-        // Clears token, then wipe auth state locally.
+        // Logger brugeren ud: fjerner token og rydder alle felter vi viser i UI
         const handleLogout = useCallback(() => {
                         if (typeof window !== 'undefined') {
                                 window.localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -89,6 +94,7 @@ export default function useAuthStatus() {
                 isSignedIn,
                 username,
                 userId,
+                // Viser forbogstav til avatar; falder tilbage til 'P' hvis tomt
                 profileInitial: username ? username.trim().charAt(0).toUpperCase() : 'P',
                 syncAuthState,
                 handleLogout

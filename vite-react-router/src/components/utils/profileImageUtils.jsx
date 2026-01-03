@@ -20,19 +20,23 @@ import { encodeImageToBase64 } from "./ImageBase64Utils";
  *   prevents duplicated logic across components.
  */
 export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => {
+    // Ryd op i input: fjern mellemrum og eventuelle citattegn der kan komme fra copy-paste
     // Trim whitespace and remove optional surrounding quotes that sometimes
     // appear when values are serialized or pasted by users.
     const sanitized = (rawValue || "").trim().replace(/^"|"$/g, "");
 
+    // Ingen billedvaerdi: returner null sa UI kan vise placeholder i stedet for at fejle
     // Empty payloads are explicitly represented as `null` by this helper so
     // callers can detect absence of an image vs. a failing conversion.
     if (!sanitized) return null;
 
+    // Hvis streng allerede ligner en data-URL, sa brug den direkte uden at aendre metadata
     // If the value already looks like a data URL, use it directly. This avoids
     // re-wrapping an already-correct value and preserves any metadata present
     // in the prefix (e.g. mime subtype).
     if (sanitized.startsWith("data:image")) return sanitized;
 
+    // URL- eller sti-vaerdier skal ikke konverteres; de kan bruges direkte i <img src>
     // Treat common path and URL prefixes as external resources. Returning them
     // unchanged makes the helper safe to use in image `src` attributes where
     // either a remote URL or a data URL is acceptable.
@@ -45,6 +49,7 @@ export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => {
         sanitized.startsWith("blob:")
     ) return sanitized;
 
+    // Naar der kun er selve base64-strengen, wrap den som data-URL med angivet mime-type
     // Otherwise assume the caller provided a raw base64 payload and construct
     // a data URL using the requested mime type. This is the most common case
     // when the backend stores only the base64 payload to save space.
@@ -66,9 +71,11 @@ export const normalizeDataUrl = (rawValue, mimeType = "image/jpeg") => {
  * (often a UI component will show a placeholder image instead).
  */
 export const getProfilePicture = ({ base64, mimeType = "image/jpeg" } = {}) => {
+    // Samler al normalisering et sted, sa komponenter kan kalde enkelt helper
     // Normalize any of the accepted input shapes to a usable src value.
     const dataUrl = normalizeDataUrl(base64, mimeType);
 
+    // Fejl tidligt hvis ingen billeddata; goer det tydeligt for kalder hvad der mangler
     // If normalization returns `null`, the caller passed no image — make the
     // failure explicit by throwing so upstream code can decide how to recover.
     if (!dataUrl) throw new Error("Profile image payload is empty");
@@ -101,6 +108,7 @@ export const setProfilePicture = async ({ userId, token, file, imageBase64, secu
     if (!userId) throw new Error("User id is required");
     if (!token) throw new Error("JWT token is required");
 
+    // Brug allerede-encoded base64 hvis tilgaengelig; ellers laes fil og encod den
     // Prefer an already-encoded base64 payload; otherwise, read the provided
     // File/Blob and encode it. `encodeImageToBase64` is intentionally
     // delegated to a shared util so we do not duplicate file-reading logic.
@@ -112,6 +120,7 @@ export const setProfilePicture = async ({ userId, token, file, imageBase64, secu
     if (!payload) throw new Error("Image data is required");
 
     try {
+        // Sender base64 direkte til backend via api-klienten
         // Using the apiClient wrapper to upsert the profile image.
         await mdb.apiv2.user.upsertProfileImage(userId, payload, token);
     } catch (error) {

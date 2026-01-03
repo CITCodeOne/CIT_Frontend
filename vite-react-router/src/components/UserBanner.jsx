@@ -1,5 +1,5 @@
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
-import { normalizeDataUrl } from "./utils/profileImageUtils";
+import defaultAvatar from "../pics/DefaultProfilePicture.jpg"; // Standardprofil hvis brugeren ikke har et billede
+import { normalizeDataUrl } from "./utils/profileImageUtils"; // Helper der sikrer at base64/data-url er gyldige
 
 export default function UserBanner({
   user_name,
@@ -18,23 +18,23 @@ export default function UserBanner({
   onShareClick,
 }) {
   const normalizedImage = (() => {
-    if (!profile_image || profile_image.trim() === "") return defaultAvatar;
+    if (!profile_image || profile_image.trim() === "") return defaultAvatar; // Ingen billedvaerdi -> brug standard
     try {
-      const normalized = normalizeDataUrl(profile_image);
+      const normalized = normalizeDataUrl(profile_image); // Forsoger at formatere data-url korrekt
       if (normalized && (normalized.includes("not-found") || normalized.includes("error") || normalized.includes("Image-not-found"))) {
-        return defaultAvatar;
+        return defaultAvatar; // Hvis strengen ligner en fejl, brug fallback
       }
-      return normalized || defaultAvatar;
+      return normalized || defaultAvatar; // Brug normaliseret billede, ellers fallback
     } catch (err) {
-      return defaultAvatar;
+      return defaultAvatar; // Eventuelle fejl giver fallback for at undgaa brudt billede
     }
   })();
   const formattedDate = createdAt
     ? new Date(createdAt).toLocaleDateString()
-    : ""; // Prettify the join date.
+    : ""; // Giver en laesbar dato for hvornår profilen blev oprettet
 
-  const canClickAvatar = isOwnProfile && isEditMode; // Owner can click avatar when editing.
-  const imgSrc = normalizedImage;
+  const canClickAvatar = isOwnProfile && isEditMode; // Ejer maa kun klikke paa billedet i redigeringstilstand
+  const imgSrc = normalizedImage; // Endeligt billede der vises
 
   return (
     <section className="container my-4">
@@ -44,19 +44,19 @@ export default function UserBanner({
             <div className="d-flex flex-column align-items-center me-md-3">
               <div
                 className={canClickAvatar ? "position-relative" : ""}
-                style={{ cursor: canClickAvatar ? "pointer" : "default" }} // Only hint clickable when editing.
+                style={{ cursor: canClickAvatar ? "pointer" : "default" }} // Viser haandcursor kun naar billede kan aendres
                 onClick={canClickAvatar ? onAvatarClick : undefined}
               >
                 <img
                   src={imgSrc}
                   alt={`${user_name}'s avatar`}
                   className="rounded-circle border"
-                  style={{ width: "96px", height: "96px", objectFit: "cover" }} // Keep avatar square.
+                  style={{ width: "96px", height: "96px", objectFit: "cover" }} // Holder billedet kvadratisk og beskærer pænt
                 />
                 {canClickAvatar && (
                   <span
                     className="position-absolute top-50 start-50 translate-middle badge bg-dark bg-opacity-75"
-                    style={{ fontSize: "0.7rem" }} // Overlay prompt when avatar is editable.
+                    style={{ fontSize: "0.7rem" }} // Overlay tekst der viser at man kan uploade
                   >
                     Upload image
                   </span>
@@ -66,7 +66,7 @@ export default function UserBanner({
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onUndoAvatar(); }}
                     className="btn btn-sm btn-light position-absolute"
-                    style={{ right: -6, bottom: -6, borderRadius: '50%', padding: '4px 6px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+                    style={{ right: -6, bottom: -6, borderRadius: '50%', padding: '4px 6px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} // Lille undo-knap i hjoernet
                     title="Undo avatar change"
                   >
                     ⤺
@@ -88,12 +88,12 @@ export default function UserBanner({
               </div>
 
               <div className="mt-2 text-muted small">
-                {createdAt && <span className="me-3">Joined: {formattedDate}</span>}
+                {createdAt && <span className="me-3">Joined: {formattedDate}</span>} {/* Viser tilmeldingsdato hvis vi har den */}
               </div>
 
               <div className="mt-2 d-flex flex-wrap gap-3 small">
-                <span>Ratings: {ratingsCount}</span>
-                <span>Bookmarks: {bookmarksCount}</span>
+                <span>Ratings: {ratingsCount}</span> {/* Antal ratings brugeren har lavet */}
+                <span>Bookmarks: {bookmarksCount}</span> {/* Antal bogmaerker brugeren har */}
               </div>
             </div>
 
@@ -104,7 +104,7 @@ export default function UserBanner({
                   onClick={onEditClick}
                   className="btn btn-outline-primary btn-sm"
                 >
-                  {isEditMode ? "Done" : "Edit profile"}
+                  {isEditMode ? "Done" : "Edit profile"} {/* Skift mellem at redigere og afslutte redigering */}
                 </button>
               )}
 
@@ -113,7 +113,7 @@ export default function UserBanner({
                 onClick={onShareClick}
                 className="btn btn-outline-primary btn-sm"
               >
-                Share profile
+                Share profile {/* Starter deling (fx kopi af link) */}
               </button>
             </div>
           </div>

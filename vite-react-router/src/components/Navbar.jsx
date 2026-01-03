@@ -1,79 +1,79 @@
-import { useState, useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import '../style/Cstyle.css';
-import Container from 'react-bootstrap/Container';
-import InputGroup from 'react-bootstrap/InputGroup';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
-import Dropdown from 'react-bootstrap/Dropdown';
-import DropdownButton from 'react-bootstrap/DropdownButton';
-import Stack from 'react-bootstrap/Stack';
-import SignInOffcanvas from './SignInOffcanvas';
-import useAuthStatus from '../hooks/useAuthStatus';
-import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx';
-import { normalizeDataUrl } from './utils/profileImageUtils';
-import defaultProfilePic from '../pics/DefaultProfilePicture.jpg';
+import { useState, useEffect } from 'react'; // Hooks til lokal state og lifecycle
+import { Link, Outlet, useNavigate } from 'react-router-dom'; // Router helpers til navigation og links
+import 'bootstrap/dist/css/bootstrap.min.css'; // Bootstrap basis-styles
+import '../style/Cstyle.css'; // Egen stil der overskriver/udvider bootstrap
+import Container from 'react-bootstrap/Container'; // Layout container
+import InputGroup from 'react-bootstrap/InputGroup'; // Wrapper til input med knapper/dropdowns
+import Form from 'react-bootstrap/Form'; // Formular elementer
+import Button from 'react-bootstrap/Button'; // Knapper
+import Nav from 'react-bootstrap/Nav'; // Navigation wrapper
+import Navbar from 'react-bootstrap/Navbar'; // Bootstrap navbar komponent
+import NavDropdown from 'react-bootstrap/NavDropdown'; // Dropdown i navbar
+import Dropdown from 'react-bootstrap/Dropdown'; // Generel dropdown
+import DropdownButton from 'react-bootstrap/DropdownButton'; // Dropdown med knap-trigger
+import Stack from 'react-bootstrap/Stack'; // Vertikal/horisontal stacking
+import SignInOffcanvas from './SignInOffcanvas'; // Sidepanel til login
+import useAuthStatus from '../hooks/useAuthStatus'; // Custom hook der giver auth-info og helpers
+import mdb from '../business-logic-layer/ApiClient/ApiClient.jsx'; // API klient til backend kald
+import { normalizeDataUrl } from './utils/profileImageUtils'; // Helper der sikrer gyldig data-url for billeder
+import defaultProfilePic from '../pics/DefaultProfilePicture.jpg'; // Fallback profilbillede
 
 export default function NavbarLayout() {
-        // State to control SignInOffcanvas visibility
+        // State til login-panelets visning
         const [showSignIn, setShowSignIn] = useState(false);
-        // Custom hook to get authentication status and user info
+        // Custom hook leverer auth status og helpers til sync/logud
         const { isSignedIn, username, profileInitial, syncAuthState, handleLogout, userId } = useAuthStatus();
-        const [query, setQuery] = useState('');
-        const [searchTitlesResult, setSearchTitlesResult] = useState(null);
-        const [searchIndividualsResult, setSearchIndividualsResult] = useState(null);
-        const [showDropdown, setShowDropdown] = useState(false);
-        const [searchEntity, setSearchEntity] = useState('All');
-        const navigate = useNavigate();
+        const [query, setQuery] = useState(''); // Tekst i soegefeltet
+        const [searchTitlesResult, setSearchTitlesResult] = useState(null); // Hurtigsoege resultater for titler
+        const [searchIndividualsResult, setSearchIndividualsResult] = useState(null); // Hurtigsoege resultater for personer
+        const [showDropdown, setShowDropdown] = useState(false); // Styrer om dropdown med resultater er synlig
+        const [searchEntity, setSearchEntity] = useState('All'); // Valgt kategori at soege i
+        const navigate = useNavigate(); // Giver navigation uden link klik
 
         const handleSearchChange = async (e) => {
-                const query = e.target.value;
-                setQuery(query);
-                if (query.length === 0) {
+                const query = e.target.value; // Ny tekst fra input
+                setQuery(query); // Opdater state saa feltet er kontrolleret
+                if (query.length === 0) { // Tomt felt nulstiller hurtigsoege
                         setSearchTitlesResult(null);
                         setSearchIndividualsResult(null);
                         setShowDropdown(false);
-                        return; // Skip empty queries
+                        return; // Undgaa unodige kald paa tom streng
                 }
-                // Implement search logic here, e.g., update state or make API calls
-                console.log('Search query:', query);
-                // Perform search for titles and individuals and once both are done, hide dropdown if no results
+                console.log('Search query:', query); // Debug log
+                // Parallelsoeger titler og personer og venter paa begge
                 const [titlesResults, individualsResults] = await Promise.all([searchTitles(query), searchIndividuals(query)]);
+                // Viser dropdown kun hvis mindst eet sæt resultater findes
                 setShowDropdown((titlesResults && titlesResults.length > 0) || (individualsResults && individualsResults.length > 0));
         };
 
         const searchTitles = async (query) => {
                 const searchParams = {
-                        name: query,	// Optional: search in title names
-                        page: 1,                  	// Optional: page number
-                        pageSize: 3              	// Optional: items per page
+                        name: query,	// Soeger i titelnavne
+                        page: 1,		// Foerste side
+                        pageSize: 3		// Faa resultater til hurtig visning
                 };
 
                 try {
-                        const results = await mdb.apiv2.titles.search(searchParams);
+                        const results = await mdb.apiv2.titles.search(searchParams); // API kald mod titler
                         console.log('Search results:', results);
-                        setSearchTitlesResult(results);
-                        if (results.length !== 0) setShowDropdown(true);
+                        setSearchTitlesResult(results); // Gem i state til dropdown
+                        if (results.length !== 0) setShowDropdown(true); // Aabn dropdown hvis noget blev fundet
                         return results;
                 } catch (error) {
                         console.error('Search failed:', error);
-                        return [];
+                        return []; // Fejl giver tom liste frem for at crashe
                 }
         };
 
         const searchIndividuals = async (query) => {
                 const searchParams = {
-                        name: query,	// Optional: search in title names
-                        page: 1,                  	// Optional: page number
-                        pageSize: 3              	// Optional: items per page
+                        name: query,	// Soeger i personnavne
+                        page: 1,		// Foerste side
+                        pageSize: 3		// Faa resultater til hurtig visning
                 };
 
                 try {
-                        const results = await mdb.apiv2.individuals.search(searchParams);
+                        const results = await mdb.apiv2.individuals.search(searchParams); // API kald mod personer
                         console.log('Search results:', results);
                         setSearchIndividualsResult(results);
                         if (results.length !== 0) setShowDropdown(true);
@@ -85,16 +85,14 @@ export default function NavbarLayout() {
         };
 
         const handleSearch = async () => {
-                // Implement search submission logic here, e.g., navigate to search results page
-                console.log('Search submitted for query:', query);
-                let searchPath = '/search';
-                // if query is empty, just navigate to /search
-                if (query.trim().length === 0) {
-                        setShowDropdown(false); // Close dropdown on search
+                console.log('Search submitted for query:', query); // Debug paa submit
+                let searchPath = '/search'; // Base route for soeger
+                if (query.trim().length === 0) { // Tomt input navigerer bare til base soegeside
+                        setShowDropdown(false);
                         navigate(searchPath);
                         return;
                 }
-                // Append query parameters based on selected entity type
+                // Tilfoej query params baseret paa valgte kategori
                 switch (searchEntity) {
                         case 'Titles':
                                 searchPath += `?title_name=${encodeURIComponent(query)}`;
@@ -107,53 +105,53 @@ export default function NavbarLayout() {
                                 searchPath += `?title_name=${encodeURIComponent(query)}&individual_name=${encodeURIComponent(query)}`;
                                 break;
                 }
-                setShowDropdown(false); // Close dropdown on search
-                navigate(searchPath);
+                setShowDropdown(false); // Skjul dropdown naar vi gaar til fuld soegeside
+                navigate(searchPath); // Skift route med parametre
         };
 
-        // Avatar state for dropdown
+        // Avatar state til profilbillede i dropdown
         const [avatar, setAvatar] = useState(defaultProfilePic);
 
         useEffect(() => {
                 const fetchAvatar = async () => {
-                        if (!isSignedIn || !userId) {
+                        if (!isSignedIn || !userId) { // Hvis ikke logget ind, brug default billede
                                 setAvatar(defaultProfilePic);
                                 return;
                         }
 
                         try {
-                                const user = await mdb.apiv2.user.get(userId);
-                                const img = user && user.image ? normalizeDataUrl(user.image) : defaultProfilePic;
+                                const user = await mdb.apiv2.user.get(userId); // Hent brugerdata
+                                const img = user && user.image ? normalizeDataUrl(user.image) : defaultProfilePic; // Normaliser data-url eller brug fallback
                                 setAvatar(img);
                         } catch (err) {
                                 console.error('Failed to fetch avatar in Navbar:', err);
-                                setAvatar(defaultProfilePic);
+                                setAvatar(defaultProfilePic); // Fejl giver fallback for at undgaa tomt billede
                         }
                 };
 
-                fetchAvatar();
+                fetchAvatar(); // Kald ved mount og naar afh ser aendres
         }, [isSignedIn, userId]);
 
         return (
-                <div className="min-vh-100 d-flex flex-column">
-                        <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow">
-                                <Container fluid className='NavbarCstyle'>
-                                        <Navbar.Brand as={Link} to="/" className='Clogo'>CIT-MDB</Navbar.Brand>
-                                        <Navbar.Toggle aria-controls="navbarScroll" />
-                                        <Navbar.Collapse id="navbarScroll">
+                <div className="min-vh-100 d-flex flex-column"> {/* Fylder minimum hele hoejden og laegger indhold vertikalt */}
+                        <Navbar expand="lg" className="bg-body-tertiary CNavbar-shadow"> {/* Responsiv navbar med custom skygge */}
+                                <Container fluid className='NavbarCstyle'> {/* Fuldbredde container med egne styles */}
+                                        <Navbar.Brand as={Link} to="/" className='Clogo'>CIT-MDB</Navbar.Brand> {/* Logo der linker hjem */}
+                                        <Navbar.Toggle aria-controls="navbarScroll" /> {/* Burger-menu paa sma skraerme */}
+                                        <Navbar.Collapse id="navbarScroll"> {/* Indhold der kan foldes sammen */}
                                                 <Nav
                                                         className="me-auto my-2 my-lg-0"
                                                         style={{ maxHeight: '100px' }}
                                                         navbarScroll
                                                 >
-                                                </Nav>
-                                                <div className="d-flex justify-content-between flex-grow-1">
-                                                        <InputGroup >
+                                                </Nav> {/* Tom venstre side giver plads til soeg og profil til hoejre */}
+                                                <div className="d-flex justify-content-between flex-grow-1"> {/* Fordeler soeg og profil sektion */}
+                                                        <InputGroup > {/* Soegefelt med dropdown og knap */}
                                                                 <DropdownButton
                                                                         variant="outline-secondary Cbutton"
                                                                         title={searchEntity}
                                                                         id="input-group-dropdown-1"
-                                                                        onToggle={() => setShowDropdown(false)} // Close quicksearch dropdown when selecting entity type
+                                                                        onToggle={() => setShowDropdown(false)} // Luk hurtigsoege dropdown naar kategori aendres
                                                                 >
                                                                         <Dropdown.Header>Search In</Dropdown.Header>
                                                                         <Dropdown.Item onClick={() => setSearchEntity('All')}>All</Dropdown.Item>
@@ -168,28 +166,25 @@ export default function NavbarLayout() {
                                                                         type="search"
                                                                         placeholder="Search"
                                                                         aria-label="Search"
-                                                                        onChange={(e) => handleSearchChange(e)}
+                                                                        onChange={(e) => handleSearchChange(e)} // Live soegning naar tekst aendres
                                                                         onFocus={() => {
-                                                                                if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true);
+                                                                                if ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0)) setShowDropdown(true); // Viser dropdown igen hvis der allerede er resultater
                                                                         }}
                                                                         onKeyDown={(e) => {
                                                                                 if (e.key === 'Enter') {
-                                                                                        handleSearch();
+                                                                                        handleSearch(); // Enter udfoerer fuld soegning
                                                                                 }
                                                                         }}
                                                                         autoComplete="off"
                                                                 />
-                                                                {/* Dropdown for search results
-                                                                        The Menu is shown dependent on the showDropdown state
-                                                                        the rootCloseEvent is set to mousedown to close the dropdown when clicking outside
-                                                                        the onToggle updates the showDropdown state and is required for rootCloseEvent to work when controlling visibility manually*/}
+                                                                {/* Dropdown for hurtigsoege resultater */}
                                                                 <Dropdown
-                                                                        show={showDropdown && ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0))} // NOTE: Control visibility via state
-                                                                        onToggle={(next) => setShowDropdown(next)} // NOTE: Use show and onToggle to control visibility
+                                                                        show={showDropdown && ((searchTitlesResult && searchTitlesResult.length > 0) || (searchIndividualsResult && searchIndividualsResult.length > 0))} // Synlig kun hvis vi har resultater
+                                                                        onToggle={(next) => setShowDropdown(next)} // Holder synlighed kontrolleret af state
                                                                         className="Csearch-dropdown"
                                                                 >
                                                                         <Dropdown.Menu
-                                                                                rootCloseEvent="mousedown" // NOTE: Use rootCloseEvent to close on outside click
+                                                                                rootCloseEvent="mousedown" // Lukker naar man klikker udenfor
                                                                                 className="Csearch-dropdown-menu"
                                                                         >
                                                                                 {searchTitlesResult && searchTitlesResult.length > 0 && (
@@ -200,7 +195,7 @@ export default function NavbarLayout() {
                                                                                                                 as={Link}
                                                                                                                 to={`/page/${title.pageId}/title/${title.id}`}
                                                                                                                 key={title.id}
-                                                                                                                onClick={() => setShowDropdown(false)}
+                                                                                                                onClick={() => setShowDropdown(false)} // Luk dropdown naar der klikkes paa et resultat
                                                                                                         >
                                                                                                                 {title.name} ({title.mediaType})
                                                                                                         </Dropdown.Item>
@@ -228,10 +223,10 @@ export default function NavbarLayout() {
                                                                                 )}
                                                                         </Dropdown.Menu>
                                                                 </Dropdown>
-                                                                <Button variant="outline-success Cbutton" onClick={() => handleSearch()}>Search</Button>
+                                                                <Button variant="outline-success Cbutton" onClick={() => handleSearch()}>Search</Button> {/* Knap til at starte fuld soegning */}
                                                         </InputGroup >
                                                         <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 120 }}>
-                                                                {/* Profile*/}
+                                                                {/* Profil sektion */}
                                                                 {isSignedIn ? (
                                                                         <NavDropdown
                                                                                 title={
@@ -256,7 +251,7 @@ export default function NavbarLayout() {
                                                                                 <NavDropdown.Item as={Link} to={`/user/${userId}/ratings`}>Ratings</NavDropdown.Item>
                                                                                 <NavDropdown.Item as={Link} to={`/user/${userId}/bookmarks`}>Bookmarks</NavDropdown.Item>
                                                                                 <NavDropdown.Divider />
-                                                                                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                                                                                <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item> {/* Brug helper fra hook til logud */}
                                                                         </NavDropdown>
                                                                 ) : (
                                                                         <Button variant="primary" onClick={() => setShowSignIn(true)}>
@@ -273,15 +268,15 @@ export default function NavbarLayout() {
                                 onClose={() => setShowSignIn(false)}
                                 onSignIn={() => {
                                         setShowSignIn(false);
-                                        syncAuthState();
+                                        syncAuthState(); // Opdater auth state efter succesfuld login
                                 }}
                         />
                         <Container
                                 fluid
                                 className="flex-grow-1 py-3 ContainerCstyle overflow-auto"
                         >
-                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px' }}>
-                                        <Outlet />
+                                <div style={{ backgroundColor: '#f8f9fa', paddingBottom: '2rem', borderRadius: '8px' }}> {/* Wrapper om outlet-indholdet */}
+                                        <Outlet /> {/* Her rendres undermatches fra routeren */}
                                 </div>
                         </Container>
                 </div >
