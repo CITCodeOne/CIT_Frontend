@@ -1,9 +1,9 @@
-import fetchSimplified from "../helper-function/FetchSimplified";
+import fetchSimplified from "../helper-function/FetchSimplified"; // Felles fetch-wrapper der haandterer base URL og headers
 
 // Default TMDB append list used by the proxy for person details
 export const tmdbDefaults = {
-	personAppend: "external_ids,images,combined_credits",
-	movieAppend: "credits,images"
+	personAppend: "external_ids,images,combined_credits", // Felter backend tilfoejer til personkald
+	movieAppend: "credits,images" // Felter backend tilfoejer til filmkald
 };
 
 // Helper to call the TMDB proxy endpoints under /api/v2/tmdb

@@ -24,14 +24,14 @@
  * Used in production and when secure=true is specified.
  * Points to the local development server on port 5001.
  */
-const API_BASE_URL_SECURE = "https://localhost:5001";
+const API_BASE_URL_SECURE = "https://localhost:5001"; // Bruges naar vi kører med HTTPS (typisk prod eller sikker lokal)
 
 /**
  * Base URL for insecure (HTTP) API connections.
  * Used for development environments where HTTPS is not required.
  * Points to the local development server on port 5000.
  */
-const API_BASE_URL_INSECURE = "http://localhost:5000";
+const API_BASE_URL_INSECURE = "http://localhost:5000"; // Bruges til lokal udvikling uden certifikat
 
 /**
  * Simplifies talking to legacy (/api) and v2 (/api/v2) endpoints.
@@ -80,19 +80,19 @@ export default async function fetchSimplified({
 
     // Determine the base URL based on security preference
     // Remove trailing slashes to ensure consistent URL construction
-    const resolvedBaseUrl = (secure ? API_BASE_URL_SECURE : API_BASE_URL_INSECURE).replace(/\/$/, "");
+    const resolvedBaseUrl = (secure ? API_BASE_URL_SECURE : API_BASE_URL_INSECURE).replace(/\/$/, ""); // Vælger base-URL efter secure-flag
 
     // Normalize and validate the API version
     // Convert to lowercase and trim whitespace for consistent comparison
-    const normalizedVersion = typeof version === "string" ? version.trim().toLowerCase() : "";
+    const normalizedVersion = typeof version === "string" ? version.trim().toLowerCase() : ""; // Sa vi kan sammenligne uanset store/smaa bogstaver
 
     // Determine API prefix based on version
     // v2 uses "/api/v2", all other versions (including "v1" and legacy) use "/api"
-    const apiPrefix = normalizedVersion === "v2" ? "/api/v2" : "/api";
+    const apiPrefix = normalizedVersion === "v2" ? "/api/v2" : "/api"; // Bestemmer om kald gaar til ny eller gammel stifane
 
     // Clean up the endpoint path
     // Remove leading slashes to prevent double slashes in the final URL
-    const trimmedEndpoint = endpoint.replace(/^\/+/, "");
+    const trimmedEndpoint = endpoint.replace(/^\/+/, ""); // Fjerner ekstra skråstreger i starten
 
     // Normalize the API prefix (remove leading slashes)
     const normalizedApiPrefix = apiPrefix.replace(/^\/+/, "");

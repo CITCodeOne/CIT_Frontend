@@ -4,20 +4,20 @@
  * Centralizes TMDB-related logic to use the backend proxy under `/api/v2/tmdb`.
  */
 
-import mdb from './ApiClient/ApiClient';
+import mdb from './ApiClient/ApiClient'; // Bruger samme API klient som resten af appen (proxy gennem backend)
 
 /**
  * Determines if a mediaType represents a TV show
  */
 export const isTvShow = (mediaType) => {
-    return mediaType === 'tvSeries' || mediaType === 'tvShow';
+    return mediaType === 'tvSeries' || mediaType === 'tvShow'; // Enkelt check der styrer hvilke TMDB endepunkter vi rammer
 };
 
 /**
  * Search for a title (movie or TV show) in TMDB via backend proxy
  */
 export const searchTitle = async (name, mediaType, year) => {
-    const searchParams = {};
+    const searchParams = {}; // Opsamler parametre til TMDB soegningen
     if (year) {
         searchParams[isTvShow(mediaType) ? 'first_air_date_year' : 'year'] = year;
     }
@@ -30,7 +30,7 @@ export const searchTitle = async (name, mediaType, year) => {
  * Helper: build TMDB image URL for a given poster/profile path
  */
 export function getImageUrl(path, size = 'w500') {
-    return path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
+    return path ? `https://image.tmdb.org/t/p/${size}${path}` : null; // Bygger komplet URL fra TMDBs billedserver
 }
 
 /**
@@ -43,7 +43,7 @@ export const getTitlePoster = async (name, mediaType, year) => {
 
         if (!posterPath) return null;
 
-        return getImageUrl(posterPath);
+        return getImageUrl(posterPath); // Returnerer fuld URL til billedet
     } catch (err) {
         console.error('Error fetching title poster:', err);
         return null;
@@ -75,7 +75,7 @@ export const getPersonPhoto = async (name) => {
  */
 export const getMultiplePersonPhotos = async (names, limit = 20) => {
     const photoPromises = names.slice(0, limit).map(async (name) => {
-        const photoUrl = await getPersonPhoto(name);
+        const photoUrl = await getPersonPhoto(name); // Henter fotos parallelt for hurtigere samlet svar
         return photoUrl ? { name, photoUrl } : null;
     });
 
@@ -115,8 +115,8 @@ export const getSimilarTitles = async (name, mediaType, year, limit = 20) => {
                 name: item.name || item.title || 'Unknown',
                 image: posterPath,
                 poster: posterPath,
-                startYear: year,
-                plot: item.overview || null
+                startYear: year, // Bruger udledt aar som tidsangivelse
+                plot: item.overview || null // Resume hvis tilgaengeligt
             };
         });
     } catch (err) {

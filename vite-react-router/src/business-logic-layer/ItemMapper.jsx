@@ -6,8 +6,8 @@
  * format and the internal application data model, ensuring type safety and consistentformat.
  */
 
-import { Movie, TvEpisode, TvSeries, Individual, MiscMedia, User, Rating, Bookmark } from "./DataClasses";
-import { TITLE_KEY_ALIASES, INDIVIDUAL_KEY_ALIASES, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES, normalizeKey } from "./KeyAliases";
+import { Movie, TvEpisode, TvSeries, Individual, MiscMedia, User, Rating, Bookmark } from "./DataClasses"; // Domene-klasser med defaults
+import { TITLE_KEY_ALIASES, INDIVIDUAL_KEY_ALIASES, USER_KEY_ALIASES, RATING_KEY_ALIASES, BOOKMARK_KEY_ALIASES, normalizeKey } from "./KeyAliases"; // Nogne oversaetter API-felter til frontend felter
 
 /**
  * Creates an appropriate title domain object instance based on the media type.
@@ -20,7 +20,7 @@ import { TITLE_KEY_ALIASES, INDIVIDUAL_KEY_ALIASES, USER_KEY_ALIASES, RATING_KEY
  * @returns {Movie|TvEpisode|TvSeries|MiscMedia} An instance of the appropriate title class
  */
 const createTitleInstance = (mediaType) => {
-    // Normalize the media type to lowercase for case-insensitive comparison
+    // Normaliserer tekst saa sammenligning ikke afhænger af store/smaa bogstaver
     switch ((mediaType || "").toLowerCase()) {
         case "movie":
             return new Movie();
@@ -80,30 +80,30 @@ const normalizeGenres = (value) => {
  * @returns {Array<Movie|TvEpisode|TvSeries|MiscMedia>} Array of mapped title domain objects
  */
 export function MapTitle(JSONarr = []) {
-    const itemArr = [];
+    const itemArr = []; // Resultatsamling der returneres til sidst
     // Minimum release year to filter out likely data errors from the origional dataset
     const minReleaseYear = 1920;
 
     // Process each item in the input array
-    for (let item of JSONarr) {
+    for (let item of JSONarr) { // Loop gennem alle raadata titler
         // Determine media type from the item, checking multiple possible property names
         const mediaType = (item?.mediaType ?? item?.MediaType ?? "").toString();
 
         // Create the appropriate title instance based on media type
-        const titleItem = createTitleInstance(mediaType);
+        const titleItem = createTitleInstance(mediaType); // Opretter den rette klasse baseret paa type
 
         // Iterate through all properties of the raw item
-        Object.entries(item || {}).forEach(([rawKey, rawValue]) => {
+        Object.entries(item || {}).forEach(([rawKey, rawValue]) => { // Gennem gaar alle felter i raadata
             // Skip null, undefined, or "N/A" values
             if (rawValue === undefined || rawValue === null || rawValue === "N/A") {
                 return;
             }
 
             // Normalize the key using the title aliases
-            const key = normalizeKey(TITLE_KEY_ALIASES, rawKey);
+            const key = normalizeKey(TITLE_KEY_ALIASES, rawKey); // Oversaetter raakegnavne til vores felter
 
             // Skip if the normalized key doesn't exist in the target object
-            if (!(key in titleItem)) return;
+            if (!(key in titleItem)) return; // Springer felter vi ikke kender i modellen
 
             let value = rawValue;
 
@@ -120,12 +120,12 @@ export function MapTitle(JSONarr = []) {
             }
 
             // Special handling for genres
-            if (key === "genres") {
+            if (key === "genres") { // Rens genrelisten saa den altid er strenge
                 value = normalizeGenres(value);
             }
 
             // Special handling for ratings - skip "N/A" rating values
-            if (key === "rating" && value === "N/A") {
+            if (key === "rating" && value === "N/A") { // Skip ratings der er markeret som N/A
                 return;
             }
 
@@ -135,10 +135,10 @@ export function MapTitle(JSONarr = []) {
 
         // Ensure the media type is set on the object
         // Use the determined media type, or fall back to existing/default values
-        titleItem.mediaType = mediaType || titleItem.mediaType || "unknown";
+        titleItem.mediaType = mediaType || titleItem.mediaType || "unknown"; // Sikrer at feltet altid er sat
 
         // Add the processed title to the result array
-        itemArr.push(titleItem);
+        itemArr.push(titleItem); // Tilfoej til samlet resultat
     }
 
     return itemArr;
@@ -158,7 +158,7 @@ export function MapTitle(JSONarr = []) {
  * @returns {Array<Individual>} Array of mapped Individual domain objects
  */
 export function MapIndividual(JSONarr = []) {
-    const itemArr = [];
+    const itemArr = []; // Opsamler alle personer i et nyt array
 
     // Process each item in the input array
     for (let item of JSONarr) {
@@ -166,14 +166,14 @@ export function MapIndividual(JSONarr = []) {
         const individualItem = new Individual();
 
         // Iterate through all properties of the raw item
-        Object.entries(item || {}).forEach(([rawKey, value]) => {
+        Object.entries(item || {}).forEach(([rawKey, value]) => { // Gaennem ga tilfaeldige key navne
             // Skip null, undefined, or "N/A" values
             if (value === undefined || value === null || value === "N/A") {
                 return;
             }
 
             // Normalize the key using the individual aliases
-            const key = normalizeKey(INDIVIDUAL_KEY_ALIASES, rawKey);
+            const key = normalizeKey(INDIVIDUAL_KEY_ALIASES, rawKey); // Oversaet til vores model-felter
 
             // Skip if the normalized key doesn't exist in the target object
             if (!(key in individualItem)) return;
@@ -183,7 +183,7 @@ export function MapIndividual(JSONarr = []) {
         });
 
         // Add the processed individual to the result array
-        itemArr.push(individualItem);
+        itemArr.push(individualItem); // Tilfoej resultatet
     }
 
     return itemArr;
@@ -198,6 +198,7 @@ export function MapIndividual(JSONarr = []) {
  * @returns {Array} An array containing the data
  */
 const toArray = (data) => Array.isArray(data) ? data : (data ? [data] : []);
+// toArray sikrer at senere mapping-funktioner altid kan iterere uden at fejle paa enkelt-objekter
 
 /**
  * Maps raw title data from the API to application-specific title objects.

@@ -11,9 +11,9 @@
  * application-specific data structures.
  */
 
-import fetchSimplified from '../helper-function/FetchSimplified';
-import { MapTitle, MapIndividual, mapTitles, mapIndividuals, mapUser, mapRatings, mapSingleRating, mapBookmarks, mapSingleBookmark } from '../ItemMapper';
-import tmdb from './ApiClientTMDB';
+import fetchSimplified from '../helper-function/FetchSimplified'; // Felles fetch-wrapper der haandterer URL, headers og fejl
+import { MapTitle, MapIndividual, mapTitles, mapIndividuals, mapUser, mapRatings, mapSingleRating, mapBookmarks, mapSingleBookmark } from '../ItemMapper'; // Mapper raadata til domene-objekter med defaults
+import tmdb from './ApiClientTMDB'; // TMDB proxy klient
 
 /**
  * Internal helper function that wraps fetchSimplified to target the v2 API segment.
@@ -24,7 +24,7 @@ import tmdb from './ApiClientTMDB';
  * @returns {Promise<unknown>} The response from the API call
  */
 const callV2 = (endpoint, options = {}) => fetchSimplified({
-	version: 'v2',
+	version: 'v2', // Saetter prefix /api/v2
 	endpoint,
 	...options,
 });
@@ -37,7 +37,7 @@ const apiv2 = {
 	 * Health check endpoints for monitoring API availability and status.
 	 * Returns ok status if the API server is reachable and functioning.
 	 */
-	health: {
+		health: {
 		/**
 		 * Performs a health check on the API server.
 		 * Returns basic status information about the server's health.
@@ -45,7 +45,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options (authToken, etc.)
 		 * @returns {Promise<Object>} Health status response
 		 */
-		status: (options) => callV2('health', options),
+		status: (options) => callV2('health', options), // Simpelt ping-endpoint
 	},
 	/**
 	 * Endpoints for managing title resources (movies, TV shows, etc.).
@@ -67,7 +67,7 @@ const apiv2 = {
 		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('titles', {
 			queryParams: { page, pageSize },
 			...options,
-		}).then(mapTitles),
+		}).then(mapTitles), // Mapper DTO til vores titel-objekter
 
 		// GET: /titles/{id}
 		/**
@@ -78,7 +78,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object|null>} Mapped title object or null if not found
 		 */
-		getById: (id, options) => callV2(`titles/${id}`, options).then(mapTitles),
+		getById: (id, options) => callV2(`titles/${id}`, options).then(mapTitles), // Returnerer enkelt titel (eller null)
 
 		// GET: /titles/{id}/ratings
 		/**
@@ -90,7 +90,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of rating objects for the title
 		 */
 
-		getRatings: (id, options) => callV2(`titles/${id}/ratings`, options).then(mapRatings),
+		getRatings: (id, options) => callV2(`titles/${id}/ratings`, options).then(mapRatings), // Henter anmeldelser for titlen
 		// GET: /titles/{id}/individuals
 		/**
 		 * Retrieves individuals (cast/crew) associated with a title.
@@ -100,7 +100,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of individual objects associated with the title
 		 */
-		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options).then(mapIndividuals),
+		getIndividuals: (id, options) => callV2(`titles/${id}/individuals`, options).then(mapIndividuals), // Skuespillere/crew for titlen
 
 		// GET: /titles/{id}/similar
 		/**
@@ -111,7 +111,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Array>} Array of similar title objects with genre overlap information
 		 */
-		getSimilar: (id, options) => callV2(`titles/${id}/similar`, options).then(mapTitles),
+		getSimilar: (id, options) => callV2(`titles/${id}/similar`, options).then(mapTitles), // Lignende titler baseret paa genre overlap
 
 		// GET: /titles/{id}/page
 		/**
@@ -122,7 +122,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object|null>} PageReferenceDTO or null if not found
 		 */
-		getPageByTitle: (id, options) => callV2(`titles/${id}/page`, options),
+		getPageByTitle: (id, options) => callV2(`titles/${id}/page`, options), // Finder Page DTO til en titel
 		// GET: /titles/top/{mediaType}?page=1&pageSize=20
 		/**
 		 * Retrieves top rated titles by media type.
@@ -138,7 +138,7 @@ const apiv2 = {
 		top: (mediaType, { page = 1, pageSize = 20 } = {}, options) => callV2(`titles/top/${mediaType}`, {
 			queryParams: { page, pageSize },
 			...options,
-		}).then(mapTitles),
+		}).then(mapTitles), // Henter top-rated titler pr type
 
 		// GET: /titles/featured
 		/**
@@ -148,7 +148,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object|null>} Mapped title object or null if not found
 		 */
-		featured: (options) => callV2('titles/featured', options).then(mapTitles),
+		featured: (options) => callV2('titles/featured', options).then(mapTitles), // Udfaerdig featured titel
 
 		// POST: /titles/search
 		/**
@@ -174,7 +174,7 @@ const apiv2 = {
 		search: (parameters, options) => callV2('titles', {
 			queryParams: parameters,
 			...options,
-		}).then(mapTitles),
+		}).then(mapTitles), // Fleksibel soegning med filtre og sortering
 
 	},/*
 	__________________________________________
@@ -225,7 +225,7 @@ const apiv2 = {
 		list: ({ page = 1, pageSize = 20 } = {}, options) => callV2('individuals', {
 			queryParams: { page, pageSize },
 			...options,
-		}).then(mapIndividuals),
+		}).then(mapIndividuals), // Mapper person-DTo til vores model
 
 		// GET: /individuals/popular?page=1&pageSize=20
 		/**
@@ -241,7 +241,7 @@ const apiv2 = {
 		popular: ({ page = 1, pageSize = 20 } = {}, options) => callV2('individuals/popular', {
 			queryParams: { page, pageSize },
 			...options,
-		}).then(mapIndividuals),
+		}).then(mapIndividuals), // Mest populaere personer sorteret af backend
 
 		// GET: /individuals/{id}
 		/**
@@ -253,7 +253,7 @@ const apiv2 = {
 		 * @returns {Promise<Object|null>} Mapped individual object or null if not found
 		 */
 
-		getById: (id, options) => callV2(`individuals/${id}`, options).then(mapIndividuals),
+		getById: (id, options) => callV2(`individuals/${id}`, options).then(mapIndividuals), // Detaljer for enkelt person
 		// GET: /individuals/{id}/titles
 		/**
 		 * Retrieves all titles associated with an individual.
@@ -264,7 +264,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of title objects associated with the individual
 		 */
 
-		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options).then(mapTitles),
+		getTitles: (id, options) => callV2(`individuals/${id}/titles`, options).then(mapTitles), // Titler som personen er associeret med
 		// GET: /individuals/{id}/popular-actors
 		/**
 		 * Retrieves popular actors related to a given individual or title.
@@ -275,7 +275,7 @@ const apiv2 = {
 		 * @returns {Promise<Array>} Array of popular actor objects (IndividualFullDTO)
 		 */
 
-		getPopularActors: (id, options) => callV2(`individuals/${id}/popular-actors`, options).then(mapIndividuals),
+		getPopularActors: (id, options) => callV2(`individuals/${id}/popular-actors`, options).then(mapIndividuals), // Co-actors populare
 		// GET: /individuals/co-actors?name={name}
 		/**
 		 * Finds co-actors for a given actor name, sorted by collaboration count.
@@ -288,7 +288,7 @@ const apiv2 = {
 		getCoActors: (actorName, options) => callV2('individuals/co-actors', {
 			queryParams: { name: actorName },
 			...options,
-		}).then(mapIndividuals),
+		}).then(mapIndividuals), // Samarbejdspartnere for skuespiller
 		   // GET: /individuals/search
 		   /**
 			* Searches for individuals with flexible filters and sorting.
@@ -308,7 +308,7 @@ const apiv2 = {
 		   search: (parameters = {}, options) => callV2('individuals', {
 			   queryParams: parameters,
 			   ...options,
-		   }).then(mapIndividuals),
+		   }).then(mapIndividuals), // Fleksibel soegning paa personer
 	},
 
 	/**
@@ -363,7 +363,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options
 		 * @returns {Promise<Object|null>} Page DTO or null
 		 */
-		getById: (pageId, options) => callV2(`pages/${pageId}`, options),
+		getById: (pageId, options) => callV2(`pages/${pageId}`, options), // Henter Page DTO direkte
 	},
 
 	/**
@@ -380,7 +380,7 @@ const apiv2 = {
 		 * @param {Object} options - Additional fetch options (usually includes authToken)
 		 * @returns {Promise<User|null>} Mapped User instance or null if not found
 		 */
-		get: (userId, options) => callV2(`users/${userId}`, options).then(mapUser),
+		get: (userId, options) => callV2(`users/${userId}`, options).then(mapUser), // Henter profil og mapper til User model
 
 		// BOOKMARKS
 		// GET: /users/{userId}/bookmarks
