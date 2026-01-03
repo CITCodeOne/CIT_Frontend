@@ -1,17 +1,32 @@
+// React hooks: useState gemmer data i komponenten, useEffect koerer ekstra arbejde (fx datahentning)
 import { useState, useEffect } from 'react';
+// Router hooks: laeser URL-parametre og skifter side
 import { useParams, useNavigate } from 'react-router-dom';
+// UI dele fra React Bootstrap
 import { Container, Card, Spinner, Carousel, Row, Col } from 'react-bootstrap';
+// Genbrugt top-komponent til at vise hovedindholdet
 import MainDisplay from '../components/MainDisplay';
+// Lille knap der kan toggles (fx bogmaerke)
 import ToggleButton from '../components/ToggleButton';
+// Forhaandslavede sider til loading, fejl og ikke-fundet
 import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
+// Special-hook der henter alle data om personen og styrer tilstande
 import useIndividualData from '../hooks/useIndividualData';
+// Hook der giver login-status og bruger-id
 import useAuthStatus from '../hooks/useAuthStatus';
+// Henter gemt login-token fra storage
 import { getStoredToken } from '../components/utils/ExtractJwtData';
+// Vores API-klient til backend
 import mdb from '../business-logic-layer/ApiClient/ApiClient';
+// TMDB-integration til billeder m.m.
 import tmdb from '../business-logic-layer/TmdbIntegration';
+// Reservebillede hvis et billede mangler
 import placeholderImage from '../pics/Image-not-found.png';
+// Lille toast til beskeder
 import ToastConfirm from '../components/utils/ToastUtil';
+// Slide-in panel til login-opfordring
 import SignInOffcanvas from '../components/SignInOffcanvas';
+// Side-styles
 import '../style/CTitlePage.css';
 import '../style/CIndividualPage.css';
 
@@ -23,17 +38,21 @@ import '../style/CIndividualPage.css';
  */
 
 function Individual() {
+    // URL-parametre: id for personen og side-id til navigation
     const { individualId, pageId } = useParams();
+    // Funktion til at sende brugeren videre til anden side
     const navigate = useNavigate();
+    // Login-status og bruger-id (hvis logget ind)
     const { isSignedIn, userId } = useAuthStatus();
 
-    // State management
+    // Lokale states til billeder fra TMDB
     const [tmdbImages, setTmdbImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
     const [tmdbProfilePicture, setTmdbProfilePicture] = useState(null);
+    // Husker hvilke titler der er bogmaerket (key = pageId)
     const [titleBookmarks, setTitleBookmarks] = useState({});
 
-    // Use custom hook for all data fetching and state management
+    // Special-hook der henter alle person-data og giver helper-funktioner
     const {
         individual,
         loading,
@@ -44,7 +63,7 @@ function Individual() {
         toggleBookmark
     } = useIndividualData(individualId, userId, isSignedIn, pageId);
 
-    // Fetch TMDB profile picture
+    // Hent profilbillede fra TMDB ud fra personens navn
     useEffect(() => {
         const fetchTmdbProfilePicture = async () => {
             if (!individual?.name) return;
@@ -62,7 +81,7 @@ function Individual() {
         fetchTmdbProfilePicture();
     }, [individual]);
 
-    // Fetch TMDB photo gallery
+    // Hent foto-galleri fra TMDB (flere billeder af personen)
     useEffect(() => {
         const fetchTmdbImages = async () => {
             if (!individual?.name) {
@@ -73,16 +92,16 @@ function Individual() {
             try {
                 setLoadingImages(true);
                 
-                const searchResults = await mdb.tmdb.searchPerson(individual.name);
+                const searchResults = await mdb.tmdb.searchPerson(individual.name); // soeg person i TMDB
                 
                 if (searchResults?.results?.length > 0) {
-                    const personId = searchResults.results[0].id;
-                    const personDetails = await mdb.tmdb.getPerson(personId);
+                    const personId = searchResults.results[0].id; // TMDB-id vi skal bruge
+                    const personDetails = await mdb.tmdb.getPerson(personId); // hent detaljer inkl. billeder
                     
-                    if (personDetails?.images?.profiles) {
+                    if (personDetails?.images?.profiles) { // kun hvis der er profiler
                         const imageUrls = personDetails.images.profiles
-                            .slice(0, 10)
-                            .map(img => `https://image.tmdb.org/t/p/w500${img.file_path}`);
+                            .slice(0, 10) // begræns til 10 billeder
+                            .map(img => `https://image.tmdb.org/t/p/w500${img.file_path}`); // byg fuld URL
                         
                         setTmdbImages(imageUrls);
                     }
@@ -100,23 +119,23 @@ function Individual() {
         }
     }, [individual]);
 
-    // Check bookmark status for Known For titles (fetch all bookmarks once)
+    // Tjek bogmaerke-status for "Known For" titler (hent alle bogmaerker paa een gang)
     useEffect(() => {
         const checkTitleBookmarks = async () => {
             if (!isSignedIn || !userId || knownForTitles.length === 0) {
-                setTitleBookmarks({});
+                setTitleBookmarks({}); // intet at markere
                 return;
             }
 
             try {
-                const token = getStoredToken();
-                // Fetch all bookmarks for the user in a single call
+                const token = getStoredToken(); // auth token
+                // Hent alle bogmaerker i et kald
                 const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
 
-                // Build a lookup set for quick checks
+                // Lav opslagssaet til hurtige opslag
                 const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId)));
 
-                const bookmarkMap = {};
+                const bookmarkMap = {}; // pageId -> true/false
                 knownForTitles.forEach(title => {
                     const pageRef = title.pageId || null;
                     if (pageRef) {
@@ -134,10 +153,10 @@ function Individual() {
         checkTitleBookmarks();
     }, [knownForTitles, userId, isSignedIn]);
 
-    // Toggle bookmark for a title
+    // Saet/fjern bogmaerke paa en titel
     const toggleTitleBookmark = async (pageId, titleId, titleName) => {
         if (!isSignedIn || !userId) {
-            alert('Please log in to bookmark titles');
+            alert('Please log in to bookmark titles'); // skal vaere logget ind
             return;
         }
 
@@ -148,15 +167,15 @@ function Individual() {
         }
 
         try {
-            const token = getStoredToken();
-            const isCurrentlyBookmarked = titleBookmarks[pageId];
+            const token = getStoredToken(); // auth token
+            const isCurrentlyBookmarked = titleBookmarks[pageId]; // nuvaerende status
             
             if (isCurrentlyBookmarked) {
-                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token });
-                setTitleBookmarks(prev => ({ ...prev, [pageId]: false }));
+                await mdb.apiv2.user.removeBookmark(userId, pageId, { authToken: token }); // fjern
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: false })); // opdater lokalt
             } else {
-                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token });
-                setTitleBookmarks(prev => ({ ...prev, [pageId]: true }));
+                await mdb.apiv2.user.addBookmark(userId, pageId, { authToken: token }); // tilfoej
+                setTitleBookmarks(prev => ({ ...prev, [pageId]: true })); // opdater lokalt
             }
         } catch (err) {
             console.error('Failed to toggle title bookmark:', err);
@@ -164,7 +183,7 @@ function Individual() {
         }
     };
 
-    // Local UI state for individual bookmark toast/sign-in
+    // Lokal UI-tilstand: vise login-panel og korte beskeder
     const [showSignIn, setShowSignIn] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
 
@@ -176,7 +195,7 @@ function Individual() {
             return;
         }
 
-        const willBeBookmarked = !isBookmarked;
+        const willBeBookmarked = !isBookmarked; // hvad statusen bliver efter klik
         try {
             await toggleBookmark();
             setToastMessage(willBeBookmarked ? 'Bookmark added.' : 'Bookmark removed.');
@@ -188,49 +207,51 @@ function Individual() {
         }
     };
 
+    // Hjælp: gaa til en given titel-side (bruger pageId + titleId)
     const navigateToTitle = (title) => {
-        const targetPageId = title.pageId && title.pageId !== 'n/a' ? title.pageId : null;
-        const targetTitleId = title.id && title.id !== 'n/a' ? title.id : null;
+        const targetPageId = title.pageId && title.pageId !== 'n/a' ? title.pageId : null; // side-id i URL
+        const targetTitleId = title.id && title.id !== 'n/a' ? title.id : null; // titel-id i URL
 
         if (!targetPageId || !targetTitleId) return;
 
-        navigate(`/page/${targetPageId}/title/${targetTitleId}`, { replace: true });
+        navigate(`/page/${targetPageId}/title/${targetTitleId}`, { replace: true }); // skift side
     };
 
     // (List functionality removed) 
 
+    // Viser standard loading/fejl/404 komponenter hvis noedvendigt
     if (loading) return <LoadingState />;
     if (error) return <ErrorState error={error} />;
     if (!individual) return <NotFoundState message="No individual found" />;
 
-    // Prepare name with birth/death years
+    // Byg navn med foedsels-/doedsaar (eller "Present" hvis i live)
     const customName = (
         <div>
             {individual.name || 'Unknown'}{' '}
             {individual.birthYear && individual.birthYear !== 'n/a' && (
                 <span className="individual-year-text">
-                    ({individual.birthYear}
+                    ({individual.birthYear} // foedselsaar
                     {individual.deathYear && individual.deathYear !== 'n/a' 
-                        ? ` - ${individual.deathYear}` 
-                        : ' - Present'})
+                        ? ` - ${individual.deathYear}`  // doedsaar
+                        : ' - Present'}) // viser "Present" hvis ingen doedsaar
                 </span>
             )}
         </div>
     );
 
-    // Prepare badges
+    // Forbered badges (fx "Actor" naar vi har kendte titler)
     const badges = [];
     if (knownForTitles.length > 0) {
         badges.push({ text: 'Actor', variant: 'primary' });
     }
 
-    // Prepare biography section
+    // Forbered bio-sektion
     const sections = [];
 
     if (individual.bio || individual.description) {
         sections.push({
             title: 'Biography',
-            content: <p className="text-muted">{individual.bio || individual.description}</p>
+            content: <p className="text-muted">{individual.bio || individual.description}</p> // kort tekst om personen
         });
     }
 
@@ -250,7 +271,7 @@ function Individual() {
                 }}
                 
             >
-            {/* Photo Gallery */}
+            {/* Foto-galleri */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -316,7 +337,7 @@ function Individual() {
                 </Card>
             </Container>
 
-            {/* Known For - Top 4 Titles */}
+            {/* Known For - top 4 titler */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -334,7 +355,7 @@ function Individual() {
                                         <Card className="h-100 shadow-sm known-for-card">
                                             <div 
                                                 className="known-for-poster-container"
-                                                onClick={() => navigateToTitle(title)}
+                                                onClick={() => navigateToTitle(title)} // klik sender til titel-side
                                             >
                                                 <img
                                                     src={title.image || title.poster || placeholderImage}
@@ -370,7 +391,7 @@ function Individual() {
                                                         inactiveLabel="Add bookmark"
                                                         className={`bookmark-btn ${titleBookmarks[title.pageId] ? 'bookmarked' : ''}`}
                                                     >
-                                                        {titleBookmarks[title.pageId] ? '✓' : '+'}
+                                                        {titleBookmarks[title.pageId] ? '✓' : '+'} {/* viser ikon for status */}
                                                     </ToggleButton>
                                                 </div>
                                             </div>
@@ -388,7 +409,7 @@ function Individual() {
                 </Card>
             </Container>
 
-            {/* Filmography - Full List */}
+            {/* Filmografi - fuld liste */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -405,7 +426,7 @@ function Individual() {
                                     <div 
                                         key={title.id} 
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white filmography-list-item"
-                                        onClick={() => navigateToTitle(title)}
+                                        onClick={() => navigateToTitle(title)} // klik gaar til titel-side
                                     >
                                         <img
                                             src={title.image || title.poster || placeholderImage}
@@ -416,7 +437,7 @@ function Individual() {
                                         <div>
                                             <h6 className="mb-0">{title.name}</h6>
                                             <p className="text-muted small mb-0">
-                                                {title.startYear && title.startYear !== 'n/a' ? title.startYear : 'Year unknown'}
+                                                {title.startYear && title.startYear !== 'n/a' ? title.startYear : 'Year unknown'} {/* viser aar eller "ukendt" */}
                                             </p>
                                         </div>
                                     </div>

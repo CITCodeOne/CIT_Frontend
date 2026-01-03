@@ -1,95 +1,98 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Card, Badge, Spinner, Button, Row, Col } from 'react-bootstrap';
-import MainDisplay from '../components/MainDisplay';
-import UserCard from '../components/UserCard';
-import ToggleButton from '../components/ToggleButton';
-import makeCarousel from '../components/MakeCarousel';
-import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates';
-import SignInOffcanvas from '../components/SignInOffcanvas';
-import { getStoredToken } from '../components/utils/ExtractJwtData';
-import { normalizeDataUrl } from '../components/utils/profileImageUtils';
-import useTitleData from '../hooks/useTitleData';
-import useAuthStatus from '../hooks/useAuthStatus';
-import mdb from '../business-logic-layer/ApiClient/ApiClient';
-import tmdb from '../business-logic-layer/TmdbIntegration';
-import placeholderImage from '../pics/Image-not-found.png';
-import ToastConfirm from '../components/utils/ToastUtil';
-import '../style/CTitlePage.css';
+// Reagerer paa URL, data-hooks og visuelle komponenter
+import { useState, useEffect } from 'react'; // React hooks til lokal tilstand og sideeffekter
+import { useParams, useNavigate } from 'react-router-dom'; // Laeser URL parametre og navigerer
+import { Container, Card, Badge, Spinner, Button, Row, Col } from 'react-bootstrap'; // UI byggeklodser
+import MainDisplay from '../components/MainDisplay'; // Overordnet layout for detail-side
+import UserCard from '../components/UserCard'; // Viser bruger eller anmelder info
+import ToggleButton from '../components/ToggleButton'; // Simpel on/off knap til bookmarks
+import makeCarousel from '../components/MakeCarousel'; // Hjaelper med vandret carousel render
+import { LoadingState, ErrorState, NotFoundState } from '../components/PageStates'; // Standard tilstande
+import SignInOffcanvas from '../components/SignInOffcanvas'; // Sidepanel til login prompt
+import { getStoredToken } from '../components/utils/ExtractJwtData'; // Laeser JWT fra storage
+import { normalizeDataUrl } from '../components/utils/profileImageUtils'; // Gor profilbilleder brugbare
+import useTitleData from '../hooks/useTitleData'; // Custom hook der samler titeldata + handlinger
+import useAuthStatus from '../hooks/useAuthStatus'; // Checker om bruger er logget ind
+import mdb from '../business-logic-layer/ApiClient/ApiClient'; // Eget backend API klient
+import tmdb from '../business-logic-layer/TmdbIntegration'; // TMDB helper til plakater/billeder
+import placeholderImage from '../pics/Image-not-found.png'; // Fallback billede hvis intet findes
+import ToastConfirm from '../components/utils/ToastUtil'; // Toast/dialog helper
+import '../style/CTitlePage.css'; // CSS for denne side
 
 /**
  * Title Page - Display movie/show details with cast, reviews, and similar titles
  */
 
 function Title() {
-    const { pageId, titleId, } = useParams();
-    const navigate = useNavigate();
-    const { isSignedIn, userId } = useAuthStatus();
+    const { pageId, titleId } = useParams(); // Henter side-id og titel-id direkte fra URL
+    const navigate = useNavigate(); // Bruges til at hoppe til andre sider (personer, titler)
+    const { isSignedIn, userId } = useAuthStatus(); // Status for om brugeren er logget ind samt id
 
+    // Henter al titelrelateret data og handlinger fra custom hook
     const {
-        title,
-        loading,
-        error,
-        cast,
-        loadingCast,
-        reviews,
-        loadingReviews,
-        isBookmarked,
-        toggleBookmark,
-        userRating,
-        userReview,
-        setUserReview,
-        loadingUserRating,
-        updateUserRating,
-        deleteUserRating
-    } = useTitleData(titleId, userId, isSignedIn, pageId); //Parsed page id from URL as required by api.client bookmark calls on main title
+        title, // Selve titel-objektet (navn, aar, plot, billeder)
+        loading, // Loader-flag for hoveddata
+        error, // Fejlbesked hvis kaldet fejler
+        cast, // Liste over skuespillere
+        loadingCast, // Loader-flag for cast
+        reviews, // Liste over anmeldelser fra andre brugere
+        loadingReviews, // Loader-flag for anmeldelser
+        isBookmarked, // Om hovedtitlen er bookmarket af brugeren
+        toggleBookmark, // Funktion der skifter bookmark state for hovedtitlen
+        userRating, // Brugerens gemte rating
+        userReview, // Brugerens gemte anmeldelse
+        setUserReview, // Setter til lokal tekst (ikke brugt direkte her)
+        loadingUserRating, // Loader-flag for egen rating/anmeldelse
+        updateUserRating, // Gemmer/overskriver rating + tekst
+        deleteUserRating // Sletter egen rating
+    } = useTitleData(titleId, userId, isSignedIn, pageId); // pageId er paakraevet til bookmark kald
 
-    // Local state
-    const [tempRating, setTempRating] = useState(0);
-    const [tempReviewText, setTempReviewText] = useState('');
-    const [submitStatus, setSubmitStatus] = useState(null);
-    const [showSignIn, setShowSignIn] = useState(false);
-    const [tmdbPoster, setTmdbPoster] = useState(null);
-    const [castPhotos, setCastPhotos] = useState({});
-    const [mdbSimilarTitles, setMdbSimilarTitles] = useState([]);
-    const [loadingSimilar, setLoadingSimilar] = useState(false);
-    const [similarBookmarks, setSimilarBookmarks] = useState({});
-    const [similarPosters, setSimilarPosters] = useState({});
-    const [userAvatar, setUserAvatar] = useState(placeholderImage);
-    const [confirmDelete, setConfirmDelete] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
+    // Lokal visnings- og UI-tilstand
+    const [tempRating, setTempRating] = useState(0); // Midlertidig rating foer submit
+    const [tempReviewText, setTempReviewText] = useState(''); // Midlertidig anmeldelsestekst foer submit
+    const [submitStatus, setSubmitStatus] = useState(null); // Kan bruges til feedback (ikke vist lige nu)
+    const [showSignIn, setShowSignIn] = useState(false); // Styrer visning af login-panel
+    const [tmdbPoster, setTmdbPoster] = useState(null); // Plakat hentet fra TMDB
+    const [castPhotos, setCastPhotos] = useState({}); // Kort: actor-navn -> foto-URL
+    const [mdbSimilarTitles, setMdbSimilarTitles] = useState([]); // Lignende titler fra backend
+    const [loadingSimilar, setLoadingSimilar] = useState(false); // Loader-flag for lignende titler
+    const [similarBookmarks, setSimilarBookmarks] = useState({}); // Kort: pageId -> bookmarked bool
+    const [similarPosters, setSimilarPosters] = useState({}); // Kort: pageId -> plakat-URL
+    const [userAvatar, setUserAvatar] = useState(placeholderImage); // Viser brugerens billede eller fallback
+    const [confirmDelete, setConfirmDelete] = useState(false); // Styrer dialog for sletning af rating
+    const [toastMessage, setToastMessage] = useState(''); // Tekst til korte beskeder/toasts
 
+    // Hoved-bookmark knap for selve titlen
     const handleMainBookmarkClick = async () => {
         if (!isSignedIn) {
-            setToastMessage('Please sign in to bookmark titles.');
-            setShowSignIn(true);
-            setTimeout(() => setToastMessage(''), 2500);
-            return;
+            setToastMessage('Please sign in to bookmark titles.'); // Vis besked hvis ikke logget ind
+            setShowSignIn(true); // Aabn login-panel
+            setTimeout(() => setToastMessage(''), 2500); // Fjern besked efter kort tid
+            return; // Stop tidligt
         }
 
-        const willBeBookmarked = !isBookmarked;
+        const willBeBookmarked = !isBookmarked; // Forventet ny tilstand efter toggle
         try {
-            await toggleBookmark();
-            setToastMessage(willBeBookmarked ? 'Bookmark added.' : 'Bookmark removed.');
+            await toggleBookmark(); // Kalder hook-funktionen der rammer backend
+            setToastMessage(willBeBookmarked ? 'Bookmark added.' : 'Bookmark removed.'); // Feedback til bruger
         } catch (err) {
             console.error('Failed toggling bookmark:', err);
-            setToastMessage('Failed to update bookmark.');
+            setToastMessage('Failed to update bookmark.'); // Fejlbesked
         } finally {
-            setTimeout(() => setToastMessage(''), 2500);
+            setTimeout(() => setToastMessage(''), 2500); // Ryd besked efter 2.5s uanset udfald
         }
     };
 
-    // Fetch TMDB poster
+    // Henter TMDB-plakat hvis vi kender navn og type
     useEffect(() => {
         const fetchPoster = async () => {
-            if (title?.name && title?.mediaType) {
+            if (title?.name && title?.mediaType) { // Kraever mindst navn og type (film/serie)
                 try {
                     const posterUrl = await tmdb.getTitlePoster(
-                        title.name,
-                        title.mediaType,
-                        title.startYear
+                        title.name, // Navn bruges til soegning
+                        title.mediaType, // Film/serie afgoer TMDB endpoint
+                        title.startYear // Aar hjaelper med at ramme den rette titel
                     );
-                    if (posterUrl) setTmdbPoster(posterUrl);
+                    if (posterUrl) setTmdbPoster(posterUrl); // Gem URL hvis fundet
                 } catch (err) {
                     console.error('Error fetching TMDB poster:', err);
                 }
@@ -98,14 +101,14 @@ function Title() {
         fetchPoster();
     }, [title]);
 
-    // Fetch TMDB cast photos
+    // Henter TMDB-billeder til skuespillere
     useEffect(() => {
         const fetchCastPhotos = async () => {
-            if (cast && cast.length > 0) {
+            if (cast && cast.length > 0) { // Kun hvis vi har cast-data
                 try {
-                    const actorNames = cast.map(actor => actor.name);
-                    const photos = await tmdb.getMultiplePersonPhotos(actorNames);
-                    setCastPhotos(photos);
+                    const actorNames = cast.map(actor => actor.name); // Traek kun navne ud
+                    const photos = await tmdb.getMultiplePersonPhotos(actorNames); // Batch-kald til TMDB
+                    setCastPhotos(photos); // Gem kort med navn -> billede
                 } catch (err) {
                     console.error('Error fetching cast photos:', err);
                 }
@@ -114,69 +117,67 @@ function Title() {
         fetchCastPhotos();
     }, [cast]);
 
-    // Fetch similar titles (backend API only)
+    // Henter lignende titler fra backend (ikke TMDB)
     useEffect(() => {
         const fetchSimilarTitles = async () => {
-            if (!titleId) return;
+            if (!titleId) return; // Hvis vi ikke kender titel-id, stop
 
             try {
-                setLoadingSimilar(true);
-                const backendSimilar = await mdb.apiv2.titles.getSimilar(titleId);
+                setLoadingSimilar(true); // Slaa loader flag til
+                const backendSimilar = await mdb.apiv2.titles.getSimilar(titleId); // Kald backend
 
                 if (backendSimilar && backendSimilar.length > 0) {
-                    setMdbSimilarTitles(backendSimilar.slice(0, 20));
+                    setMdbSimilarTitles(backendSimilar.slice(0, 20)); // Begraens til 20 for overskuelighed
                 } else {
-                    setMdbSimilarTitles([]);
+                    setMdbSimilarTitles([]); // Ingen resultater
                 }
             } catch (err) {
                 console.error('Error fetching similar titles:', err);
-                setMdbSimilarTitles([]);
+                setMdbSimilarTitles([]); // Ryd ved fejl
             } finally {
-                setLoadingSimilar(false);
+                setLoadingSimilar(false); // Sluk loader igen
             }
         };
 
         fetchSimilarTitles();
     }, [titleId, title]);
 
-    // Fetch TMDB posters for similar titles
+    // Henter TMDB-plakater til lignende titler hvis backend ikke gav en
     useEffect(() => {
         const fetchSimilarPosters = async () => {
             if (mdbSimilarTitles.length === 0) {
-                setSimilarPosters({});
+                setSimilarPosters({}); // Tom liste -> intet at hente
                 return;
             }
 
             try {
                 const posterPromises = mdbSimilarTitles.map(async (similar) => {
                     try {
-                        // Use pageId as the canonical key for similar titles
-                        const key = similar.pageId || similar.id || null;
+                        const key = similar.pageId || similar.id || null; // Brug pageId som noegle
 
-                        // If the similar title already has a poster from MDB API, use it
                         if (similar.poster) {
-                            return { key, poster: similar.poster };
+                            return { key, poster: similar.poster }; // Brug backend-plakat hvis vi allerede har den
                         }
 
-                        // Otherwise, fetch it from TMDB
+                        // Ellers bed TMDB om en plakat
                         const posterUrl = await tmdb.getTitlePoster(
-                            similar.name,
-                            similar.mediaType || 'movie',
-                            similar.startYear
+                            similar.name, // Titelnavn
+                            similar.mediaType || 'movie', // Default til film hvis ukendt
+                            similar.startYear // Hjaelp til at finde korrekt titel
                         );
-                        return { key, poster: posterUrl };
+                        return { key, poster: posterUrl }; // Kan vaere null hvis ikke fundet
                     } catch (err) {
                         console.error(`Error fetching poster for ${similar.name}:`, err);
                         return { key: similar.pageId || similar.id || null, poster: null };
                     }
                 });
 
-                const posterResults = await Promise.all(posterPromises);
-                const posterMap = {};
+                const posterResults = await Promise.all(posterPromises); // Vent paa alle async kald
+                const posterMap = {}; // Byg nyt kort pageId -> plakat
                 posterResults.forEach(({ key, poster }) => {
-                    if (key && poster) posterMap[String(key)] = poster;
+                    if (key && poster) posterMap[String(key)] = poster; // Gem kun hvis begge findes
                 });
-                setSimilarPosters(posterMap);
+                setSimilarPosters(posterMap); // Opdater state
             } catch (err) {
                 console.error('Error fetching similar title posters:', err);
             }
@@ -185,50 +186,49 @@ function Title() {
         fetchSimilarPosters();
     }, [mdbSimilarTitles]);
 
-    // Check bookmark status for similar titles (fetch bookmarks once)
+    // Tjekker om lignende titler allerede er bookmarket (hentes samlet)
     useEffect(() => {
         const checkSimilarBookmarks = async () => {
             if (!isSignedIn || !userId || mdbSimilarTitles.length === 0) {
-                setSimilarBookmarks({});
+                setSimilarBookmarks({}); // Ryd hvis ingen bruger eller ingen titler
                 return;
             }
 
             try {
-                const token = getStoredToken();
-                // Fetch all bookmarks for the user in one call
-                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token });
+                const token = getStoredToken(); // JWT til auth
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, { authToken: token }); // Hent alle bookmarks
 
-                const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId)));
+                const bookmarkedSet = new Set((bookmarks || []).map(b => String(b.pageId))); // Hurtig lookup
 
-                const bookmarkMap = {};
+                const bookmarkMap = {}; // pageId -> true/false
                 mdbSimilarTitles.forEach(similar => {
                     if (similar.pageId) bookmarkMap[similar.pageId] = bookmarkedSet.has(String(similar.pageId));
                 });
 
-                setSimilarBookmarks(bookmarkMap);
+                setSimilarBookmarks(bookmarkMap); // Opdater state saa knapper kan vise aktiv/inaktiv
             } catch (err) {
                 console.error('Error checking similar title bookmarks:', err);
-                setSimilarBookmarks({});
+                setSimilarBookmarks({}); // Fald tilbage til tomt kort ved fejl
             }
         };
 
         checkSimilarBookmarks();
     }, [isSignedIn, userId, mdbSimilarTitles]);
 
-    // Fetch user avatar
+    // Henter bruger-avatar til egne anmeldelser
     useEffect(() => {
         const fetchUserAvatar = async () => {
             if (!isSignedIn || !userId) {
-                setUserAvatar(placeholderImage);
+                setUserAvatar(placeholderImage); // Brug fallback hvis ingen bruger
                 return;
             }
 
             try {
-                const user = await mdb.apiv2.user.get(userId);
-                setUserAvatar(user && user.image ? normalizeDataUrl(user.image) : placeholderImage);
+                const user = await mdb.apiv2.user.get(userId); // Hent brugerprofil
+                setUserAvatar(user && user.image ? normalizeDataUrl(user.image) : placeholderImage); // Normaliser data-URL hvis sat
             } catch (err) {
                 console.error('Failed to fetch user avatar:', err);
-                setUserAvatar(placeholderImage);
+                setUserAvatar(placeholderImage); // Fallback ved fejl
             }
         };
 
@@ -237,58 +237,60 @@ function Title() {
 
     const handleSimilarTitleBookmark = async (similarTitleId, newState) => {
         if (!isSignedIn || !userId) {
-            setToastMessage('Please sign in to bookmark titles');
-            setShowSignIn(true);
-            setTimeout(() => setToastMessage(''), 2500);
+            setToastMessage('Please sign in to bookmark titles'); // Kraever login
+            setShowSignIn(true); // Vis login-panel
+            setTimeout(() => setToastMessage(''), 2500); // Ryd besked efter kort tid
             return;
         }
 
         try {
-            const token = getStoredToken();
+            const token = getStoredToken(); // JWT til auth
             if (newState) {
-                await mdb.apiv2.user.addBookmark(userId, similarTitleId, { authToken: token });
+                await mdb.apiv2.user.addBookmark(userId, similarTitleId, { authToken: token }); // Tilfoej
             } else {
-                await mdb.apiv2.user.removeBookmark(userId, similarTitleId, { authToken: token });
+                await mdb.apiv2.user.removeBookmark(userId, similarTitleId, { authToken: token }); // Fjern
             }
-            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState }));
-            setToastMessage(newState ? 'Bookmark added.' : 'Bookmark removed.');
+            setSimilarBookmarks(prev => ({ ...prev, [similarTitleId]: newState })); // Optimistisk UI-opdatering
+            setToastMessage(newState ? 'Bookmark added.' : 'Bookmark removed.'); // Feedback
         } catch (err) {
             console.error('Error toggling similar title bookmark:', err);
-            setToastMessage('Failed to update bookmark.');
+            setToastMessage('Failed to update bookmark.'); // Fejlfeedback
         } finally {
-            setTimeout(() => setToastMessage(''), 2500);
+            setTimeout(() => setToastMessage(''), 2500); // Ryd besked
         }
     };
 
     const navigateToIndividual = (person) => {
-        const targetPageId = person?.pageId && person.pageId !== 'n/a' ? person.pageId : null;
-        const targetIndividualId = person?.id && person.id !== 'n/a' ? person.id : null;
+        const targetPageId = person?.pageId && person.pageId !== 'n/a' ? person.pageId : null; // Valider pageId
+        const targetIndividualId = person?.id && person.id !== 'n/a' ? person.id : null; // Valider individ-id
 
-        if (!targetPageId || !targetIndividualId) return;
+        if (!targetPageId || !targetIndividualId) return; // Stop hvis data mangler
 
-        navigate(`/page/${targetPageId}/individual/${targetIndividualId}`);
+        navigate(`/page/${targetPageId}/individual/${targetIndividualId}`); // Hop til personsiden
     };
 
     const handleSubmitReview = async () => {
         if (tempRating === 0) {
-            alert('Please select a rating before submitting');
+            alert('Please select a rating before submitting'); // Kraever mindst en rating
             return;
         }
 
         try {
-            await updateUserRating(tempRating, tempReviewText);
-            setToastMessage('Your rating has been submitted.');
+            await updateUserRating(tempRating, tempReviewText); // Gem rating + tekst via hook
+            setToastMessage('Your rating has been submitted.'); // Bekraeftelse
         } catch (err) {
-            setToastMessage('Failed to submit review. Please try again.');
+            setToastMessage('Failed to submit review. Please try again.'); // Fejlfeedback
         } finally {
-            setTimeout(() => setToastMessage(''), 3000);
+            setTimeout(() => setToastMessage(''), 3000); // Fjern besked efter 3s
         }
     };
 
-    if (loading) return <LoadingState />;
-    if (error) return <ErrorState error={error} />;
-    if (!title) return <NotFoundState message="No title found" />;
+    // Enkel tidlig retur for laese/fejl/404
+    if (loading) return <LoadingState />; // Viser spinner mens data hentes
+    if (error) return <ErrorState error={error} />; // Viser fejlkomponent med besked
+    if (!title) return <NotFoundState message="No title found" />; // Hvis ingen titel blev fundet
 
+    // Forbereder data til MainDisplay komponenten
     const customTitle = (
         <div>
             {title.name || 'No Title'}{' '}
@@ -296,17 +298,17 @@ function Title() {
                 <span className="title-year-text">({title.startYear})</span>
             )}
         </div>
-    );
+    ); // Viser navn og aar i samme titelblok
 
-    const badges = [];
+    const badges = []; // Smaa badges under titlen
     if (title.mediaType) {
-        badges.push({ text: title.mediaType, variant: 'primary' });
+        badges.push({ text: title.mediaType, variant: 'primary' }); // Film/serie badge
     }
     if (title.runtime > 0) {
-        badges.push({ text: `${title.runtime} min`, variant: 'secondary' });
+        badges.push({ text: `${title.runtime} min`, variant: 'secondary' }); // Spilletid badge
     }
 
-    const sections = [];
+    const sections = []; // Sektioner der vises i MainDisplay
     if (title.genres?.length > 0) {
         sections.push({
             title: 'Genres',
@@ -315,48 +317,48 @@ function Title() {
                     {genre.name || genre}
                 </Badge>
             ))
-        });
+        }); // Liste af genre badges
     }
     if (title.plotPre || title.plot) {
         sections.push({
             title: 'Overview',
             content: <p className="text-muted">{title.plotPre || title.plot}</p>
-        });
+        }); // Viser beskrivelse/plot
     }
 
     return (
         <MainDisplay
-            image={tmdbPoster || title.image || placeholderImage}
-            title={customTitle}
-            subtitle={null}
-            rating={title.rating}
-            badges={badges}
-            sections={sections}
+            image={tmdbPoster || title.image || placeholderImage} // Viser TMDB-plakat, ellers backend, ellers fallback
+            title={customTitle} // Navn + aar
+            subtitle={null} // Ingen undertekst lige nu
+            rating={title.rating} // Officiel rating fra data
+            badges={badges} // Smaa badges under titlen
+            sections={sections} // Tekstsektioner som genres og overview
             bookmark={{
-                itemId: title.pageId,
-                isBookmarked: isBookmarked,
-                onToggle: handleMainBookmarkClick
+                itemId: title.pageId, // Brug pageId som noegle for bookmark
+                isBookmarked: isBookmarked, // Aktuel bookmark-tilstand
+                onToggle: handleMainBookmarkClick // Handler der kalder backend og giver toast
             }}
         >
-            {/* Top Cast */}
+            {/* Top Cast - kvik visning af de mest kendte navne */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Top Cast</h4>
-                        {loadingCast ? (
+                        {loadingCast ? ( // Viser spinner mens cast loades
                             <LoadingState message="Loading cast..." />
-                        ) : cast.length === 0 ? (
+                        ) : cast.length === 0 ? ( // Ingen cast fundet
                             <p className="text-muted">No cast information available.</p>
                         ) : (
-                            <Row className="g-4 justify-content-center">
+                            <Row className="g-4 justify-content-center"> {/* Grid til top 4 cast */}
                                 {cast.slice(0, 4).map((actor) => (
                                     <Col key={actor.pageId} xs={6} sm={4} md={3} lg={3} className="text-center">
                                         <div
-                                            onClick={() => navigateToIndividual(actor)}
+                                            onClick={() => navigateToIndividual(actor)} // Klik gaar til personsiden
                                             className="top-cast-container"
                                         >
                                             <img
-                                                src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
+                                                src={castPhotos[actor.name] || actor.profilePath || placeholderImage} // TMDB foto, ellers backend, ellers fallback
                                                 alt={actor.name}
                                                 className="rounded-circle mb-3 top-cast-image"
                                             />
@@ -371,7 +373,7 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Full Cast */}
+            {/* Full Cast - komplet liste */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
@@ -386,10 +388,10 @@ function Title() {
                                     <div
                                         key={actor.pageId}
                                         className="d-flex align-items-center p-3 mb-2 border rounded bg-white cast-list-item"
-                                        onClick={() => navigateToIndividual(actor)}
+                                        onClick={() => navigateToIndividual(actor)} // Klik gaar til personsiden
                                     >
                                         <img
-                                            src={castPhotos[actor.name] || actor.profilePath || placeholderImage}
+                                            src={castPhotos[actor.name] || actor.profilePath || placeholderImage} // TMDB foto fallback
                                             alt={actor.name}
                                             className="cast-thumbnail me-3"
                                         />
@@ -405,12 +407,12 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Similar Titles */}
+            {/* Similar Titles - carousel med lignende titler */}
             <Container className="mt-4">
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Similar Titles</h4>
-                        {loadingSimilar ? (
+                        {loadingSimilar ? ( // Loader for lignende titler
                             <LoadingState message="Loading similar titles..." />
                         ) : mdbSimilarTitles.length === 0 ? (
                             <p className="text-muted">No similar titles available.</p>
@@ -418,22 +420,22 @@ function Title() {
                             <div>
                                 {makeCarousel(
                                     mdbSimilarTitles.map(similar => ({
-                                        ...similar,
-                                        title: similar.name,
-                                        subtitle: similar.startYear ? `(${similar.startYear})` : null,
-                                        isBookmarked: similarBookmarks[similar.pageId] || false,
-                                        onBookmark: handleSimilarTitleBookmark
+                                        ...similar, // Behold resten af felterne
+                                        title: similar.name, // Navn skal ind i komponentens forventede felt
+                                        subtitle: similar.startYear ? `(${similar.startYear})` : null, // Aar i parentes hvis findes
+                                        isBookmarked: similarBookmarks[similar.pageId] || false, // Brug lookup map
+                                        onBookmark: handleSimilarTitleBookmark // Kald handler med id og ny state
                                     })),
-                                    'title',
+                                    'title', // Noegle for carousel caching
                                     ({ item }) => (
                                         <div className="similar-title-card">
 
                                             <div
                                                 className="similar-poster-container"
-                                                onClick={() => navigate(`/page/${item.pageId}`)}
+                                                onClick={() => navigate(`/page/${item.pageId}`)} // Klik gaar til titel-siden
                                             >
                                                 <img
-                                                    src={similarPosters[item.pageId] || item.image || placeholderImage}
+                                                    src={similarPosters[item.pageId] || item.image || placeholderImage} // TMDB plakat fallback
                                                     alt={item.name}
                                                     className="similar-poster-image"
                                                 />
@@ -464,13 +466,13 @@ function Title() {
                 </Card>
             </Container>
 
-            {/* Reviews */}
+            {/* Reviews - egne og andres vurderinger */}
             <Container className="mt-4 mb-4" id="reviews-section">
                 <Card className="shadow-sm">
                     <Card.Body>
                         <h4 className="mb-4">Reviews</h4>
 
-                        {!isSignedIn ? (
+                        {!isSignedIn ? ( // Hvis ikke logget ind, vis opfordring
                             <Card className="mb-4 bg-light">
                                 <Card.Body className="text-center py-4">
                                     <p className="mb-2 text-muted">
@@ -481,34 +483,34 @@ function Title() {
                                     </p>
                                 </Card.Body>
                             </Card>
-                        ) : loadingUserRating ? (
+                        ) : loadingUserRating ? ( // Hvis vi henter egen rating
                             <LoadingState message="Loading your rating..." />
                         ) : (
                             <>
-                                {/* Submission feedback is shown via ToastConfirm */}
+                                {/* Feedback paa submit sker via ToastConfirm */}
 
                                 <UserCard
                                     userId={userId}
                                     username="You"
                                     avatar={userAvatar}
-                                    rating={tempRating || userRating}
-                                    content={tempReviewText || userReview}
+                                    rating={tempRating || userRating} // Viser midlertidig rating hvis valgt
+                                    content={tempReviewText || userReview} // Viser tekst der er tastet eller gemt
                                     editable={true}
                                     showRating={true}
-                                    onRatingChange={(newRating) => setTempRating(newRating)}
-                                    onContentChange={(text) => setTempReviewText(text)}
-                                    onDelete={() => setConfirmDelete(true)}
-                                    showDeleteButton={userRating > 0}
+                                    onRatingChange={(newRating) => setTempRating(newRating)} // Opdater midlertidig rating
+                                    onContentChange={(text) => setTempReviewText(text)} // Opdater midlertidig tekst
+                                    onDelete={() => setConfirmDelete(true)} // Aabn bekraeft for slet
+                                    showDeleteButton={userRating > 0} // Kun vis slet hvis der findes rating
                                     maxContentLength={0}
                                     placeholder="Write your review here... (optional)"
                                 />
 
-                                {(tempRating > 0 || tempReviewText.trim()) && (
+                                {(tempRating > 0 || tempReviewText.trim()) && ( // Kun vis submit hvis der er indhold
                                     <div className="text-end mt-2">
                                         <Button
                                             variant="primary"
                                             onClick={handleSubmitReview}
-                                            disabled={(tempRating === 0) && (userRating === 0)}
+                                            disabled={(tempRating === 0) && (userRating === 0)} // Bloker hvis ingen rating
                                         >
                                             Submit Review
                                         </Button>
@@ -517,7 +519,7 @@ function Title() {
                             </>
                         )}
 
-                        {loadingReviews ? (
+                        {loadingReviews ? ( // Loader for alle anmeldelser
                             <LoadingState message="Loading reviews..." />
                         ) : reviews.length === 0 ? (
                             <p className="text-muted">No reviews available yet.</p>
@@ -533,7 +535,7 @@ function Title() {
                                         content={review.content}
                                         editable={false}
                                         showRating={true}
-                                        maxContentLength={250}
+                                        maxContentLength={250} // Trimmer lang tekst i kort visning
                                     />
                                 ))}
                             </div>
@@ -542,12 +544,12 @@ function Title() {
                 </Card>
             </Container>
             <ToastConfirm
-                show={confirmDelete}
+                show={confirmDelete} // Styrer slet-bekraeftelse
                 message="Delete your rating?"
                 onClose={() => setConfirmDelete(false)}
                 onConfirm={async () => {
                     try {
-                        await deleteUserRating();
+                        await deleteUserRating(); // Sletter rating via hook
                         setToastMessage('Rating deleted.');
                     } catch (err) {
                         setToastMessage('Failed to delete rating.');
@@ -557,7 +559,7 @@ function Title() {
             />
 
             <ToastConfirm
-                show={!!toastMessage}
+                show={!!toastMessage} // Viser toasts for korte beskeder
                 message={toastMessage}
                 onClose={() => setToastMessage('')}
             />

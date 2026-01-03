@@ -1,76 +1,76 @@
-import { useState, useRef, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import UserBanner from "../components/UserBanner";
-import Rating from "../components/Rating";
-import useAuthStatus from "../hooks/useAuthStatus";
-import { getStoredToken } from "../components/utils/ExtractJwtData";
-import mdb from "../business-logic-layer/ApiClient/ApiClient";
-import defaultAvatar from "../pics/DefaultProfilePicture.jpg";
-import placeholderImage from "../pics/Image-not-found.png";
-import ToastConfirm from '../components/utils/ToastUtil';
-import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils";
-import { formatPlotPre } from "../components/utils/PlotPreFormatter";
-import { LoadingState } from '../components/PageStates';
+// Side der viser en brugers profil, ratings og bookmarks
+import { useState, useRef, useEffect } from "react"; // React hooks til tilstand, referencer og sideeffekter
+import { useParams, useNavigate, Link } from "react-router-dom"; // Laeser URL parametre, navigerer og laver links
+import UserBanner from "../components/UserBanner"; // Topbanner med navn, email, counts og avatar
+import Rating from "../components/Rating"; // Stjernerating komponent
+import useAuthStatus from "../hooks/useAuthStatus"; // Fortaeller om brugeren er logget ind og hvilket id
+import { getStoredToken } from "../components/utils/ExtractJwtData"; // Henter gemt JWT token fra storage
+import mdb from "../business-logic-layer/ApiClient/ApiClient"; // Egen API klient mod backend
+import defaultAvatar from "../pics/DefaultProfilePicture.jpg"; // Fallback profilbillede
+import placeholderImage from "../pics/Image-not-found.png"; // Fallback plakat ved manglende billede
+import ToastConfirm from '../components/utils/ToastUtil'; // Lille modal/toast til bekraeftelser
+import { encodeImageToBase64 } from "../components/utils/ImageBase64Utils"; // Konverterer uploadet billede til base64
+import { formatPlotPre } from "../components/utils/PlotPreFormatter"; // Kutter/formatterer plot-tekst
+import { LoadingState } from '../components/PageStates'; // Genbrug spinner visning
 
 export default function User() {
-    const { userId } = useParams();
-    const navigate = useNavigate();
-    const fileInputRef = useRef(null); // for avatar file input
-    const { isSignedIn, userId: tokenUserId } = useAuthStatus();
+    const { userId } = useParams(); // Fanger bruger-id fra URL'en
+    const navigate = useNavigate(); // Bruges til at hoppe til andre sider
+    const fileInputRef = useRef(null); // Ref til skjult file input for avatar upload
+    const { isSignedIn, userId: tokenUserId } = useAuthStatus(); // Login-status og id fra token
 
-    // State for user data
-    const [userData, setUserData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    // Grunddata for profilen
+    const [userData, setUserData] = useState(null); // Objekt med navn, email, rolle, tider m.m.
+    const [loading, setLoading] = useState(true); // Viser loader mens vi henter data
+    const [error, setError] = useState(null); // Fejlbesked hvis noget gaar galt
 
-    // dummy ratings list as state
+    // Liste over ratings brugeren har givet
     const [ratedTitles, setRatedTitles] = useState([]);
 
-    // get latest 3 ratings
+    // De seneste 3 ratings bruges i toppen
     const latestRatedTitles = ratedTitles.slice(0, 3);
 
-    // dummy bookmarks as state
+    // Liste over sider/titler/personer brugeren har bookmarket
     const [bookmarkedPages, setBookmarkedPages] = useState([]);
-    const [removingRatingId, setRemovingRatingId] = useState(null);
-    const [removingBookmarkId, setRemovingBookmarkId] = useState(null);
+    const [removingRatingId, setRemovingRatingId] = useState(null); // Hjaelper med "Removing..." knap-state
+    const [removingBookmarkId, setRemovingBookmarkId] = useState(null); // Samme men for bookmarks
 
-    // Fetch user data on mount
+    // Henter brugerdata, ratings og bookmarks naar siden aabnes
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                setLoading(true);
-                setError(null);
+                setLoading(true); // Taend loader
+                setError(null); // Nulstil fejl
 
-                // Fetch user profile (include auth token when available)
-                const token = getStoredToken();
-                const authOptions = token ? { authToken: token } : undefined;
+                // Hent brugerprofil (tag token med hvis vi er logget ind)
+                const token = getStoredToken(); // JWT fra localStorage
+                const authOptions = token ? { authToken: token } : undefined; // Bruges af API klienten
 
-                const user = await mdb.apiv2.user.get(userId, authOptions);
-                setUserData(user);
+                const user = await mdb.apiv2.user.get(userId, authOptions); // Hent profil
+                setUserData(user); // Gem i state
 
-                // try to fetch stored profile image from backend (GET /users/{userId}/profile-image)
+                // Forsog at hente gemt profilbillede fra backend
                 let apiProfileImage = null;
                 try {
-                    const imgDto = await mdb.apiv2.user.getProfileImage(userId, authOptions);
-                    apiProfileImage = imgDto?.profileImage || imgDto?.ProfileImage || null;
+                    const imgDto = await mdb.apiv2.user.getProfileImage(userId, authOptions); // GET /users/{id}/profile-image
+                    apiProfileImage = imgDto?.profileImage || imgDto?.ProfileImage || null; // API kan returnere forskelligt felt-navn
                 } catch (err) {
-                    // ignore 404 (no image) but log other errors
+                    // Ignorer 404 (intet billede) men log andre fejl
                     if (!err || err.status !== 404) console.debug('getProfileImage failed', err);
                 }
 
-                const initialAvatar = apiProfileImage || user?.image || null;
-                setAvatarUrl(initialAvatar);
-                setOriginalAvatarUrl(initialAvatar);
+                const initialAvatar = apiProfileImage || user?.image || null; // Vaelg server-billede eller brugerfelt
+                setAvatarUrl(initialAvatar); // Vises i UI
+                setOriginalAvatarUrl(initialAvatar); // Bruges til fortryd/undo
 
-
-                // Fetch user ratings and bookmarks (use correct API signatures)
+                // Hent ratings fra backend
                 const ratings = await mdb.apiv2.user.getRatings(userId, authOptions);
 
-                // Enrich each rating with title data (poster, title name, year, mediaType, short plot)
+                // Berig hver rating med titeldata (plakat, navn, aar, type, kort plot)
                 const enrichedRatings = await Promise.all(
                     ratings.map(async (r) => {
                         try {
-                            const title = await mdb.apiv2.titles.getById(r.titleId, authOptions);
+                            const title = await mdb.apiv2.titles.getById(r.titleId, authOptions); // Hent tilhoerende titel
                             return {
                                 ...r,
                                 title: title?.name ?? title?.title ?? 'Unknown',
@@ -80,7 +80,7 @@ export default function User() {
                                 plotPre: title?.plot ? String(title.plot).slice(0, 200) : '',
                                 pageId: title?.pageId ?? null,
                             };
-                        } catch (err) {
+                        } catch (err) { // Ved fejl, brug placeholders
                             return {
                                 ...r,
                                 title: 'Unknown',
@@ -94,24 +94,24 @@ export default function User() {
                     })
                 );
 
-                enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time));
-                setRatedTitles(enrichedRatings);
+                enrichedRatings.sort((a, b) => new Date(b.time) - new Date(a.time)); // Seneste foerst
+                setRatedTitles(enrichedRatings); // Gem i state
 
-                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions);
+                const bookmarks = await mdb.apiv2.user.getBookmarks(userId, authOptions); // Hent bookmarks
 
-                // Enrich bookmarks: a bookmark references a pageId which may point to a title or an individual
+                // Berig bookmarks: et pageId kan pege paa titel eller person
                 const enrichedBookmarks = await Promise.all(
                     bookmarks.map(async (b) => {
                         try {
-                            // resolve page to find whether it's a title or individual
+                            // Slaa op et pageId for at se om det er titel eller individ
                             const pageRef = await mdb.apiv2.page.getById(b.pageId, authOptions);
 
-                            // API returns { pageId, tconst, iconst }
-                            const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null;
-                            const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null;
+                            // API giver { pageId, tconst, iconst }
+                            const tconst = pageRef?.tconst ? String(pageRef.tconst).trim() : null; // Titel id
+                            const iconst = pageRef?.iconst ? String(pageRef.iconst).trim() : null; // Individ id
 
-                            if (tconst) {
-                                const title = await mdb.apiv2.titles.getById(tconst, authOptions);
+                            if (tconst) { // Hvis det er en titel
+                                const title = await mdb.apiv2.titles.getById(tconst, authOptions); // Hent titel
                                 return {
                                     ...b,
                                     kind: 'title',
@@ -123,8 +123,8 @@ export default function User() {
                                 };
                             }
 
-                            if (iconst) {
-                                const individual = await mdb.apiv2.individuals.getById(iconst, authOptions);
+                            if (iconst) { // Hvis det er en person
+                                const individual = await mdb.apiv2.individuals.getById(iconst, authOptions); // Hent person
                                 return {
                                     ...b,
                                     kind: 'individual',
@@ -136,7 +136,7 @@ export default function User() {
                                 };
                             }
 
-                            // fallback when pageRef doesn't contain ids
+                            // Fallback hvis pageRef ikke har id'er
                             return {
                                 ...b,
                                 kind: 'unknown',
@@ -146,7 +146,7 @@ export default function User() {
                                 mediaType: 'unknown',
                                 pageId: b.pageId,
                             };
-                        } catch (err) {
+                        } catch (err) { // Hvis vi ikke kan loese pageId
                             return {
                                 ...b,
                                 kind: 'error',
@@ -160,12 +160,12 @@ export default function User() {
                     })
                 );
 
-                enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time));
-                setBookmarkedPages(enrichedBookmarks);
+                enrichedBookmarks.sort((a, b) => new Date(b.time) - new Date(a.time)); // Seneste foerst
+                setBookmarkedPages(enrichedBookmarks); // Gem i state
             } catch (err) {
-                setError(err.message);
+                setError(err.message); // Gem fejl
             } finally {
-                setLoading(false);
+                setLoading(false); // Sluk loader uanset udfald
             }
         };
 
@@ -177,53 +177,53 @@ export default function User() {
     // get latest 3 bookmarks
     const latestBookmarks = bookmarkedPages.slice(0, 3);
 
-    const [avatarUrl, setAvatarUrl] = useState(userData?.image || null);
-    const [originalAvatarUrl, setOriginalAvatarUrl] = useState(userData?.image || null);
-    const [pendingAvatarFile, setPendingAvatarFile] = useState(null);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [shareMessage, setShareMessage] = useState("");
-    const [confirmDeleteRatingId, setConfirmDeleteRatingId] = useState(null);
-    const [confirmDeleteBookmarkId, setConfirmDeleteBookmarkId] = useState(null);
+    // Avatar og redigeringstilstand
+    const [avatarUrl, setAvatarUrl] = useState(userData?.image || null); // Det billede vi viser nu
+    const [originalAvatarUrl, setOriginalAvatarUrl] = useState(userData?.image || null); // Billede vi kan gaa tilbage til
+    const [pendingAvatarFile, setPendingAvatarFile] = useState(null); // Fil valgt men ikke gemt endnu
+    const [isEditMode, setIsEditMode] = useState(false); // Om brugeren er i rediger-tilstand
+    const [shareMessage, setShareMessage] = useState(""); // Tekster til toasts/beskeder
+    const [confirmDeleteRatingId, setConfirmDeleteRatingId] = useState(null); // Hvilken rating der skal slettes
+    const [confirmDeleteBookmarkId, setConfirmDeleteBookmarkId] = useState(null); // Hvilket bookmark der skal slettes
 
     // Consider tokenUserId or userId may be string/number — compare as strings for robustness
-    const isOwnProfile = isSignedIn && String(tokenUserId) === String(userId);
+    const isOwnProfile = isSignedIn && String(tokenUserId) === String(userId); // Sammenlign som tekst for sikkerhed
 
     const handleToggleEditMode = () => {
-        if (!isOwnProfile) return;
-        // if turning off edit mode, save pending avatar if present
-        const turningOff = isEditMode;
-        if (turningOff && pendingAvatarFile) {
+        if (!isOwnProfile) return; // Kun ejeren maa redigere
+        const turningOff = isEditMode; // Vi er ved at slukke redigering?
+        if (turningOff && pendingAvatarFile) { // Hvis vi lukker og der er valgt nyt billede
             (async () => {
                 try {
                     const token = getStoredToken();
-                    if (!token) throw new Error('Not authenticated');
-                    // Encode the selected File to base64 and upload
+                    if (!token) throw new Error('Not authenticated'); // Skal vaere logget ind
+                    // Konverter valgt fil til base64 og upload
                     const dataUrl = pendingAvatarFile ? await encodeImageToBase64(pendingAvatarFile) : null;
                     if (!dataUrl) throw new Error('No image data to upload');
 
-                    // Use ApiClient v2 upsert endpoint which includes consistent options handling
+                    // Brug v2 endpoint der gemmer profilbillede
                     await mdb.apiv2.user.upsertProfileImage(userId, dataUrl, { authToken: token });
 
-                    setUserData((prev) => ({ ...(prev || {}), image: dataUrl }));
-                    setOriginalAvatarUrl(dataUrl);
+                    setUserData((prev) => ({ ...(prev || {}), image: dataUrl })); // Opdater brugerobjektet
+                    setOriginalAvatarUrl(dataUrl); // Nyt "original" til undo fremover
                     if (avatarUrl && avatarUrl.startsWith('blob:')) {
-                        try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
+                        try { URL.revokeObjectURL(avatarUrl); } catch (e) {} // Ryd blob-URL fra hukommelse
                     }
-                    setPendingAvatarFile(null);
-                    setShareMessage('Profile image saved');
+                    setPendingAvatarFile(null); // Ingen ventende fil mere
+                    setShareMessage('Profile image saved'); // Kort feedback
                     setTimeout(() => setShareMessage(''), 2000);
                 } catch (err) {
                     console.error('Failed to save profile image', err);
-                    setShareMessage('Failed to save image');
+                    setShareMessage('Failed to save image'); // Fejlbesked til brugeren
                     setTimeout(() => setShareMessage(''), 3000);
                 }
             })();
         }
 
-        setIsEditMode((prev) => !prev);
+        setIsEditMode((prev) => !prev); // Skift til/fra redigering
     };
 
-    // share profile handler - copies profile URL to clipboard or shows fallback message
+    // Del profil: kopierer URL eller viser fejl
     const handleShareClick = async () => {
         const profileUrl = window.location.href;
 
@@ -242,13 +242,13 @@ export default function User() {
         }
     };
 
-    // avatar click handler
+    // Klik paa avatar: aabner filvalg hvis ejer og i redigering
     const handleAvatarClick = () => {
         if (!isOwnProfile || !isEditMode) return;
         fileInputRef.current?.click();
     };
 
-    // avatar file change handler
+    // Naar brugeren vaelger en ny avatar-fil
     const handleAvatarFileChange = (event) => {
         const file = event.target.files?.[0];
         if (!file) return;
@@ -259,7 +259,7 @@ export default function User() {
         setPendingAvatarFile(file);
         setAvatarUrl(newUrl);
 
-        // keep selection in-memory only; encode/upload when the user saves (leaving edit mode)
+        // Behold valget kun i hukommelsen; upload foerst naar man slukker redigering
 
         // reset input so same file can be selected later
         event.target.value = null;
@@ -267,24 +267,24 @@ export default function User() {
 
     const handleUndoAvatar = () => {
         if (pendingAvatarFile && avatarUrl && avatarUrl.startsWith('blob:')) {
-            try { URL.revokeObjectURL(avatarUrl); } catch (e) {}
+            try { URL.revokeObjectURL(avatarUrl); } catch (e) {} // Ryd midlertidig blob-URL
         }
-        setPendingAvatarFile(null);
-        setAvatarUrl(originalAvatarUrl || defaultAvatar);
-        if (fileInputRef.current) fileInputRef.current.value = null;
+        setPendingAvatarFile(null); // Drop valg
+        setAvatarUrl(originalAvatarUrl || defaultAvatar); // Gaa tilbage til oprindelige billede
+        if (fileInputRef.current) fileInputRef.current.value = null; // Nulstil file input
     };
 
-    // navigate to user's full ratings list
+    // Gaa til fuld ratings-liste for brugeren
     const handleBrowseAllRatings = () => {
         navigate(`/user/${userId}/ratings`);
     };
 
-    // navigate to user's full bookmarks list
+    // Gaa til fuld bookmark-liste for brugeren
     const handleBrowseAllBookmarks = () => {
         navigate(`/user/${userId}/bookmarks`);
     };
 
-    // delete bookmark handler - calls API
+    // Slet bookmark via API
     const handleDeleteBookmark = async (pageId) => {
         if (!isSignedIn) {
             setShareMessage("You must be logged in to remove bookmarks.");
@@ -315,7 +315,7 @@ export default function User() {
         }
     };
 
-    // delete rating handler - calls API
+    // Slet rating via API
     const handleDeleteRating = async (titleId) => {
         if (!isSignedIn) {
             setShareMessage("You must be logged in to remove ratings.");
@@ -348,11 +348,11 @@ export default function User() {
 
     return (
         <main className="container py-4">
-            {loading && <LoadingState message="Loading user data..." />}
-            {error && <p className="text-danger">Error: {error}</p>}
+            {loading && <LoadingState message="Loading user data..." />} {/* Viser spinner mens vi henter */}
+            {error && <p className="text-danger">Error: {error}</p>} {/* Viser fejl hvis kald fejler */}
             {!loading && !error && userData && (
                 <>
-                    {/* avatar change */}
+                    {/* Avatar: skjult filinput til upload */}
                     <input
                         type="file"
                         accept="image/*"
@@ -362,22 +362,22 @@ export default function User() {
                     />
 
                     <UserBanner
-                        user_name={userData.name}
-                        email={userData.email}
-                        createdAt={userData.createdAt}
-                        ratingsCount={ratedTitles.length}
-                        bookmarksCount={bookmarkedPages.length}
-                        profile_image={avatarUrl || defaultAvatar}
-                        role={userData.role}
-                        isOwnProfile={isOwnProfile}
-                        isEditMode={isEditMode}
-                        onEditClick={handleToggleEditMode}
-                        onAvatarClick={handleAvatarClick}
-                        showUndo={!!pendingAvatarFile}
-                        onUndoAvatar={handleUndoAvatar}
-                        onShareClick={handleShareClick}
+                        user_name={userData.name} // Brugernavn
+                        email={userData.email} // Email vises i banner
+                        createdAt={userData.createdAt} // Kontoens oprettelsesdato
+                        ratingsCount={ratedTitles.length} // Antal ratings
+                        bookmarksCount={bookmarkedPages.length} // Antal bookmarks
+                        profile_image={avatarUrl || defaultAvatar} // Vist profilbillede
+                        role={userData.role} // Rolle tekst
+                        isOwnProfile={isOwnProfile} // Bruges til at styre knapper
+                        isEditMode={isEditMode} // Viser redigeringsknapper
+                        onEditClick={handleToggleEditMode} // Toggles redigering / gemmer avatar
+                        onAvatarClick={handleAvatarClick} // Aabner filvalg
+                        showUndo={!!pendingAvatarFile} // Viser fortryd hvis nyt billede ikke gemt
+                        onUndoAvatar={handleUndoAvatar} // Fortryd avatarvalg
+                        onShareClick={handleShareClick} // Kopier profil-link
                     />
-                    {/* latest 3 ratings */}
+                    {/* Seneste 3 ratings */}
                     <section className="mt-4">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h3 className="h5 mb-0">Latest ratings</h3>
@@ -428,7 +428,7 @@ export default function User() {
                                             </div>
                                         </Link>
 
-                                        {/* Rating and Remove button */}
+                                        {/* Rating og fjern-knap */}
                                         <div className="d-flex align-items-center gap-2 ms-md-3">
                                             <Rating
                                                 initialRating={item.rating}
@@ -452,7 +452,7 @@ export default function User() {
                         )}
                     </section>
 
-                    {/* latest 3 bookmarks & 'browse all' button */}
+                    {/* Seneste 3 bookmarks + knap til fuld liste */}
                     <section className="mt-4">
                         <div className="d-flex justify-content-between align-items-center mb-3">
                             <h3 className="h5 mb-0">Latest bookmarks</h3>
@@ -493,7 +493,7 @@ export default function User() {
                                                 onError={(e) => { e.target.src = placeholderImage; }}
                                             />
 
-                                            {/* Title & plot preview*/}
+                                            {/* Titel og kort plot */}
                                             <div className="flex-grow-1">
                                                 <div className="fs-5 fw-semibold">{item.title}</div>
                                                 <div className="text-muted small">
@@ -502,7 +502,7 @@ export default function User() {
                                             </div>
                                         </Link>
 
-                                        {/* Delete bookmark button */}
+                                        {/* Fjern bookmark knap */}
                                         {isOwnProfile && (
                                             <button
                                                 type="button"
@@ -520,7 +520,7 @@ export default function User() {
                     </section>
 
                     <ToastConfirm
-                        show={!!confirmDeleteRatingId}
+                        show={!!confirmDeleteRatingId} // Bekraeft slet rating
                         message="Delete this rating?"
                         onClose={() => setConfirmDeleteRatingId(null)}
                         onConfirm={async () => {
@@ -535,7 +535,7 @@ export default function User() {
                     />
 
                     <ToastConfirm
-                        show={!!confirmDeleteBookmarkId}
+                        show={!!confirmDeleteBookmarkId} // Bekraeft slet bookmark
                         message="Delete this bookmark?"
                         onClose={() => setConfirmDeleteBookmarkId(null)}
                         onConfirm={async () => {
@@ -550,7 +550,7 @@ export default function User() {
                     />
 
                     <ToastConfirm
-                        show={!!shareMessage}
+                        show={!!shareMessage} // Viser korte info-beskeder
                         message={shareMessage}
                         onClose={() => setShareMessage('')}
                     />
