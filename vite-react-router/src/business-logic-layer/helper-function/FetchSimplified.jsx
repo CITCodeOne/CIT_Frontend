@@ -88,7 +88,7 @@ export default async function fetchSimplified({
 
     // Determine API prefix based on version
     // v2 uses "/api/v2", all other versions (including "v1" and legacy) use "/api"
-    const apiPrefix = normalizedVersion === "v2" ? "/api/v2" : "/api"; // Bestemmer om kald gaar til ny eller gammel stifane
+    const apiPrefix = normalizedVersion === "v2" ? "/api/v2" : "/api"; // Bestemmer om kald gaar til ny eller gammel endpoint
 
     // Clean up the endpoint path
     // Remove leading slashes to prevent double slashes in the final URL

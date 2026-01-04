@@ -7,7 +7,7 @@
  * domain models.
  * This is done since we have made a lot of itterations on the backend API and we want to keep
  * the frontend working without having to refactor all the domain models every time.
- * Fallback if no alias is found, to catch any missed fields.  // Hjertesuk: vi beholder frontend stabil selv om backend navne aendres
+ * Fallback if no alias is found, to catch any missed fields.  // vi beholder frontend stabil selv om backend navne aendres
  *
  * The normalizeKey function is used throughout the application to ensure consistent
  * property mapping when transforming raw API responses into application domain objects.
