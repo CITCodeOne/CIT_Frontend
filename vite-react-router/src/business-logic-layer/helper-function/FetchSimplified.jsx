@@ -105,7 +105,7 @@ export default async function fetchSimplified({
         : `${normalizedApiPrefix}/${trimmedEndpoint}`;
 
     // Create the full URL using the URL constructor for proper encoding
-    const url = new URL(path, resolvedBaseUrl);
+    const url = new URL(path, resolvedBaseUrl); // Bygger den fulde URL med base URL og sti dette er en javascript indbygget klasse
 
     // Append query parameters to the URL
     // Only include parameters that have defined, non-null values
