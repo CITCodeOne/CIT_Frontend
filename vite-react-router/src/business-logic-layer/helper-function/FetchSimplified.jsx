@@ -87,7 +87,7 @@ export default async function fetchSimplified({
     const normalizedVersion = typeof version === "string" ? version.trim().toLowerCase() : "";
 
     // Determine API prefix based on version
-    // v2 uses "/api/v2", all other versions (including "v1" and legacy) use "/api"
+    // v2 uses "/api/v2", all other versions uses "/api"
     const apiPrefix = normalizedVersion === "v2" ? "/api/v2" : "/api";
 
     // Clean up the endpoint path
