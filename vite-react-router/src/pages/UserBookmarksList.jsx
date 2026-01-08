@@ -140,7 +140,7 @@ export default function UserBookmarksList() {
     // returns a list of all the user's bookmarks
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">Your bookmarks</h2>
+            <h2 className="h4 mb-3">Bookmarks</h2>
 
             {loading && <LoadingState message="Loading bookmarks..." />}
             {error && <p className="text-danger">Error: {error}</p>}

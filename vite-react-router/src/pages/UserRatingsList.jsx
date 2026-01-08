@@ -104,7 +104,7 @@ export default function UserRatingsList() {
 
     return (
         <main className="container py-4">
-            <h2 className="h4 mb-3">Your reviews:</h2>
+            <h2 className="h4 mb-3">Reviews:</h2>
 
             {loading && <p>Loading ratings...</p>}
             {error && <p className="text-danger">Error: {error}</p>}
